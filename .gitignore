@@ -1,0 +1,13 @@
+# Agent worktrees and local settings
+.claude/*
+!.claude/skills/
+!.claude/agents/
+.claude/worktrees/
+
+# Dependencies and build artifacts
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
