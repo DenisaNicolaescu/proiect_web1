@@ -9,14 +9,47 @@
 <!-- graffino-agentic:end -->
 
 ## Index
-- Q-001 · What technology stack and web frameworks are required for this project?
+- Q-001 · What technology stack and web frameworks are required for this project? · _answered_
+- Q-002 · How should seed data from Field.md and docs/field_photos be ingested? · _answered_
+- Q-003 · What email transport should be used for status notifications in dev vs prod? · _answered_
+- Q-004 · Should citizen comments support image attachments or remain text-only?
+- Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation?
 
 ---
 
 ## Q-001 · What technology stack and web frameworks are required for this project?
-- **Status:** open
+- **Status:** answered
 - **Blocks:** project scaffolding, dependencies, and build configuration
 - **Who answers:** project owner
 - **Proposed answer:** Node.js / TypeScript or standard HTML/CSS/JavaScript with a lightweight backend
-- **Answer:** 
-- **Recorded as:** 
+- **Answer:** Node.js with TypeScript for the backend server, React with TypeScript (Vite) + Leaflet.js for the client, PostgreSQL with PostGIS for geospatial persistence, and sharp + exifr + heic-convert for the server-side image pipeline.
+- **Date:** 2026-11-19
+- **Recorded as:** D-002
+
+## Q-002 · How should seed data from Field.md and docs/field_photos be ingested?
+- **Status:** answered
+- **Blocks:** database seeding and initial presentation of 20+ issues
+- **Who answers:** project owner / brief
+- **Proposed answer:** Automated database seed script
+- **Answer:** An automated seed script (`npm run db:seed`) parses `Field.md`, converts the 24 `.heic` photos in `docs/field_photos/` to optimized web formats (JPEG/WebP) via `heic-convert` and `sharp` while stripping EXIF, and inserts the issues with their exact GPS coordinates into PostgreSQL/PostGIS along with default users and the 12 categories.
+- **Date:** 2026-11-19
+
+## Q-003 · What email transport should be used for status notifications in dev vs prod?
+- **Status:** answered
+- **Blocks:** notification service implementation
+- **Who answers:** project owner
+- **Proposed answer:** Local preview/log for dev, SMTP for prod
+- **Answer:** Local development uses an emulated transport (Mailpit / in-memory DB notification log / Nodemailer stream) to inspect the 5-minute / 10-change batching job without external dependencies; production uses standard SMTP configured via `.env`.
+- **Date:** 2026-11-19
+
+## Q-004 · Should citizen comments support image attachments or remain text-only?
+- **Status:** open
+- **Blocks:** comment data model & UI
+- **Who answers:** project owner / UI design
+- **Proposed answer:** Text-only to prevent unmoderated media spam and storage abuse; citizen photos are uploaded at report creation, while resolution evidence photos are uploaded exclusively by operators.
+
+## Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation?
+- **Status:** open
+- **Blocks:** client map layer configuration
+- **Who answers:** project owner
+- **Proposed answer:** Standard OpenStreetMap tile server (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) with standard attribution, avoiding external API key requirements during academic demo evaluation. 
