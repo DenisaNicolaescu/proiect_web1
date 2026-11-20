@@ -92,40 +92,67 @@ DS- IDs are for the tools (registry, mocks, board, Figma frames).
 ### Color
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--color-bg` | `#ffffff` | `#0f172a` | Main page background |
-| `--color-surface` | `#f8fafc` | `#1e293b` | Card / surface background |
-| `--color-border` | `#e2e8f0` | `#334155` | Borders and dividers |
-| `--color-text` | `#0f172a` | `#f8fafc` | Primary text |
-| `--color-text-muted` | `#64748b` | `#94a3b8` | Secondary / muted text |
-| `--color-primary` | `#2563eb` | `#3b82f6` | Brand and primary actions |
+| `--color-bg` | `#f8fafc` | `#0b0f19` | Main page & map canvas background |
+| `--color-surface` | `#ffffff` | `#151c2c` | Card & sidebar sheet surface |
+| `--color-surface-elevated` | `#f1f5f9` | `#1e293b` | Floating map controls, popups, headers |
+| `--color-border` | `#e2e8f0` | `#253248` | Card borders, dividers |
+| `--color-border-subtle` | `#f1f5f9` | `#1b2436` | Subtle inner dividers, table rows |
+| `--color-text` | `#0f172a` | `#f8fafc` | Primary text headings and body |
+| `--color-text-muted` | `#64748b` | `#94a3b8` | Secondary labels, timestamps, captions |
+| `--color-primary` | `#1e40af` | `#3b82f6` | Sibiu Civic Blue — Primary actions, active tabs |
+| `--color-primary-hover` | `#1d4ed8` | `#60a5fa` | Primary hover state |
+| `--color-primary-subtle` | `#eff6ff` | `#1e293b` | Primary tinted container background |
+| `--color-accent` | `#d97706` | `#fbbf24` | Sibiu Gold/Amber — Highlights, stars, badges |
+| `--color-accent-subtle` | `#fef3c7` | `#451a03` | Amber badge background |
+| `--color-status-noua` | `#0284c7` | `#38bdf8` | Sky Blue — Sesizare nouă / primită |
+| `--color-status-noua-bg` | `#f0f9ff` | `#082f49` | Nouă badge background |
+| `--color-status-confirmata` | `#4f46e5` | `#818cf8` | Royal Indigo — Sesizare confirmată |
+| `--color-status-confirmata-bg` | `#eef2ff` | `#1e1b4b` | Confirmată badge background |
+| `--color-status-in-lucru` | `#d97706` | `#fbbf24` | Warning Amber — Sesizare în lucru |
+| `--color-status-in-lucru-bg` | `#fffbeb` | `#451a03` | În lucru badge background |
+| `--color-status-rezolvata` | `#059669` | `#34d399` | Success Emerald — Sesizare rezolvată |
+| `--color-status-rezolvata-bg` | `#ecfdf5` | `#064e3b` | Rezolvată badge background |
+| `--color-status-respinsa` | `#dc2626` | `#f87171` | Destructive Crimson — Sesizare respinsă |
+| `--color-status-respinsa-bg` | `#fef2f2` | `#450a0a` | Respinsă badge background |
+| `--color-status-fuzionata` | `#64748b` | `#94a3b8` | Neutral Slate — Sesizare fuzionată (duplicat) |
+| `--color-status-fuzionata-bg` | `#f1f5f9` | `#1e293b` | Fuzionată badge background |
+| `--color-sla-overdue` | `#be123c` | `#fb7185` | High-alert Crimson — SLA depășit alert ring |
+| `--color-sla-overdue-bg` | `#fff1f2` | `#4c0519` | SLA depășit badge background |
 
 ### Typography
 | Token | Family | Size / line height | Weight | Use |
 |---|---|---|---|---|
-| `--font-sans` | system-ui, sans-serif | — | 400 / 600 | Body and UI elements |
-| `--text-sm` | `--font-sans` | 14px / 20px | 400 | Secondary text, captions |
-| `--text-base` | `--font-sans` | 16px / 24px | 400 | Standard body text |
-| `--text-lg` | `--font-sans` | 18px / 28px | 600 | Section headers |
-| `--text-xl` | `--font-sans` | 24px / 32px | 700 | Page titles |
+| `--font-sans` | `'Inter', system-ui, sans-serif` | — | 400 / 500 / 600 / 700 | Primary UI, body, labels (diacritics: ș, ț, ă, î, â) |
+| `--font-mono` | `'JetBrains Mono', monospace` | — | 400 / 600 | GPS coordinates, issue IDs (`#01`) |
+| `--font-numeric` | `tabular-nums` | — | — | Vote counters, SLA countdowns, KPI statistics |
+| `--text-xs` | `--font-sans` | 12px / 16px | 500 / 600 | Status tags, map pin bubbles, timestamps |
+| `--text-sm` | `--font-sans` | 14px / 20px | 400 / 500 | Secondary text, filter options, input labels |
+| `--text-base` | `--font-sans` | 16px / 24px | 400 / 500 | Card descriptions, body text, buttons |
+| `--text-lg` | `--font-sans` | 18px / 28px | 600 | Issue titles, card headlines, section titles |
+| `--text-xl` | `--font-sans` | 24px / 32px | 700 | Modal titles, sidebar header |
+| `--text-2xl` | `--font-sans` | 30px / 36px | 700 | Public statistics KPI figures |
 
 ### Spacing
-| Token | Value |
-|---|---|
-| `--space-1` | 4px |
-| `--space-2` | 8px |
-| `--space-3` | 12px |
-| `--space-4` | 16px |
-| `--space-6` | 24px |
-| `--space-8` | 32px |
+| Token | Value | Use |
+|---|---|---|
+| `--space-1` | 4px | Micro padding, tag gaps |
+| `--space-2` | 8px | Button inline gap, icon padding |
+| `--space-3` | 12px | Card inner row spacing |
+| `--space-4` | 16px | Standard card padding, form field gap |
+| `--space-6` | 24px | Sidebar padding, modal padding |
+| `--space-8` | 32px | Section gap on dashboard & statistics |
 
 ### Radius, shadow, motion
 | Token | Value | Use |
 |---|---|---|
-| `--radius-sm` | 4px | Badges, small tags |
-| `--radius-md` | 8px | Buttons, inputs |
-| `--radius-lg` | 12px | Cards, modal panels |
-| `--shadow-sm` | 0 1px 2px rgba(0,0,0,0.05) | Subtle element elevation |
-| `--shadow-md` | 0 4px 6px -1px rgba(0,0,0,0.1) | Cards, dropdown menus |
+| `--radius-sm` | 4px | Small status badges, tag pills |
+| `--radius-md` | 8px | Buttons, form inputs, dropdowns |
+| `--radius-lg` | 12px | Issue cards, floating sheet container, modals |
+| `--radius-xl` | 16px | Floating map search bar, quick report trigger |
+| `--radius-full` | 9999px | Map marker pins, avatar bubbles, circular action icons |
+| `--shadow-sm` | 0 1px 2px rgba(0,0,0,0.05) | Subtle list card separation |
+| `--shadow-md` | 0 4px 6px -1px rgba(0,0,0,0.1) | Hovered cards, dropdown menus |
+| `--shadow-lg` | 0 10px 15px -3px rgba(0,0,0,0.1) | Floating map sidebar & bottom-sheet drawer |
 
 ### Breakpoints / window sizes
 | Name | Min | Max |

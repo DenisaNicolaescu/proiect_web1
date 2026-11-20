@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-003 · Raportare sesizare nouă (Cartierul Tineretului, Sibiu)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Design Tokens from docs/design/DESIGN.md */
+    :root {
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-surface-elevated: #f1f5f9;
+      --color-border: #e2e8f0;
+      --color-border-subtle: #f1f5f9;
+      --color-text: #0f172a;
+      --color-text-muted: #64748b;
+      --color-primary: #1e40af;
+      --color-primary-hover: #1d4ed8;
+      --color-primary-subtle: #eff6ff;
+      --color-accent: #d97706;
+      --color-accent-subtle: #fef3c7;
+      
+      --color-status-noua: #0284c7;
+      --color-status-noua-bg: #f0f9ff;
+      --color-status-confirmata: #4f46e5;
+      --color-status-confirmata-bg: #eef2ff;
+      --color-status-in-lucru: #d97706;
+      --color-status-in-lucru-bg: #fffbeb;
+      --color-status-rezolvata: #059669;
+      --color-status-rezolvata-bg: #ecfdf5;
+      --color-status-respinsa: #dc2626;
+      --color-status-respinsa-bg: #fef2f2;
+      --color-status-fuzionata: #64748b;
+      --color-status-fuzionata-bg: #f1f5f9;
+      --color-sla-overdue: #be123c;
+      --color-sla-overdue-bg: #fff1f2;
+
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-numeric: tabular-nums;
+
+      --text-xs: 12px;
+      --lh-xs: 16px;
+      --text-sm: 14px;
+      --lh-sm: 20px;
+      --text-base: 16px;
+      --lh-base: 24px;
+      --text-lg: 18px;
+      --lh-lg: 28px;
+      --text-xl: 24px;
+      --lh-xl: 32px;
+      --text-2xl: 30px;
+      --lh-2xl: 36px;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-6: 24px;
+      --space-8: 32px;
+
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    [data-theme="dark"] {
+      --color-bg: #0b0f19;
+      --color-surface: #151c2c;
+      --color-surface-elevated: #1e293b;
+      --color-border: #253248;
+      --color-border-subtle: #1b2436;
+      --color-text: #f8fafc;
+      --color-text-muted: #94a3b8;
+      --color-primary: #3b82f6;
+      --color-primary-hover: #60a5fa;
+      --color-primary-subtle: #1e293b;
+      --color-accent: #fbbf24;
+      --color-accent-subtle: #451a03;
+
+      --color-status-noua: #38bdf8;
+      --color-status-noua-bg: #082f49;
+      --color-status-confirmata: #818cf8;
+      --color-status-confirmata-bg: #1e1b4b;
+      --color-status-in-lucru: #fbbf24;
+      --color-status-in-lucru-bg: #451a03;
+      --color-status-rezolvata: #34d399;
+      --color-status-rezolvata-bg: #064e3b;
+      --color-status-respinsa: #f87171;
+      --color-status-respinsa-bg: #450a0a;
+      --color-status-fuzionata: #94a3b8;
+      --color-status-fuzionata-bg: #1e293b;
+      --color-sla-overdue: #fb7185;
+      --color-sla-overdue-bg: #4c0519;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      line-height: var(--lh-base);
+      font-size: var(--text-base);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Top Showcase Bar */
+    .mock-header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mock-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .mock-badge {
+      background: var(--color-primary-subtle);
+      color: var(--color-primary);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+    }
+
+    .mock-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .control-label {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .pill-selector {
+      display: inline-flex;
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .pill-btn {
+      background: transparent;
+      border: none;
+      padding: 6px var(--space-3);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill-btn:hover {
+      color: var(--color-text);
+    }
+
+    .pill-btn.active {
+      background: var(--color-surface);
+      color: var(--color-primary);
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Main Container */
+    .app-layout {
+      display: flex;
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: var(--space-6);
+      gap: var(--space-6);
+    }
+
+    @media (max-width: 900px) {
+      .app-layout {
+        flex-direction: column;
+        padding: var(--space-4);
+      }
+    }
+
+    /* Form Column */
+    .form-col {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    /* Map Preview Column */
+    .map-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: sticky;
+      top: 80px;
+      height: fit-content;
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      font-size: var(--text-xl);
+      line-height: var(--lh-xl);
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .card-subtitle {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-2);
+    }
+
+    .label-hint {
+      font-size: var(--text-xs);
+      font-weight: 400;
+      color: var(--color-text-muted);
+      margin-left: var(--space-1);
+    }
+
+    .input, .select, .textarea {
+      width: 100%;
+      padding: 10px var(--space-3);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      line-height: var(--lh-sm);
+      color: var(--color-text);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      min-height: 44px; /* Touch target minimum */
+    }
+
+    .input:focus, .select:focus, .textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-subtle);
+    }
+
+    .textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Photo Upload Zone */
+    .upload-dropzone {
+      border: 2px dashed var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      background: var(--color-surface-elevated);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .upload-dropzone:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-subtle);
+    }
+
+    .upload-icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto var(--space-2);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .upload-title {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: var(--space-1);
+    }
+
+    .upload-subtitle {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* Photo Preview with EXIF Badge */
+    .photo-preview-box {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--color-surface-elevated);
+      position: relative;
+    }
+
+    .photo-preview-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .photo-preview-bar {
+      padding: var(--space-2) var(--space-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .exif-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--color-status-rezolvata);
+      background: var(--color-status-rezolvata-bg);
+      padding: 2px var(--space-2);
+      border-radius: var(--radius-sm);
+    }
+
+    .remove-photo-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-status-respinsa);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 24px;
+    }
+
+    /* Map Preview Frame */
+    .map-frame {
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      height: 380px;
+      position: relative;
+      overflow: hidden;
+      background: var(--color-surface-elevated);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .map-svg-mock {
+      width: 100%;
+      height: 100%;
+      background: #e2e8f0;
+      position: relative;
+    }
+
+    [data-theme="dark"] .map-svg-mock {
+      background: #1b2436;
+    }
+
+    .map-polygon-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .map-hud {
+      position: absolute;
+      top: var(--space-3);
+      left: var(--space-3);
+      right: var(--space-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      pointer-events: none;
+    }
+
+    .map-tag {
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-md);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      border: 1px solid var(--color-border);
+      pointer-events: auto;
+    }
+
+    .map-pin {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      cursor: grab;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+      transition: all 0.2s ease;
+    }
+
+    .map-pin svg {
+      display: block;
+      width: 36px;
+      height: 44px;
+    }
+
+    .coords-bar {
+      margin-top: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Duplicate Alert Card */
+    .duplicate-card {
+      background: var(--color-accent-subtle);
+      border: 1px solid var(--color-accent);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .duplicate-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .duplicate-title {
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text);
+    }
+
+    .duplicate-text {
+      font-size: var(--text-xs);
+      line-height: var(--lh-sm);
+      color: var(--color-text);
+    }
+
+    .duplicate-actions {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    /* Out of bounds error alert */
+    .out-of-bounds-card {
+      background: var(--color-status-respinsa-bg);
+      border: 1px solid var(--color-status-respinsa);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      animation: shake 0.3s ease-in-out;
+    }
+
+    .alert-icon {
+      flex-shrink: 0;
+      color: var(--color-status-respinsa);
+      width: 20px;
+      height: 20px;
+    }
+
+    .out-of-bounds-title {
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-status-respinsa);
+      margin-bottom: 2px;
+    }
+
+    .out-of-bounds-text {
+      font-size: var(--text-xs);
+      color: var(--color-text);
+    }
+
+    /* Anonymous Switch */
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+
+    .checkbox-input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    .checkbox-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .checkbox-title {
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .checkbox-desc {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      padding: 10px var(--space-6);
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 44px; /* Accessible hit target */
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--color-primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      border-color: var(--color-border);
+      color: var(--color-text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--color-surface-elevated);
+    }
+
+    .btn-accent {
+      background: var(--color-accent);
+      color: #ffffff;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Success Card View */
+    .success-card {
+      text-align: center;
+      padding: var(--space-8) var(--space-6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .success-icon-wrap {
+      width: 64px;
+      height: 64px;
+      background: var(--color-status-rezolvata-bg);
+      color: var(--color-status-rezolvata);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--color-status-rezolvata);
+    }
+
+    .sla-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      background: var(--color-primary-subtle);
+      color: var(--color-primary);
+      border: 1px solid var(--color-primary);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      font-variant-numeric: var(--font-numeric);
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Top Mock Controller (Allows testing all states & themes) -->
+  <header class="mock-header">
+    <div class="mock-meta">
+      <span class="mock-badge">DS-003</span>
+      <strong style="font-size: var(--text-sm);">Raportare sesizare nouă</strong>
+      <span style="font-size: var(--text-xs); color: var(--color-text-muted);">Cartierul Tineretului, Sibiu</span>
+    </div>
+    
+    <div class="mock-controls">
+      <span class="control-label">Stare:</span>
+      <div class="pill-selector">
+        <button class="pill-btn active" onclick="setState('empty')">1. Implicit (Gol)</button>
+        <button class="pill-btn" onclick="setState('duplicate')">2. Duplicat &lt;50m</button>
+        <button class="pill-btn" onclick="setState('out-of-bounds')">3. Eroare poligon</button>
+        <button class="pill-btn" onclick="setState('loading')">4. Încărcare EXIF</button>
+        <button class="pill-btn" onclick="setState('success')">5. Succes &amp; SLA</button>
+        <button class="pill-btn" onclick="setState('long-text')">6. Text lung &amp; Anonim</button>
+      </div>
+
+      <span class="control-label" style="margin-left: var(--space-3);">Temă:</span>
+      <div class="pill-selector">
+        <button class="pill-btn active" id="btn-theme-light" onclick="setTheme('light')">☀️ Light</button>
+        <button class="pill-btn" id="btn-theme-dark" onclick="setTheme('dark')">🌙 Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Screen View -->
+  <main class="app-layout">
+
+    <!-- Left Column: Report Form -->
+    <section class="form-col" id="form-container">
+      <div class="card">
+        <h1 class="card-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Adaugă o sesizare civică
+        </h1>
+        <p class="card-subtitle">Semnalează o problemă din Cartierul Tineretului. Operatorii o vor tria în funcție de termenul legal de rezolvare.</p>
+
+        <!-- Hidden honeypot for bot spam protection (Decision D-006) -->
+        <input type="text" name="neighborhood_bot_honey" style="display:none;" tabindex="-1" autocomplete="off">
+
+        <!-- Duplicate Alert Card (shown conditionally in state: duplicate) -->
+        <div class="duplicate-card" id="duplicate-warning" style="display: none;">
+          <div class="duplicate-header">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent); flex-shrink: 0;">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <div>
+              <div class="duplicate-title">Există deja o sesizare similară în apropiere (18 m distanță)</div>
+              <p class="duplicate-text">Pe Strada Oslo a fost raportată acum 4 zile: <em>„Groapă adâncă pe carosabil cu stratul de asfalt măcinat”</em> (Sesizarea #13). Susține sesizarea existentă pentru a-i crește prioritatea la primărie!</p>
+            </div>
+          </div>
+          <div class="duplicate-actions">
+            <button type="button" class="btn btn-accent" style="padding: 6px var(--space-4);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+              Votează sesizarea existentă (#13)
+            </button>
+            <button type="button" class="btn btn-secondary" style="padding: 6px var(--space-3);" onclick="dismissDuplicate()">
+              Este o problemă diferită, trimite oricum
+            </button>
+          </div>
+        </div>
+
+        <!-- Out of Bounds Error Alert (shown conditionally in state: out-of-bounds) -->
+        <div class="out-of-bounds-card" id="out-of-bounds-alert" style="display: none;">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div>
+            <div class="out-of-bounds-title">Locația selectată este în afara ariei Cartierului Tineretului</div>
+            <p class="out-of-bounds-text">Platforma este dedicată exclusiv străzilor din Cartierul Tineretului, Sibiu (~10 străzi, perimetru aprobat prin D-003). Te rugăm să plasezi pin-ul pe hartă în interiorul conturului albastru.</p>
+          </div>
+        </div>
+
+        <!-- Form Fields -->
+        <form id="report-form" onsubmit="event.preventDefault(); setState('success');">
+
+          <!-- 1. Photo Upload Field -->
+          <div class="form-group">
+            <label class="label">Fotografie la fața locului <span class="label-hint">(obligatoriu · EXIF GPS este extras automat)</span></label>
+            
+            <div id="upload-empty" class="upload-dropzone">
+              <div class="upload-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+              <div class="upload-title">Încarcă fotografia problemei (.jpg, .png, .heic)</div>
+              <div class="upload-subtitle">Apasă aici sau trage fișierul. Metadatele EXIF vor fi curățate înainte de publicare.</div>
+            </div>
+
+            <!-- Upload Loading State -->
+            <div id="upload-loading" class="upload-dropzone" style="display: none; padding: var(--space-8);">
+              <div class="spinner" style="margin-bottom: var(--space-3);"></div>
+              <div class="upload-title">Se procesează fotografia și se extrage locația GPS...</div>
+              <div class="upload-subtitle">Se verifică metadatele EXIF și duplicitatea în raza de 50m.</div>
+            </div>
+
+            <!-- Upload Completed Preview -->
+            <div id="upload-preview" class="photo-preview-box" style="display: none;">
+              <img id="preview-image" src="" alt="Dovadă sesizare" class="photo-preview-img">
+              <div class="photo-preview-bar">
+                <span class="exif-chip" id="exif-chip-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  GPS EXIF extras: 45.81434° N, 24.13326° E
+                </span>
+                <button type="button" class="remove-photo-btn" onclick="clearPhoto()">Șterge foto</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Category & Subcategory Selection (The 12 Official Primăria Sibiu Categories) -->
+          <div class="form-group" style="display: flex; gap: var(--space-4);">
+            <div style="flex: 1;">
+              <label class="label" for="category-select">Categorie principală <span class="label-hint">(12 categorii oficiale Sibiu)</span></label>
+              <select id="category-select" class="select" onchange="updateSubcategories()">
+                <option value="">Alege categoria...</option>
+                <option value="strazi">Străzi și iluminat (SLA: 30 zile lucrătoare)</option>
+                <option value="animale">Animale pe domeniu public (SLA: 3 zile lucrătoare)</option>
+                <option value="salubritate">Salubritate (SLA: 3 zile lucrătoare)</option>
+                <option value="utilitati">Utilități (apă, canal, gaz, curent) (SLA: 5 zile)</option>
+                <option value="trafic">Trafic auto, semne de circulație și parcări (SLA: 5 zile)</option>
+                <option value="fumat">Fumat în spații interzise (SLA: 5 zile)</option>
+                <option value="transport">Transport în comun (SLA: 10 zile)</option>
+                <option value="angajati">Angajați în serviciul public (SLA: 10 zile)</option>
+                <option value="vandalism">Vandalism (SLA: 15 zile)</option>
+                <option value="parcuri">Parcuri și spații verzi (SLA: 15 zile)</option>
+                <option value="biciclisti">Bicicliști (SLA: 15 zile)</option>
+                <option value="mediu">Protecția Mediului (SLA: 15 zile)</option>
+                <option value="diverse">Construcții &amp; Diverse (SLA: 30 zile)</option>
+              </select>
+            </div>
+
+            <div style="flex: 1;">
+              <label class="label" for="subcategory-select">Subcategorie</label>
+              <select id="subcategory-select" class="select">
+                <option value="">Alege întâi categoria...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 3. Description Field -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <label class="label" for="desc-input">Descrierea problemei</label>
+              <span id="char-counter" style="font-size: var(--text-xs); color: var(--color-text-muted); font-family: var(--font-mono);">0 / 500</span>
+            </div>
+            <textarea id="desc-input" class="textarea" placeholder="Descrie detaliile observate (ex: adâncime groapă, număr imobil din apropiere, grad de pericol)..." oninput="updateCharCount()"></textarea>
+          </div>
+
+          <!-- 4. Location Address Input / Confirmation -->
+          <div class="form-group">
+            <label class="label" for="address-input">Adresă / Reper stradal</label>
+            <input id="address-input" class="input" type="text" placeholder="Ex: Strada Oslo colț cu Klagenfurt">
+          </div>
+
+          <!-- 5. Anonymous Reporting Toggle (Decision D-006 & Neighbor #2 Requirement) -->
+          <div class="form-group">
+            <label class="checkbox-row" for="anon-checkbox">
+              <input type="checkbox" id="anon-checkbox" class="checkbox-input" onchange="toggleAnon()">
+              <div class="checkbox-text">
+                <span class="checkbox-title">Raportează anonim</span>
+                <span class="checkbox-desc">Numele și emailul tău nu vor apărea pe hartă sau în exporturile publice (afișat ca „Cetățean anonim”). Contul tău este folosit doar de sistem pentru notificări și prevenirea spamului.</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Submit Button Action -->
+          <button type="submit" id="submit-btn" class="btn btn-primary btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Trimite sesizarea civică
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Map Preview & Boundary Polygon -->
+    <section class="map-col" id="map-container">
+      <div class="card" style="padding: var(--space-4);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
+          <strong style="font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-2);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+            Amplasare pin pe hartă
+          </strong>
+          <span class="exif-chip" id="boundary-status-chip">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            În interiorul ariei
+          </span>
+        </div>
+
+        <!-- Simulated Leaflet Map Canvas with Cartierul Tineretului Polygon -->
+        <div class="map-frame" id="map-frame">
+          <svg class="map-svg-mock" viewBox="0 0 400 380" preserveAspectRatio="none">
+            <!-- Simulated Streets of Cartierul Tineretului -->
+            <path d="M 40,80 L 360,90" stroke="#cbd5e1" stroke-width="8" fill="none" />
+            <path d="M 40,160 L 360,170" stroke="#cbd5e1" stroke-width="10" fill="none" />
+            <path d="M 60,250 L 340,250" stroke="#cbd5e1" stroke-width="8" fill="none" />
+            <path d="M 120,40 L 110,340" stroke="#cbd5e1" stroke-width="8" fill="none" />
+            <path d="M 220,40 L 230,340" stroke="#cbd5e1" stroke-width="8" fill="none" />
+            <path d="M 300,50 L 310,320" stroke="#cbd5e1" stroke-width="6" fill="none" />
+
+            <!-- Street Labels -->
+            <text x="140" y="85" fill="#64748b" font-size="10" font-family="var(--font-sans)">Aleea Monet</text>
+            <text x="140" y="165" fill="#64748b" font-size="10" font-family="var(--font-sans)">Str. Viena</text>
+            <text x="50" y="245" fill="#64748b" font-size="10" font-family="var(--font-sans)">Str. Oslo</text>
+            <text x="115" y="300" fill="#64748b" font-size="10" font-family="var(--font-sans)" transform="rotate(85 115,300)">Str. Klagenfurt</text>
+            <text x="235" y="300" fill="#64748b" font-size="10" font-family="var(--font-sans)" transform="rotate(85 235,300)">Str. Picasso</text>
+
+            <!-- Approved Neighborhood Boundary Polygon (Decision D-003) -->
+            <polygon id="polygon-shape" points="40,40 370,50 360,330 30,320" 
+                     fill="rgba(30, 64, 175, 0.08)" 
+                     stroke="var(--color-primary)" 
+                     stroke-width="2.5" 
+                     stroke-dasharray="6,4" />
+
+            <!-- Existing Neighbor Duplicate Pin (#13) -->
+            <g id="duplicate-marker" transform="translate(195, 235)" style="display: none;">
+              <circle cx="0" cy="0" r="16" fill="rgba(217, 119, 6, 0.25)" />
+              <circle cx="0" cy="0" r="8" fill="var(--color-status-in-lucru)" />
+              <text x="12" y="4" font-size="10" font-weight="700" fill="var(--color-status-in-lucru)" font-family="var(--font-mono)">#13 (4z)</text>
+            </g>
+
+            <!-- 50m Duplicate Detection Radius Circle -->
+            <circle id="duplicate-radius" cx="180" cy="245" r="48" fill="rgba(2, 132, 199, 0.12)" stroke="var(--color-status-noua)" stroke-width="1.5" stroke-dasharray="3,3" style="display: none;" />
+          </svg>
+
+          <!-- Interactive User Placed Pin -->
+          <div class="map-pin" id="draggable-pin" style="top: 245px; left: 180px;">
+            <svg viewBox="0 0 24 32" fill="none">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20c0-6.63-5.37-12-12-12z" fill="var(--color-primary)"/>
+              <circle cx="12" cy="11" r="4.5" fill="#ffffff"/>
+            </svg>
+          </div>
+
+          <!-- Top Map HUD -->
+          <div class="map-hud">
+            <span class="map-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+              Cartierul Tineretului
+            </span>
+            <button type="button" class="map-tag" style="cursor: pointer;" onclick="locateUser()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 12 8"/></svg>
+              GPS-ul meu
+            </button>
+          </div>
+        </div>
+
+        <div class="coords-bar">
+          <span id="coords-text">45.81434° N, 24.13326° E</span>
+          <span style="font-size: 11px;">Trage pinul pe hartă</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Success View Card (Hidden by default, shown in state: success) -->
+    <section class="form-col" id="success-container" style="display: none;">
+      <div class="card success-card">
+        <div class="success-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+
+        <h2 style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-text);">Sesizarea civică #25 a fost înregistrată!</h2>
+        
+        <p style="font-size: var(--text-base); color: var(--color-text-muted); max-width: 540px;">
+          Sesizarea ta pe <strong>Strada Oslo</strong> a fost preluată în sistem. Poza a fost curățată de metadatele EXIF și este acum vizibilă pe harta cartierului.
+        </p>
+
+        <div class="sla-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Termen legal SLA: 30 zile lucrătoare (Termen: 12 ianuarie 2027)
+        </div>
+
+        <p style="font-size: var(--text-xs); color: var(--color-text-muted); max-width: 480px;">
+          Calculat conform Deciziei D-004 (excluzând Paștele, Rusaliile, 1 Decembrie și sărbătorile legale din România). Vei primi un email la fiecare schimbare de status.
+        </p>
+
+        <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+          <button type="button" class="btn btn-primary" onclick="setState('empty')">Adaugă altă sesizare</button>
+          <button type="button" class="btn btn-secondary">Vezi sesizarea pe hartă</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Subcategories for Primăria Sibiu official taxonomy
+    const SUBCATEGORIES = {
+      strazi: ["Groapă", "Capac canalizare lipsă / defect", "Trotuar deteriorat", "Iluminat public defect / lipsă", "Stradă inundată", "Copac cu risc pe carosabil", "Altele - Străzi și Iluminat"],
+      animale: ["Câine agresiv", "Animal fără lesă", "Animal mort abandonat"],
+      salubritate: ["Deșeuri abandonate", "Stradă murdară", "Coș de gunoi lipsă/deteriorat", "Pubele neridicate"],
+      utilitati: ["Capac lipsă (apă/canal)", "Defecte țevi / hidranți / gaz"],
+      trafic: ["Parcare neregulamentară", "Semn de circulație lipsă / deteriorat", "Semafor defect", "Vehicul abandonat"],
+      fumat: ["Loc de joacă", "Instituție publică", "Transport public"],
+      transport: ["Stații de autobuz deteriorate", "Autobuz"],
+      angajati: ["Comportament inadecvat"],
+      vandalism: ["Bănci deteriorate", "Locuri de joacă vandalizate", "Stâlpi delimitare distruși"],
+      parcuri: ["Spațiu verde neîngrijit", "Loc de joacă deteriorat", "Alee blocată"],
+      biciclisti: ["Pistă blocată", "Pistă deteriorată", "Semnalizare greșită"],
+      mediu: ["Protecția Mediului"],
+      diverse: ["Construcție ilegală", "Diverse"]
+    };
+
+    function updateSubcategories() {
+      const cat = document.getElementById("category-select").value;
+      const sub = document.getElementById("subcategory-select");
+      sub.innerHTML = '<option value="">Alege subcategoria...</option>';
+      if (SUBCATEGORIES[cat]) {
+        SUBCATEGORIES[cat].forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.textContent = s;
+          sub.appendChild(opt);
+        });
+      }
+    }
+
+    function updateCharCount() {
+      const val = document.getElementById("desc-input").value;
+      document.getElementById("char-counter").textContent = val.length + " / 500";
+    }
+
+    function setTheme(theme) {
+      document.body.setAttribute("data-theme", theme);
+      document.getElementById("btn-theme-light").classList.toggle("active", theme === "light");
+      document.getElementById("btn-theme-dark").classList.toggle("active", theme === "dark");
+    }
+
+    function dismissDuplicate() {
+      document.getElementById("duplicate-warning").style.display = "none";
+      document.getElementById("duplicate-marker").style.display = "none";
+      document.getElementById("duplicate-radius").style.display = "none";
+    }
+
+    function locateUser() {
+      const pin = document.getElementById("draggable-pin");
+      pin.style.top = "160px";
+      pin.style.left = "210px";
+      document.getElementById("coords-text").textContent = "45.81651° N, 24.13238° E (Str. Viena)";
+    }
+
+    function clearPhoto() {
+      document.getElementById("upload-preview").style.display = "none";
+      document.getElementById("upload-empty").style.display = "block";
+    }
+
+    function setState(state) {
+      // Pill state button highlighting
+      const buttons = document.querySelectorAll('.pill-selector button');
+      buttons.forEach(b => {
+        if (b.textContent.includes(state) || 
+           (state === 'empty' && b.textContent.includes('Implicit')) ||
+           (state === 'duplicate' && b.textContent.includes('Duplicat')) ||
+           (state === 'out-of-bounds' && b.textContent.includes('Eroare')) ||
+           (state === 'loading' && b.textContent.includes('EXIF')) ||
+           (state === 'success' && b.textContent.includes('Succes')) ||
+           (state === 'long-text' && b.textContent.includes('Text lung'))) {
+          b.classList.add('active');
+        } else if (!b.textContent.includes('Light') && !b.textContent.includes('Dark')) {
+          b.classList.remove('active');
+        }
+      });
+
+      // Show/Hide Containers
+      const formCol = document.getElementById("form-container");
+      const mapCol = document.getElementById("map-container");
+      const successCol = document.getElementById("success-container");
+
+      if (state === "success") {
+        formCol.style.display = "none";
+        mapCol.style.display = "none";
+        successCol.style.display = "flex";
+        return;
+      } else {
+        formCol.style.display = "flex";
+        mapCol.style.display = "flex";
+        successCol.style.display = "none";
+      }
+
+      // Reset base elements
+      const uploadEmpty = document.getElementById("upload-empty");
+      const uploadLoading = document.getElementById("upload-loading");
+      const uploadPreview = document.getElementById("upload-preview");
+      const duplicateWarning = document.getElementById("duplicate-warning");
+      const duplicateMarker = document.getElementById("duplicate-marker");
+      const duplicateRadius = document.getElementById("duplicate-radius");
+      const outOfBoundsAlert = document.getElementById("out-of-bounds-alert");
+      const boundaryStatusChip = document.getElementById("boundary-status-chip");
+      const submitBtn = document.getElementById("submit-btn");
+      const pin = document.getElementById("draggable-pin");
+      const polygonShape = document.getElementById("polygon-shape");
+      const coordsText = document.getElementById("coords-text");
+
+      // Default resets
+      uploadLoading.style.display = "none";
+      uploadPreview.style.display = "none";
+      uploadEmpty.style.display = "block";
+      duplicateWarning.style.display = "none";
+      duplicateMarker.style.display = "none";
+      duplicateRadius.style.display = "none";
+      outOfBoundsAlert.style.display = "none";
+      submitBtn.disabled = false;
+      polygonShape.setAttribute("stroke", "var(--color-primary)");
+      polygonShape.setAttribute("fill", "rgba(30, 64, 175, 0.08)");
+      boundaryStatusChip.style.background = "var(--color-status-rezolvata-bg)";
+      boundaryStatusChip.style.color = "var(--color-status-rezolvata)";
+      boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> În interiorul ariei';
+
+      if (state === "empty") {
+        document.getElementById("report-form").reset();
+        pin.style.top = "200px";
+        pin.style.left = "200px";
+        coordsText.textContent = "45.81523° N, 24.13476° E";
+        updateCharCount();
+      } 
+      else if (state === "duplicate") {
+        uploadEmpty.style.display = "none";
+        uploadPreview.style.display = "block";
+        document.getElementById("preview-image").src = "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=60";
+        document.getElementById("category-select").value = "strazi";
+        updateSubcategories();
+        document.getElementById("subcategory-select").value = "Groapă";
+        document.getElementById("desc-input").value = "Groapă apărută în asfalt lângă trotuar pe carosabil.";
+        document.getElementById("address-input").value = "Strada Oslo";
+        updateCharCount();
+        duplicateWarning.style.display = "flex";
+        duplicateMarker.style.display = "block";
+        duplicateRadius.style.display = "block";
+        pin.style.top = "245px";
+        pin.style.left = "180px";
+        coordsText.textContent = "45.81434° N, 24.13326° E (Str. Oslo)";
+      } 
+      else if (state === "out-of-bounds") {
+        outOfBoundsAlert.style.display = "flex";
+        submitBtn.disabled = true;
+        pin.style.top = "15px";
+        pin.style.left = "20px";
+        coordsText.textContent = "45.82010° N, 24.12800° E (În afara ariei)";
+        polygonShape.setAttribute("stroke", "var(--color-status-respinsa)");
+        polygonShape.setAttribute("fill", "rgba(220, 38, 38, 0.08)");
+        boundaryStatusChip.style.background = "var(--color-status-respinsa-bg)";
+        boundaryStatusChip.style.color = "var(--color-status-respinsa)";
+        boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> În afara ariei';
+      } 
+      else if (state === "loading") {
+        uploadEmpty.style.display = "none";
+        uploadLoading.style.display = "block";
+      } 
+      else if (state === "long-text") {
+        uploadEmpty.style.display = "none";
+        uploadPreview.style.display = "block";
+        document.getElementById("preview-image").src = "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=600&auto=format&fit=crop&q=60";
+        document.getElementById("category-select").value = "trafic";
+        updateSubcategories();
+        document.getElementById("subcategory-select").value = "Parcare neregulamentară";
+        document.getElementById("desc-input").value = "Autoutilitară albă parcată permanent pe întreaga lățime a trotuarului pietonal de pe Strada Viena, chiar lângă intersecția cu Aleea Monet. Pietonii, persoanele vârstnice și părinții cu cărucioare de copii sunt forțați să coboare direct pe partea carosabilă cu vizibilitate foarte redusă. Situația persistă zilnic în intervalul 10:00 - 18:00.";
+        document.getElementById("address-input").value = "Strada Viena nr. 14, intersecție cu Aleea Monet";
+        document.getElementById("anon-checkbox").checked = true;
+        updateCharCount();
+        pin.style.top = "120px";
+        pin.style.left = "240px";
+        coordsText.textContent = "45.81651° N, 24.13238° E (Str. Viena)";
+      }
+    }
+
+    // Default initialization
+    updateSubcategories();
+  </script>
+</body>
+</html>

@@ -1,4 +1,53 @@
 # docs/design/registry.yaml — every screen and shared component, by DS- ID.
 # Plans, commits, mocks and board files use the ID (tickets don't). kind: foundation | component | screen
 # status: draft (mock drawn) | approved (confirmed on the board) | implemented | deprecated (never delete an entry)
-designs: []
+
+designs:
+  - id: DS-001
+    name: Interactive Map & List View
+    kind: screen
+    status: draft
+    route: /
+    description: Public split-view civic dashboard with OpenStreetMap canvas, marker clusters, Cartierul Tineretului polygon boundary, category/status/age filter sheet, list view, and CSV/GeoJSON exports.
+
+  - id: DS-002
+    name: Issue Detail & Timeline View
+    kind: screen
+    status: draft
+    route: /issues/:id
+    description: Detailed issue page with before/after photo gallery, map pin, dynamic SLA status countdown badge, "Mă afectează și pe mine" vote action, comment thread, follow toggle, and merged duplicate banner.
+
+  - id: DS-003
+    name: Report Civic Issue View
+    kind: screen
+    status: draft
+    route: /report
+    description: Citizen reporting flow with photo upload, server-side EXIF GPS auto-fill, map pin picker with strict polygon validation, category/subcategory selection, "Raportează anonim" toggle, and live duplicate suggestion card.
+
+  - id: DS-004
+    name: Operator Triage Dashboard
+    kind: screen
+    status: draft
+    route: /operator/triage
+    description: Operator queue with SLA urgency filters, status transition modal (rejection reason or resolution photo upload), and reversible duplicate merge/unmerge management dialog.
+
+  - id: DS-005
+    name: Public Statistics & SLA Transparency
+    kind: screen
+    status: draft
+    route: /statistics
+    description: Public neighborhood performance analytics dynamically computed: average resolution time in working days per category, % resolved, SLA overdue counts, and public CSV/GeoJSON exports.
+
+  - id: DS-006
+    name: Admin Management Panel
+    kind: screen
+    status: draft
+    route: /admin
+    description: Administrative control panel for editing the 12 categories and subcategories, configuring working-day SLAs, tuning duplicate thresholds (50m / 30 days), and assigning user roles.
+
+  - id: DS-007
+    name: Authentication Views (Login & Register)
+    kind: screen
+    status: draft
+    route: /auth/login, /auth/register
+    description: Sign-in and account registration screens with role-based routing, diacritic support, and frictionless honeypot anti-spam protection.
