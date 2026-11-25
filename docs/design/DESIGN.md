@@ -101,8 +101,10 @@ These rules add to the guardrails above; where they are stricter, they win.
 - **Sunlight contrast.** `--color-text` and `--color-text-muted` reach at least 7:1
   on `--color-bg`, `--color-surface` and `--color-surface-elevated` in the light theme.
 - **Status = icon + text + color.** A status is never shown by color alone: every
-  status badge and pin carries its icon and its name. A badge has a 1 px border in
-  its status color (badge backgrounds alone are about 1.1:1 against the surface).
+  status badge carries its icon and its name. A map pin carries its icon and color;
+  its name is in the pin's accessible label, in the map legend and in the preview
+  that opens on tap (Q-013). A badge has a 1 px border in its status color (badge
+  backgrounds alone are about 1.1:1 against the surface).
 - **Red means a problem that needs attention** (termen depășit, eroare); no status is
   red. `--color-danger` is used only for the "Termen depășit" badge ("SLA depășit" in
   the Operator's queue) and for error
