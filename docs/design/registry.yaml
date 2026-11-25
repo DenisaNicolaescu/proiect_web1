@@ -43,7 +43,7 @@ designs:
     kind: screen
     status: draft
     route: /admin
-    description: Administrative control panel for editing the 12 categories and subcategories, configuring working-day SLAs, tuning duplicate thresholds (50m / 30 days), and assigning user roles.
+    description: Administrative control panel for editing the 14 categories and subcategories, configuring working-day SLAs, and assigning user roles.
 
   - id: DS-007
     name: Authentication Views (Login & Register)

@@ -15,6 +15,7 @@
 - Q-004 · Should citizen comments support image attachments or remain text-only?
 - Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation?
 - Q-006 · How do we take screenshots of the app for the design check?
+- Q-007 · Are the per-category SLA values validated by Primăria Sibiu or the neighbourhood association?
 
 ---
 
@@ -32,7 +33,7 @@
 - **Blocks:** database seeding and initial presentation of 20+ issues
 - **Who answers:** project owner / brief
 - **Proposed answer:** Automated database seed script
-- **Answer:** An automated seed script (`npm run db:seed`) parses `Field.md`, converts the 24 `.heic` photos in `docs/field_photos/` to optimized web formats (JPEG/WebP) via `heic-convert` and `sharp` while stripping EXIF, and inserts the issues with their exact GPS coordinates into PostgreSQL/PostGIS along with default users and the 12 categories.
+- **Answer:** An automated seed script (`npm run db:seed`) parses `Field.md`, converts the 24 `.heic` photos in `docs/field_photos/` to optimized web formats (JPEG/WebP) via `heic-convert` and `sharp` while stripping EXIF, and inserts the issues with their exact GPS coordinates into PostgreSQL/PostGIS along with default users and the 14 categories.
 - **Date:** 2026-11-19
 
 ## Q-003 · What email transport should be used for status notifications in dev vs prod?
@@ -60,3 +61,9 @@
 - **Blocks:** the screenshot step of `/build` and DESIGN.md (AGENTS.md section 2 has no command)
 - **Who answers:** project owner, once the client is scaffolded
 - **Proposed answer:** A Playwright script against the Vite dev server, light and dark, saved to `docs/design/screens/<DS-id>.<light|dark>.png`. Not confirmed; no client exists yet.
+
+## Q-007 · Are the per-category SLA values validated by Primăria Sibiu or the neighbourhood association?
+- **Status:** open
+- **Blocks:** final SLA values in the seed and the claim of validated SLAs (the brief's "ideal, validate de cineva de la primărie / asociație"); the SLA engine itself is not blocked
+- **Who answers:** project owner, after contacting Primăria Sibiu or the asociația de proprietari
+- **Context:** The SLA values (3 to 30 working days) are the project owner's own estimates, derived from Primăria's reply no. 93006/16.11.2026, which gives only a range ("de la 1–3 zile lucrătoare la 6 luni – 1 an"). Primăria did not provide per-category deadlines.

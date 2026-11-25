@@ -35,13 +35,16 @@ _Avoid_: merge distructiv, combinare definitivă
 **Raportare opțional anonimă** (noun) — The mode allowing an authenticated user to conceal their real name and email from public views and exports (rendered as "Cetățean anonim") while retaining accountability in the database.
 _Avoid_: guest submission, postare fără cont
 
+**Vizitator** (noun) — An unauthenticated user who can view the map, the list, the sesizare detail, the public statistics and the exports, but cannot change anything. Not an account role; the account roles are Cetățean, Operator and Admin.
+_Avoid_: guest, utilizator anonim
+
 **Cetățean** (noun) — An authenticated end user from the neighborhood who can report issues, cast one vote per issue, comment, and follow status notifications.
-_Avoid_: vizitator, public user, regular user
+_Avoid_: public user, regular user
 
 **Operator** (noun) — An authenticated privileged user responsible for reviewing, triaging, transitioning workflow statuses, uploading resolution proof, and merging/unmerging duplicates.
 _Avoid_: agent primărie, moderator, trior
 
-**Admin** (noun) — An authenticated system administrator responsible for managing user roles, configuring categories, setting SLAs in working days, and tuning duplicate parameters.
+**Admin** (noun) — An authenticated system administrator responsible for managing user roles, configuring categories, and setting SLAs in working days.
 _Avoid_: webmaster, superuser, root
 
 **Aria cartierului** (noun) — The closed polygon boundary encapsulating the surveyed streets of Cartierul Tineretului with a 50–100m buffer, outside of which pins and GPS reports are strictly rejected.

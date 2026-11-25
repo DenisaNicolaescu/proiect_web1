@@ -813,10 +813,10 @@
             </div>
           </div>
 
-          <!-- 2. Category & Subcategory Selection (The 12 Official Primăria Sibiu Categories) -->
+          <!-- 2. Category & Subcategory Selection (The 14 Official Primăria Sibiu Categories) -->
           <div class="form-group" style="display: flex; gap: var(--space-4);">
             <div style="flex: 1;">
-              <label class="label" for="category-select">Categorie principală <span class="label-hint">(12 categorii oficiale Sibiu)</span></label>
+              <label class="label" for="category-select">Categorie principală <span class="label-hint">(14 categorii oficiale Sibiu)</span></label>
               <select id="category-select" class="select" onchange="updateSubcategories()">
                 <option value="">Alege categoria...</option>
                 <option value="strazi">Străzi și iluminat (SLA: 30 zile lucrătoare)</option>
@@ -831,7 +831,8 @@
                 <option value="parcuri">Parcuri și spații verzi (SLA: 15 zile)</option>
                 <option value="biciclisti">Bicicliști (SLA: 15 zile)</option>
                 <option value="mediu">Protecția Mediului (SLA: 15 zile)</option>
-                <option value="diverse">Construcții &amp; Diverse (SLA: 30 zile)</option>
+                <option value="constructii">Construcții (SLA: 30 zile)</option>
+                <option value="diverse">Diverse (SLA: 30 zile)</option>
               </select>
             </div>
 
@@ -1004,7 +1005,8 @@
       parcuri: ["Spațiu verde neîngrijit", "Loc de joacă deteriorat", "Alee blocată"],
       biciclisti: ["Pistă blocată", "Pistă deteriorată", "Semnalizare greșită"],
       mediu: ["Protecția Mediului"],
-      diverse: ["Construcție ilegală", "Diverse"]
+      constructii: ["Construcție ilegală", "Șantier neîngrădit", "Construcție periculoasă", "Construcție dezafectată sau abandonată"],
+      diverse: ["Diverse"]
     };
 
     function updateSubcategories() {
