@@ -9,12 +9,12 @@
 ## Index
 - D-001 · Primary git branch is main
 - D-002 · Full-stack technology stack (Node.js, React, PostgreSQL/PostGIS)
-- D-003 · Cartierul Tineretului polygon boundary enforcement
 - D-004 · 14 Primăria categories and Romanian statutory working-day SLA engine
 - D-005 · Spatial duplicate detection and reversible merge architecture
 - D-006 · Mandatory authentication with public anonymity and anti-spam rate limiting
 - D-007 · Email confirmation is mandatory at registration
 - D-008 · Account roles are hierarchical
+- D-009 · Neighbourhood area is the owner-drawn polygon, without buffer
 
 ---
 
@@ -35,16 +35,6 @@
 - **Why:** Delivers fast geospatial queries (ST_DWithin, ST_Contains) at scale, robust EXIF metadata stripping, responsive map clustering, and typed contracts between client and server.
 - **Rejected:** SQLite without spatial extensions, client-side only mock data, native mobile apps.
 - **Evidence:** User approval of D-002 proposal; [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L22); [Interview.md](file:///home/deny/proiect_web1/Interview.md).
-- **Source:** interview · confidence high
-
-## D-003 · Cartierul Tineretului polygon boundary enforcement
-- **Status:** approved
-- **Date:** 2026-11-19
-- **Confirmed:** 2026-11-19
-- **Rule:** The platform scope is strictly bounded to Cartierul Tineretului via a closed polygon enclosing the surveyed streets from Field.md with a 50-100m buffer. Pins outside this boundary are strictly blocked on both client and server with the error message "Locația selectată este în afara ariei Cartierului Tineretului". The polygon is visibly outlined on the map.
-- **Why:** Prevents off-target submissions and keeps the platform scoped to the neighborhood association.
-- **Rejected:** Soft warnings without blocking, unbound city-wide reporting, automatic silent rejection.
-- **Evidence:** User approval of D-003 proposal; [Field.md](file:///home/deny/proiect_web1/Field.md); [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L9).
 - **Source:** interview · confidence high
 
 ## D-004 · 14 Primăria categories and Romanian statutory working-day SLA engine
@@ -95,4 +85,14 @@
 - **Why:** One permission level per account is simple to check on the server, and an Admin can triage when no Operator is available.
 - **Rejected:** Separate, non-overlapping roles.
 - **Evidence:** Q-009 answer; user approval of the D-008 proposal (2026-11-25).
+- **Source:** interview · confidence high
+
+## D-009 · Neighbourhood area is the owner-drawn polygon, without buffer
+- **Status:** approved
+- **Date:** 2026-11-26
+- **Confirmed:** 2026-11-26
+- **Rule:** Aria cartierului is exactly the polygon in `docs/design/cartier.geojson` (drawn by the project owner on geojson.io), with no buffer. That file is the only source of the polygon for the client, the server and the seed. A sesizare outside it cannot be reported: the pin is blocked on client and server with the message "Locația selectată este în afara ariei Cartierului Tineretului". The polygon is outlined on the map. Field reports outside it stay in Field.md, marked "în afara ariei proiectului – exclusă din seed" with their distance to the polygon, and are not seeded. Supersedes D-003.
+- **Why:** The owner drew the real neighbourhood boundary; one exact polygon is simple to check and the same everywhere. It keeps 22 of the 24 field reports, above the brief's minimum of 20.
+- **Rejected:** A 50–100 m buffer around the surveyed streets (D-003); deleting the excluded reports from Field.md.
+- **Evidence:** User approval of the D-009 proposal (2026-11-26); Q-014; `docs/design/cartier.geojson`; [Field.md](file:///home/deny/proiect_web1/Field.md) (#06 0.1 m and #24 7.0 m outside).
 - **Source:** interview · confidence high

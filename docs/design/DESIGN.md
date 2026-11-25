@@ -103,8 +103,9 @@ These rules add to the guardrails above; where they are stricter, they win.
 - **Status = icon + text + color.** A status is never shown by color alone: every
   status badge and pin carries its icon and its name. A badge has a 1 px border in
   its status color (badge backgrounds alone are about 1.1:1 against the surface).
-- **Red means a problem that needs attention** (SLA depășit, eroare); no status is
-  red. `--color-danger` is used only for the "SLA depășit" badge and for error
+- **Red means a problem that needs attention** (termen depășit, eroare); no status is
+  red. `--color-danger` is used only for the "Termen depășit" badge ("SLA depășit" in
+  the Operator's queue) and for error
   messages, always with an icon and text. Nothing else is red, including
   `respinsă` and non-error destructive actions.
 - **Green means success, red means a problem; otherwise statuses have their own
@@ -121,6 +122,20 @@ These rules add to the guardrails above; where they are stricter, they win.
 - **Fonts.** Inter (`--font-sans`) for everything. JetBrains Mono (`--font-mono`)
   only for sesizare IDs (`#13`) and GPS coordinates. Counters and KPIs use Inter
   with `--font-numeric`.
+
+## Opening mocks
+Mocks are opened through a local web server, never directly as a file (`file://`):
+
+```bash
+cd docs/design/mocks
+python3 -m http.server 8000   # on Windows: py -m http.server 8000
+# then open http://localhost:8000/DS-001.html
+```
+
+The OpenStreetMap tile server needs a `Referer` header, and a page opened as a file
+does not send one. A mock with a map states `<meta name="referrer"
+content="strict-origin-when-cross-origin">` and sets the same `referrerPolicy` on the
+tile layer; it never uses `no-referrer`.
 
 ## Source
 - Design board: none yet (published from `mocks/`, never pulled)
@@ -162,8 +177,8 @@ value is given in "Use".
 | `--color-status-fuzionata-bg` | `#f1f5f9` | `#1e293b` | Fuzionată badge background |
 | `--color-success` | `#047857` | `#6ee7b7` | Green: success and confirmations that are not a status (same values as rezolvată; ≥ 4.84:1 on success-bg) |
 | `--color-success-bg` | `#d1fae5` | `#052e2b` | Success message and chip background |
-| `--color-danger` | `#b91c1c` | `#fca5a5` | Red, the only one: "SLA depășit" badge and error messages (≥ 5.30:1 on danger-bg, ≥ 5.91:1 on bg/surface/elevated) |
-| `--color-danger-bg` | `#fee2e2` | `#450a0a` | "SLA depășit" badge and error message background (`--color-text` on it ≥ 14.61:1) |
+| `--color-danger` | `#b91c1c` | `#fca5a5` | Red, the only one: "Termen depășit" badge and error messages (≥ 5.30:1 on danger-bg, ≥ 5.91:1 on bg/surface/elevated) |
+| `--color-danger-bg` | `#fee2e2` | `#450a0a` | "Termen depășit" badge and error message background (`--color-text` on it ≥ 14.61:1) |
 
 **Map pins** (light-theme values in both themes, on OSM tiles ≈ `#f2efe9`): pin color
 vs map ≥ 4.38:1, white icon on pin ≥ 5.02:1, for all six statuses and danger.

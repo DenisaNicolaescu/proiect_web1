@@ -37,3 +37,24 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
   - **Q-007 (deschisă):** validarea SLA-urilor cu Primăria sau cu asociația de proprietari.
   
   Modificările au fost aplicate în `docs/agents/DECISIONS.md`, `docs/agents/OPEN-QUESTIONS.md`, `README.md`, `CONTEXT.md`, `Field.md`, `docs/design/registry.yaml` și mock-ul `docs/design/mocks/DS-003.html`, apoi verificate cu `python3 docs/agents/tools/ledger-lint.py`.
+
+---
+
+## Sesiunea 3 — 25–26 noiembrie 2026
+
+- **Data:** 2026-11-25 – 2026-11-26
+- **Ce am cerut (What I asked):**  
+  Mock-ul DS-001 (Hartă și listă), status `draft`, doar cu tokenii din `docs/design/DESIGN.md`: toate stările (gol, încărcare, eroare, succes, text lung), light și dark, telefon și desktop, variantele pentru vizitator, cetățean și operator. Apoi harta reală (Leaflet + tile-uri OpenStreetMap), cele 24 de sesizări din `Field.md` la coordonatele lor, poligonul cartierului desenat de mine pe geojson.io și verificarea că toate sesizările sunt în interior.
+
+- **Ce am primit (What I received):**  
+  Mock-ul `docs/design/mocks/DS-001.html`, cu capturi verificate în toate combinațiile, și întrebările deschise Q-010…Q-015. Verificarea poligonului: primul poligon lăsa în afară #14–#17; al doilea, redesenat, includea #14–#17, dar lăsa în afară #06 (0,1 m) și #24 (7,0 m). Asistentul a semnalat că poligonul contrazice bufferul de 50–100 m din D-003 și a scris un PROPOSAL pentru înlocuirea lui D-003.
+
+- **Ce am făcut cu răspunsul (What I did with the response):**  
+  Am decis și am aprobat următoarele:
+  - **Aria cartierului (D-009, înlocuiește D-003):** aria este exact poligonul meu din `docs/design/cartier.geojson`, fără buffer. O sesizare din afara lui nu poate fi raportată.
+  - **#06 și #24:** rămân în `Field.md`, marcate „în afara ariei proiectului – exclusă din seed”, cu distanța față de poligon; miniaturile lor fără EXIF sunt în `docs/field_photos/`. Seed-ul și harta conțin 22 de sesizări, peste minimul de 20 din fișă.
+  - **Q-005:** tile-uri OpenStreetMap, cu atribuirea vizibilă. **Q-011:** filtrul „Raportată” (Oricând, Ultimele 7 zile, Ultimele 30 de zile, Ultimele 3 luni, Mai vechi de 3 luni). **Q-012:** implicit niciun status ales, deci se văd toate.
+  - **Ton:** cetățenii și vizitatorii văd „termen” („Termen depășit cu N zile lucrătoare”), nu „SLA”; termenul „Termen” a fost adăugat în `CONTEXT.md`.
+  - Mock-urile se deschid prin `python3 -m http.server` din `docs/design/mocks` (notat în `DESIGN.md`).
+  
+  Modificările au fost verificate cu `python3 docs/agents/tools/ledger-lint.py`.

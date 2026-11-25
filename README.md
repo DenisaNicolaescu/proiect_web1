@@ -6,7 +6,7 @@
 ## 1. Prezentare generală
 
 Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home/deny/proiect_web1/docs/brief.md) și a cercetării reale de teren desfășurate în **Cartierul Tineretului, Sibiu**:
-- **Cercetare de teren:** 24 de sesizări reale culese la fața locului (gropi, capace de canal, trotuare surpate, mașini pe trotuar, cabluri electrice expuse, animale fără stăpân) documentate cu coordonate GPS, descrieri și fotografii în [Field.md](file:///home/deny/proiect_web1/Field.md) și [docs/field_photos/](file:///home/deny/proiect_web1/docs/field_photos/).
+- **Cercetare de teren:** 24 de sesizări reale culese la fața locului, dintre care 22 sunt în aria proiectului și intră în seed (#06 și #24 sunt în afara poligonului, D-009) (gropi, capace de canal, trotuare surpate, mașini pe trotuar, cabluri electrice expuse, animale fără stăpân) documentate cu coordonate GPS, descrieri și fotografii în [Field.md](file:///home/deny/proiect_web1/Field.md) și [docs/field_photos/](file:///home/deny/proiect_web1/docs/field_photos/).
 - **Interviuri cu cetățenii:** 5 vecini intervievați din Cartierul Tineretului (Aleea Monet, Str. Viena), evidențiind bariere reale: lipsa de feedback, teama de tensiuni între vecini (necesitatea raportării anonime) și dorința de a susține problemele printr-un simplu vot ([Interview.md](file:///home/deny/proiect_web1/Interview.md)).
 - **Validare administrativă:** Răspunsul oficial al Primăriei Municipiului Sibiu (înregistrat cu nr. **93006/16.11.2026** în [Interview.md](file:///home/deny/proiect_web1/Interview.md)), oferind taxonomia completă de 14 categorii oficiale și intervalul general de intervenție („de la 1–3 zile lucrătoare la 6 luni – 1 an”). SLA-urile pe categorie sunt estimări proprii ale proiectului, încă nevalidate (Q-007).
 
@@ -15,10 +15,12 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 ## 2. Variabilele de proiect (P08)
 
 ### 2.1. Aria cartierului (Neighborhood Polygon)
-- **Delimitare:** Poligon închis ce cuprinde străzile din Cartierul Tineretului documentate în cercetarea de teren (~10 străzi: *Aleea Monet, Str. Viena, Str. Rembrandt, Str. Michelangelo, Str. Orhideelor, Str. Oslo, Str. Klagenfurt, Str. Picasso, Str. Lisabona* etc.) extins cu un buffer de 50–100m.
+- **Delimitare:** Poligon închis ce cuprinde străzile din Cartierul Tineretului documentate în cercetarea de teren (~10 străzi: *Aleea Monet, Str. Viena, Str. Rembrandt, Str. Michelangelo, Str. Orhideelor, Str. Oslo, Str. Klagenfurt, Str. Picasso, Str. Lisabona* etc.), desenat pe geojson.io; aria este exact acest poligon, fără buffer.
 - **Validare strictă:** Poligonul este afișat pe hartă. Orice încercare de raportare sau plasare a pin-ului în afara acestui perimetru este **blocată strict** atât pe client, cât și pe server, afișând mesajul explicit:
   > *"Locația selectată este în afara ariei Cartierului Tineretului"*.
-- **Decizie:** [D-003](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-003--cartierul-tineretului-polygon-boundary-enforcement).
+- **Fișier:** `docs/design/cartier.geojson` — singura sursă a poligonului pentru client, server și seed.
+- **Sesizări în afara ariei:** #06 (0,1 m) și #24 (7,0 m) rămân în Field.md, marcate „în afara ariei proiectului – exclusă din seed”.
+- **Decizie:** [D-009](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-009--neighbourhood-area-is-the-owner-drawn-polygon-without-buffer), care înlocuiește [D-003](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-003--cartierul-tineretului-polygon-boundary-enforcement).
 
 ### 2.2. Taxonomie categorii & Motor de calcul SLA în zile lucrătoare
 - **Categorii oficiale:** Sunt implementate toate cele 14 categorii și subcategoriile aferente comunicate de Primăria Sibiu.
