@@ -10,7 +10,7 @@
 - D-001 · Primary git branch is main
 - D-002 · Full-stack technology stack (Node.js, React, PostgreSQL/PostGIS)
 - D-003 · Cartierul Tineretului polygon boundary enforcement
-- D-004 · 12 Primăria categories and Romanian statutory working-day SLA engine
+- D-004 · 14 Primăria categories and Romanian statutory working-day SLA engine
 - D-005 · Spatial duplicate detection and reversible merge architecture
 - D-006 · Mandatory authentication with public anonymity and anti-spam rate limiting
 
@@ -45,24 +45,24 @@
 - **Evidence:** User approval of D-003 proposal; [Field.md](file:///home/deny/proiect_web1/Field.md); [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L9).
 - **Source:** interview · confidence high
 
-## D-004 · 12 Primăria categories and Romanian statutory working-day SLA engine
+## D-004 · 14 Primăria categories and Romanian statutory working-day SLA engine
 - **Status:** approved
-- **Date:** 2026-11-19
-- **Confirmed:** 2026-11-19
-- **Rule:** The system implements all 12 official categories and their subcategories from Primăria Municipiului Sibiu response no. 93006/16.11.2026. SLAs in working days (ranging from 3 to 30 days) are configured at the main category level and inherited by subcategories. Overdue status is computed algorithmically accounting for Romanian statutory non-working holidays (including Orthodox Easter and Pentecost via Meeus/Jones/Butcher algorithm). Operators cannot manually override the computed SLA deadline.
-- **Why:** Complies with Primăria Sibiu official taxonomy while guaranteeing objective, testable SLA calculation and overdue indicators.
-- **Rejected:** Arbitrary manual operator deadline overrides, calendar-day SLAs without holiday awareness.
-- **Evidence:** User approval of D-004 proposal; [Interview.md](file:///home/deny/proiect_web1/Interview.md#L68-L140); [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L28).
+- **Date:** 2026-11-25
+- **Confirmed:** 2026-11-25
+- **Rule:** The system implements all 14 official categories and their subcategories from Primăria Municipiului Sibiu response no. 93006/16.11.2026; Construcții and Diverse are separate categories. SLAs in working days are the project owner's own estimates, derived from the range Primăria gave ("de la 1–3 zile lucrătoare la 6 luni – 1 an"); Primăria did not communicate them and they are not yet validated (Q-007). Default values: Animale pe domeniu public 3 · Salubritate 3 · Utilități 5 · Trafic auto, semne de circulație și parcări 5 · Fumat în spații interzise 5 · Transport în comun 10 · Angajați în serviciul public 10 · Vandalism 15 · Parcuri și spații verzi 15 · Bicicliști 15 · Protecția Mediului 15 · Străzi și iluminat 30 · Construcții 30 · Diverse 30. The SLA is set on the main category and inherited by its subcategories. An Admin can change a category's SLA from the admin panel; an Operator cannot change an SLA or override a computed deadline. Deadlines and overdue status are computed excluding weekends and Romanian statutory non-working holidays (including Orthodox Easter and Pentecost via the Meeus/Jones/Butcher algorithm).
+- **Why:** Follows Primăria Sibiu's official taxonomy, keeps SLA calculation objective and testable, and states honestly that the SLA values are estimates.
+- **Rejected:** Operator deadline overrides, calendar-day SLAs without holiday awareness, presenting the estimated SLAs as communicated by Primăria.
+- **Evidence:** User approval of the D-004 change (2026-11-25); [Interview.md](file:///home/deny/proiect_web1/Interview.md) (Primăria reply, points 1 and 2); [brief.md](file:///home/deny/proiect_web1/docs/brief.md); Q-007.
 - **Source:** interview · confidence high
 
 ## D-005 · Spatial duplicate detection and reversible merge architecture
 - **Status:** approved
-- **Date:** 2026-11-19
-- **Confirmed:** 2026-11-19
-- **Rule:** Duplicate suggestions trigger at <50m and <30 days in the same category during reporting, presenting a suggestion card while allowing explicit submission. Operators can merge duplicate issues into a primary issue: the merged issue takes status fuzionată with merged_into_id, its pin is hidden from the main map, and comments/photos/followers are aggregated with source badges. Vote records remain untouched, with active votes calculated as COUNT(DISTINCT user_id). Unmerging is fully supported, restoring original vote tallies, comments, followers, and previous status.
+- **Date:** 2026-11-25
+- **Confirmed:** 2026-11-25
+- **Rule:** Duplicate suggestions trigger at <50m and <30 days in the same category during reporting, presenting a suggestion card while allowing explicit submission. Duplicate thresholds are fixed: same main category, under 50 m, within the last 30 calendar days. They are set in the server configuration, not from the user interface; no role, including Admin, can change them from the app. Operators can merge duplicate issues into a primary issue: the merged issue takes status fuzionată with merged_into_id, its pin is hidden from the main map, and comments/photos/followers are aggregated with source badges. Vote records remain untouched, with active votes calculated as COUNT(DISTINCT user_id). Unmerging is fully supported, restoring original vote tallies, comments, followers, and previous status.
 - **Why:** Avoids duplicate clutter on the map, prevents vote destruction, and allows non-destructive rollback of accidental operator merges.
 - **Rejected:** Destructive vote merging (deleting duplicate vote rows), permanent irreversible merging.
-- **Evidence:** User approval of D-005 proposal; [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L16-L28).
+- **Evidence:** User approval of the D-005 change (2026-11-25); User approval of D-005 proposal; [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L16-L28).
 - **Source:** interview · confidence high
 
 ## D-006 · Mandatory authentication with public anonymity and anti-spam rate limiting

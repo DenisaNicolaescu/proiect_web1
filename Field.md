@@ -15,8 +15,8 @@ Descriere: Surpare adâncă a stratului de asfalt exact în jurul unui capac de 
 Fisier foto: docs/field_photos/sesizare_01.heic"
 
 02. Teren viran neîngrijit cu vegetație uscată și moloz depozitat
-Categorie: Parcuri și spații verzi/ Salubritate
-Subcategorie: Spațiu verde neîngrijit/ Deseuri abandonate
+Categorie: Parcuri și spații verzi
+Subcategorie: Spațiu verde neîngrijit
 Locatie: Strada Michelangelo
 Coordonate GPS: 45,81455° N, 24,13427° E
 Data si ora: 15 noiembrie 2026 la ora 12:34
@@ -61,7 +61,7 @@ Fisier foto: docs/field_photos/sesizare_06.heic"
 
 07. Capac de canalizare asfaltat peste și tasat/crăpat în carosabil
 Categorie Principala: Străzi și iluminat
-Subcategorie: Capac canalizare lipsă / defect sau Groapă
+Subcategorie: Capac canalizare lipsă / defect
 Locatie: Strada Orhideelor
 Coordonate GPS: 45,81460° N, 24,13635° E
 Data si ora: 15 noiembrie 2026 la ora 12:39
@@ -69,8 +69,8 @@ Descriere: Capac de canal acoperit aproape complet cu asfalt, unde stratul rutie
 Fisier foto: docs/field_photos/sesizare_07.heic"
 
 08. Teren neîntreținut cu vegetație uscată și grămezi de pietriș aproape de trotuar
-Categorie: Parcuri și spații verzi/ Salubritate
-Subcategorie: Spațiu verde neîngrijit/ Deseuri abandonate
+Categorie: Parcuri și spații verzi
+Subcategorie: Spațiu verde neîngrijit
 Locatie: Strada Orhideelor
 Coordonate GPS: 45,81570° N, 24,13334° E
 Data si ora: 15 noiembrie 2026 la ora 12:43
@@ -106,7 +106,7 @@ Fisier foto: docs/field_photos/sesizare_11.heic"
 
 12. Canal astupat de noroi si adancit in asfalt
 Categorie Principala: Străzi și iluminat
-Subcategorie: Capac canalizare lipsă / defect sau Groapă
+Subcategorie: Capac canalizare lipsă / defect
 Locatie: Intersectia Strada Oslo cu Strada Klagenfurt
 Coordonate GPS: 45,81460° N, 24,13264° E
 Data si ora: 15 noiembrie 2026 la ora 12:48

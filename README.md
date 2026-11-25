@@ -8,7 +8,7 @@
 Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home/deny/proiect_web1/docs/brief.md) și a cercetării reale de teren desfășurate în **Cartierul Tineretului, Sibiu**:
 - **Cercetare de teren:** 24 de sesizări reale culese la fața locului (gropi, capace de canal, trotuare surpate, mașini pe trotuar, cabluri electrice expuse, animale fără stăpân) documentate cu coordonate GPS, descrieri și fotografii în [Field.md](file:///home/deny/proiect_web1/Field.md) și [docs/field_photos/](file:///home/deny/proiect_web1/docs/field_photos/).
 - **Interviuri cu cetățenii:** 5 vecini intervievați din Cartierul Tineretului (Aleea Monet, Str. Viena), evidențiind bariere reale: lipsa de feedback, teama de tensiuni între vecini (necesitatea raportării anonime) și dorința de a susține problemele printr-un simplu vot ([Interview.md](file:///home/deny/proiect_web1/Interview.md)).
-- **Validare administrativă:** Răspunsul oficial al Primăriei Municipiului Sibiu (înregistrat cu nr. **93006/16.11.2026** în [Interview.md](file:///home/deny/proiect_web1/Interview.md)), oferind taxonomia completă de 12 categorii oficiale și termenele reale de intervenție.
+- **Validare administrativă:** Răspunsul oficial al Primăriei Municipiului Sibiu (înregistrat cu nr. **93006/16.11.2026** în [Interview.md](file:///home/deny/proiect_web1/Interview.md)), oferind taxonomia completă de 14 categorii oficiale și intervalul general de intervenție („de la 1–3 zile lucrătoare la 6 luni – 1 an”). SLA-urile pe categorie sunt estimări proprii ale proiectului, încă nevalidate (Q-007).
 
 ---
 
@@ -21,7 +21,8 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 - **Decizie:** [D-003](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-003--cartierul-tineretului-polygon-boundary-enforcement).
 
 ### 2.2. Taxonomie categorii & Motor de calcul SLA în zile lucrătoare
-- **Categorii oficiale:** Sunt implementate toate cele 12 categorii și subcategoriile aferente comunicate de Primăria Sibiu:
+- **Categorii oficiale:** Sunt implementate toate cele 14 categorii și subcategoriile aferente comunicate de Primăria Sibiu.
+- **SLA-uri (estimări proprii):** Valorile de mai jos au fost stabilite de autoare pornind de la intervalul comunicat de Primărie („de la 1–3 zile lucrătoare la 6 luni – 1 an”). Nu sunt comunicate de Primărie și urmează să fie validate cu Primăria sau asociația ([Q-007](file:///home/deny/proiect_web1/docs/agents/OPEN-QUESTIONS.md)).
   1. *Animale pe domeniu public* — **3 zile lucrătoare**
   2. *Salubritate* — **3 zile lucrătoare**
   3. *Utilități (apă, canalizare, gaz, electricitate)* — **5 zile lucrătoare**
@@ -34,14 +35,15 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   10. *Bicicliști* — **15 zile lucrătoare**
   11. *Protecția Mediului* — **15 zile lucrătoare**
   12. *Străzi și iluminat* (gropi, trotuare, iluminat defect) — **30 zile lucrătoare**
-  - *Construcții & Diverse* — **30 zile lucrătoare**
+  13. *Construcții* — **30 zile lucrătoare**
+  14. *Diverse* — **30 zile lucrătoare**
 - **SLA Granularity:** SLA-ul este configurat la nivelul categoriei principale și moștenit de subcategorii.
 - **Calcul zile lucrătoare:** Zilele lucrătoare sunt calculate strict excluzând weekend-urile și sărbătorile legale din România (inclusiv sărbătorile cu dată mobilă: Paștele ortodox și Rusaliile, calculate prin algoritmul Meeus/Jones/Butcher).
-- **Integritate:** Operatorii nu pot suprascrie manual termenul SLA, asigurând indicatori obiectivi de depășire și statistici publice reale.
+- **Integritate:** Adminul poate modifica SLA-ul unei categorii din panoul de administrare. Operatorii nu pot modifica SLA-ul și nu pot suprascrie manual termenul calculat, asigurând indicatori obiectivi de depășire și statistici publice reale.
 - **Decizie:** [D-004](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-004--12-primăria-categories-and-romanian-statutory-working-day-sla-engine).
 
 ### 2.3. Detecție duplicate & Fuziune reversibilă (Twist P08)
-- **Praguri implicite:** Aceeași categorie principală, distanță `< 50 m`, înregistrată în ultimele `30 de zile calendaristice` (ajustabile de Admin din setări).
+- **Praguri fixe:** Aceeași categorie principală, distanță `< 50 m`, înregistrată în ultimele `30 de zile calendaristice`. Pragurile sunt setate în configurarea serverului, nu din interfață.
 - **Flux la raportare:** La detectarea duplicatelor, cetățeanului i se afișează un card de sugestie: *"Există deja o sesizare similară în apropiere — votează-o pentru a crește prioritatea"*, având opțiunea de a vota sesizarea existentă sau de a confirma explicit *"Este o problemă diferită, trimite oricum"*.
 - **Fuziune reversibilă (Operator):**
   - Sesizarea secundară (B) este unită în sesizarea principală (A): statusul lui B devine `fuzionată`, pin-ul lui B este ascuns de pe harta principală pentru a evita aglomerarea, iar pagina lui B afișează un banner cu trimitere către A și opțiunea de unmerge.
@@ -84,7 +86,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 3. **Raportare sesizare nouă (Cetățean):** Încărcare foto cu extragere GPS, poziționare pin pe hartă (cu validare poligon), selecție categorie și subcategorie, descriere, opțiune "Raportează anonim", detecție duplicat live cu card de sugestie.
 4. **Panou de triere operator (Operator):** Coadă de sesizări, schimbare status (`confirmată` → `în lucru` → `rezolvată` / `respinsă`), motiv obligatoriu la respingere, încărcare foto dovadă la rezolvare, interfață de fuziune și desfacere fuziune (unmerge).
 5. **Statistici publice (Public):** Indicatori calculați dinamic: timp mediu de rezolvare per categorie, procent sesizări rezolvate, sesizări depășite de termen, total sesizări pe cartier.
-6. **Panou de administrare (Admin):** Gestionare categorii, subcategorii și SLA-uri în zile lucrătoare, configurare praguri duplicate, gestionare roluri utilizatori (`citizen`, `operator`, `admin`).
+6. **Panou de administrare (Admin):** Gestionare categorii, subcategorii și SLA-uri în zile lucrătoare, gestionare roluri utilizatori (`citizen`, `operator`, `admin`).
 7. **Autentificare (Auth):** Autentificare și înregistrare cont cetățean/operator.
 
 ---
