@@ -13,6 +13,8 @@
 - D-004 · 14 Primăria categories and Romanian statutory working-day SLA engine
 - D-005 · Spatial duplicate detection and reversible merge architecture
 - D-006 · Mandatory authentication with public anonymity and anti-spam rate limiting
+- D-007 · Email confirmation is mandatory at registration
+- D-008 · Account roles are hierarchical
 
 ---
 
@@ -73,4 +75,24 @@
 - **Why:** Protects neighbor privacy (Neighbor #2 V.D.), enforces "one vote per user", and prevents automated spam and vandalism without requiring intrusive CAPTCHAs.
 - **Rejected:** Unauthenticated guest submissions, completely untracked anonymous database records, third-party CAPTCHA challenges.
 - **Evidence:** User approval of D-006 proposal; [Interview.md](file:///home/deny/proiect_web1/Interview.md#L15-L18); [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L12-L24).
+- **Source:** interview · confidence high
+
+## D-007 · Email confirmation is mandatory at registration
+- **Status:** approved
+- **Date:** 2026-11-25
+- **Confirmed:** 2026-11-25
+- **Rule:** A new account must confirm its email address through the link sent at registration. Until it is confirmed, the account can sign in but cannot report, vote, comment or follow. One email address can hold only one account. Confirmation is a state of DS-007 ("Verifică-ți emailul", resend link, expired link), not a separate screen. Extends D-006.
+- **Why:** Anti-spam and "one vote per person": without confirmation, one person could open several accounts and vote several times.
+- **Rejected:** Registration without email confirmation; a separate confirmation screen.
+- **Evidence:** Q-008 answer; user approval of the D-007 proposal (2026-11-25).
+- **Source:** interview · confidence high
+
+## D-008 · Account roles are hierarchical
+- **Status:** approved
+- **Date:** 2026-11-25
+- **Confirmed:** 2026-11-25
+- **Rule:** Account roles are hierarchical: Cetățean < Operator < Admin. Each role can do everything the role below it can. An Operator can do everything a Cetățean does, plus change status, merge and unmerge sesizări. An Admin can do everything an Operator does, plus manage categories, SLAs, users and roles. An account has exactly one role. The Vizitator (unauthenticated) is not an account role.
+- **Why:** One permission level per account is simple to check on the server, and an Admin can triage when no Operator is available.
+- **Rejected:** Separate, non-overlapping roles.
+- **Evidence:** Q-009 answer; user approval of the D-008 proposal (2026-11-25).
 - **Source:** interview · confidence high
