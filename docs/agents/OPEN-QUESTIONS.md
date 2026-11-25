@@ -16,6 +16,8 @@
 - Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation?
 - Q-006 · How do we take screenshots of the app for the design check?
 - Q-007 · Are the per-category SLA values validated by Primăria Sibiu or the neighbourhood association?
+- Q-008 · Is email confirmation required at registration? · _answered_
+- Q-009 · Can an Admin do everything an Operator does, or are the roles separate? · _answered_
 
 ---
 
@@ -67,3 +69,19 @@
 - **Blocks:** final SLA values in the seed and the claim of validated SLAs (the brief's "ideal, validate de cineva de la primărie / asociație"); the SLA engine itself is not blocked
 - **Who answers:** project owner, after contacting Primăria Sibiu or the asociația de proprietari
 - **Context:** The SLA values (3 to 30 working days) are the project owner's own estimates, derived from Primăria's reply no. 93006/16.11.2026, which gives only a range ("de la 1–3 zile lucrătoare la 6 luni – 1 an"). Primăria did not provide per-category deadlines.
+
+## Q-008 · Is email confirmation required at registration?
+- **Status:** answered
+- **Blocks:** registration flow (DS-007), account model
+- **Who answers:** project owner
+- **Answer:** Yes. Email confirmation is mandatory at registration (anti-spam, one vote per person). It is a state of DS-007, not a separate screen.
+- **Date:** 2026-11-25
+- **Recorded as:** D-007
+
+## Q-009 · Can an Admin do everything an Operator does, or are the roles separate?
+- **Status:** answered
+- **Blocks:** role checks on the server, which screens each role sees (DS-004, DS-011, DS-012)
+- **Who answers:** project owner
+- **Answer:** Roles are hierarchical: an Admin can do everything an Operator does.
+- **Date:** 2026-11-25
+- **Recorded as:** D-008

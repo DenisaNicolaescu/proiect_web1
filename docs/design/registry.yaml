@@ -1,53 +1,145 @@
 # docs/design/registry.yaml — every screen and shared component, by DS- ID.
 # Plans, commits, mocks and board files use the ID (tickets don't). kind: foundation | component | screen
-# status: draft (mock drawn) | approved (confirmed on the board) | implemented | deprecated (never delete an entry)
+# status: planned (approved in the screen list, no mock yet) | draft (mock drawn) | approved (confirmed on the board) | implemented | deprecated (never delete an entry)
+# roles: who sees the screen. Roles are hierarchical (D-008): a role also sees the screens of the roles below it.
+#   vizitator (unauthenticated) < cetatean < operator < admin
 
 designs:
+  # ── Public: vizitator and every signed-in role ──────────────────────────────
   - id: DS-001
-    name: Interactive Map & List View
+    name: Map & List
     kind: screen
-    status: draft
+    status: planned
     route: /
-    description: Public split-view civic dashboard with OpenStreetMap canvas, marker clusters, Cartierul Tineretului polygon boundary, category/status/age filter sheet, list view, and CSV/GeoJSON exports.
+    roles: [vizitator]
+    description: Public map with marker clusters and the Cartierul Tineretului polygon, filters by category, status and age, list view, and CSV / GeoJSON export of all public sesizări (the only place with export). On Mobile, map and list are shown one at a time with a toggle.
+    brief: Harta cu clustere, filtre pe categorie / status / vârstă, listă; Export CSV / GeoJSON
 
   - id: DS-002
-    name: Issue Detail & Timeline View
+    name: Sesizare Detail
     kind: screen
-    status: draft
+    status: planned
     route: /issues/:id
-    description: Detailed issue page with before/after photo gallery, map pin, dynamic SLA status countdown badge, "Mă afectează și pe mine" vote action, comment thread, follow toggle, and merged duplicate banner.
+    roles: [vizitator]
+    description: >-
+      Photo gallery (before / after), map pin, status timeline with SLA indicator (remaining / depășit), vote count, comments.
+      One screen with role variants (states in one mock):
+      vizitator — read-only, "Intră în cont ca să votezi" instead of actions;
+      cetatean — "Mă afectează și pe mine" vote, comment, follow;
+      operator — adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
+      fuzionata — banner linking to the primary sesizare.
+    brief: Detaliu per sesizare; vot "mă afectează și pe mine", comentarii, urmărire; indicator de depășire; fuziune
 
+  - id: DS-005
+    name: Public Statistics
+    kind: screen
+    status: planned
+    route: /statistics
+    roles: [vizitator]
+    description: Statistics computed from the data, never hard-coded — average resolution time in working days per category, % resolved, sesizări over SLA, totals. No export here (export lives on DS-001).
+    brief: Pagină publică de statistici (timp mediu de rezolvare, procent rezolvate, pe categorie)
+
+  # ── Authentication: vizitator ───────────────────────────────────────────────
+  - id: DS-007
+    name: Sign In & Register
+    kind: screen
+    status: planned
+    route: /auth/login, /auth/register
+    roles: [vizitator]
+    description: Sign in and registration. Registration always creates a Cetățean account; Operators and Admins are appointed in DS-013. Email confirmation states (D-007) — "Verifică-ți emailul", resend link, link expired, confirmed. Honeypot field (D-006).
+    brief: Indirect — un vot per utilizator; roluri (D-006, D-007)
+
+  - id: DS-008
+    name: Password Reset
+    kind: screen
+    status: planned
+    route: /auth/reset-password
+    roles: [vizitator]
+    description: Two states — request a reset link by email; set a new password from the link (including link expired).
+    brief: Not in the brief
+
+  # ── Cetățean ────────────────────────────────────────────────────────────────
   - id: DS-003
-    name: Report Civic Issue View
+    name: Report a Sesizare
     kind: screen
     status: draft
     route: /report
-    description: Citizen reporting flow with photo upload, server-side EXIF GPS auto-fill, map pin picker with strict polygon validation, category/subcategory selection, "Raportează anonim" toggle, and live duplicate suggestion card.
+    roles: [cetatean]
+    description: Photo upload with EXIF GPS suggestion, map pin with strict polygon validation (D-003), category / subcategory, description, "Raportează anonim", live duplicate card "există deja, votează-o" (D-005).
+    brief: Raportare (categorie, descriere, poză, locație, opțional anonim); detecție de duplicate la raportare
 
+  - id: DS-009
+    name: My Sesizări
+    kind: screen
+    status: planned
+    route: /me/reports
+    roles: [cetatean]
+    description: Two tabs — "Raportate de mine" and "Urmărite" — each sesizare with its status and SLA.
+    brief: Urmărire (notificare la schimbare de status); "Raportate de mine" is not explicitly in the brief
+
+  - id: DS-010
+    name: Profile & Notifications
+    kind: screen
+    status: planned
+    route: /me/profile
+    roles: [cetatean]
+    description: Minimal — name, password change, one switch for notification emails. The unsubscribe link in DS-014 leads here.
+    brief: Notificări prin email; the profile itself is not in the brief
+
+  - id: DS-014
+    name: Grouped Notification Email
+    kind: screen
+    status: planned
+    route: email
+    roles: [cetatean]
+    description: One email that groups several status changes of followed sesizări (up to 10 changes in 5 minutes), each with sesizare, old → new status and a link to DS-002; unsubscribe link to DS-010.
+    brief: Notificări prin email la schimbări de status, din job, cu grupare
+
+  # ── Operator ────────────────────────────────────────────────────────────────
   - id: DS-004
-    name: Operator Triage Dashboard
+    name: Triage Queue
     kind: screen
-    status: draft
+    status: planned
     route: /operator/triage
-    description: Operator queue with SLA urgency filters, status transition modal (rejection reason or resolution photo upload), and reversible duplicate merge/unmerge management dialog.
+    roles: [operator]
+    description: Queue of sesizări ordered by SLA (remaining / depășit), with filters; opens DS-002. Status change and merge happen in DS-011 and DS-012.
+    brief: Un operator poate tria o săptămână de sesizări doar din aplicație; termene (SLA) cu indicator de depășire
 
-  - id: DS-005
-    name: Public Statistics & SLA Transparency
+  - id: DS-011
+    name: Status Change Dialog
     kind: screen
-    status: draft
-    route: /statistics
-    description: Public neighborhood performance analytics dynamically computed: average resolution time in working days per category, % resolved, SLA overdue counts, and public CSV/GeoJSON exports.
+    status: planned
+    route: dialog (from DS-004 and DS-002)
+    roles: [operator]
+    description: Moves a sesizare nouă → confirmată → în lucru → rezolvată / respinsă; reason required to reject, photo required to resolve; validation and error states.
+    brief: Workflow de status, cu motiv la respingere și poză la rezolvare; doar operatorii schimbă statusul
 
+  - id: DS-012
+    name: Merge & Unmerge Dialog
+    kind: screen
+    status: planned
+    route: dialog (from DS-002)
+    roles: [operator]
+    description: >-
+      Merge — opened from the "Posibile duplicate" section of the operator panel on DS-002; pick the primary sesizare, preview the effect (unique votes as COUNT(DISTINCT user_id), comments, followers), confirm.
+      Unmerge — opened from the merge history of the primary sesizare on DS-002; preview what returns to the secondary sesizare (votes, comments, followers, previous status), confirm (D-005).
+    brief: Operatorul poate uni două sesizări păstrând voturile și comentariile; fuziunea e reversibilă
+
+  # ── Admin ───────────────────────────────────────────────────────────────────
   - id: DS-006
-    name: Admin Management Panel
+    name: Categories & SLA
     kind: screen
-    status: draft
-    route: /admin
-    description: Administrative control panel for editing the 14 categories and subcategories, configuring working-day SLAs, and assigning user roles.
+    status: planned
+    route: /admin/categories
+    roles: [admin]
+    description: Edit the 14 categories and their subcategories, and the SLA in working days of each main category (D-004). Duplicate thresholds are not here — they are fixed in server configuration (D-005).
+    brief: Roluri — admin (categorii, SLA-uri)
 
-  - id: DS-007
-    name: Authentication Views (Login & Register)
+  - id: DS-013
+    name: Users & Roles
     kind: screen
-    status: draft
-    route: /auth/login, /auth/register
-    description: Sign-in and account registration screens with role-based routing, diacritic support, and frictionless honeypot anti-spam protection.
+    status: planned
+    route: /admin/users
+    roles: [admin]
+    description: Search users and set each account's single role — cetatean, operator or admin (D-008).
+    brief: Roluri — admin (utilizatori)

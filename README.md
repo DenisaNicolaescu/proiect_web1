@@ -55,6 +55,8 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 ### 2.4. Autentificare, Confidențialitate (Raportare Anonimă) & Anti-Spam
 - **Autentificare obligatorie:** Toate acțiunile cu impact (raportare, vot, comentarii, abonare notificări) necesită cont autentificat (`user_id`).
 - **Raportare opțional anonimă:** La raportare, cetățeanul poate bifa *"Raportează anonim"*. Numele și emailul său sunt ascunse complet de pe hartă, detaliul sesizării și exporturile publice (afișat ca *"Cetățean anonim"*), protejând intimitatea vecinilor (solicitare Neighbor #2 V.D.), în timp ce sistemul păstrează identificatorul intern pentru responsabilitate și anti-spam.
+- **Confirmarea emailului:** Obligatorie la înregistrare. Până la confirmare, contul se poate autentifica, dar nu poate raporta, vota, comenta sau urmări. O adresă de email are un singur cont ([D-007](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md)).
+- **Roluri ierarhice:** Cetățean < Operator < Admin; fiecare rol poate face tot ce face rolul de sub el. Vizitatorul (nelogat) doar vizualizează și nu este un rol de cont ([D-008](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md)).
 - **Un vot per utilizator:** Garantat prin constrângere unică pe `(issue_id, user_id)`.
 - **Rate limiting anti-spam:**
   - Raportare: maximum 5 sesizări / 10 minute per utilizator / IP.
@@ -81,13 +83,13 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 
 ## 4. Ecrane (Views)
 
-1. **Hartă interactivă & Listă (Public):** Clustere de sesizări, conturul poligonului Cartierul Tineretului, filtre după categorie, status, vechime; butoane de export public CSV și GeoJSON.
-2. **Detaliu sesizare (Public):** Galerie foto (înainte/după), pin hartă, cronologie statusuri cu indicator SLA (rămas / depășit), număr voturi, buton "Mă afectează și pe mine", comentarii, urmărire status.
-3. **Raportare sesizare nouă (Cetățean):** Încărcare foto cu extragere GPS, poziționare pin pe hartă (cu validare poligon), selecție categorie și subcategorie, descriere, opțiune "Raportează anonim", detecție duplicat live cu card de sugestie.
-4. **Panou de triere operator (Operator):** Coadă de sesizări, schimbare status (`confirmată` → `în lucru` → `rezolvată` / `respinsă`), motiv obligatoriu la respingere, încărcare foto dovadă la rezolvare, interfață de fuziune și desfacere fuziune (unmerge).
-5. **Statistici publice (Public):** Indicatori calculați dinamic: timp mediu de rezolvare per categorie, procent sesizări rezolvate, sesizări depășite de termen, total sesizări pe cartier.
-6. **Panou de administrare (Admin):** Gestionare categorii, subcategorii și SLA-uri în zile lucrătoare, gestionare roluri utilizatori (`citizen`, `operator`, `admin`).
-7. **Autentificare (Auth):** Autentificare și înregistrare cont cetățean/operator.
+Lista completă, cu ID-uri DS-, este în [docs/design/registry.yaml](file:///home/deny/proiect_web1/docs/design/registry.yaml). Fiecare rol vede și ecranele rolurilor de sub el (D-008).
+
+- **Public (Vizitator):** DS-001 Hartă și listă (filtre, clustere, export CSV / GeoJSON) · DS-002 Detaliu sesizare (cu variante pe roluri) · DS-005 Statistici publice.
+- **Autentificare (Vizitator):** DS-007 Autentificare și înregistrare (cu confirmarea emailului) · DS-008 Resetare parolă.
+- **Cetățean:** DS-003 Raportare (cu sugestia „există deja, votează-o”) · DS-009 Sesizările mele (raportate și urmărite) · DS-010 Profil și notificări · DS-014 Emailul de notificare grupată.
+- **Operator:** DS-004 Coada de triaj · DS-011 Schimbare status · DS-012 Unire și anulare unire; panoul operatorului din DS-002.
+- **Admin:** DS-006 Categorii și SLA · DS-013 Utilizatori și roluri.
 
 ---
 
