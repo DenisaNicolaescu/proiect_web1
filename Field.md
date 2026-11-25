@@ -58,6 +58,8 @@ Coordonate GPS: 45,81454° N, 24,13652° E
 Data si ora: 15 noiembrie 2026 la ora 12:39
 Descriere: Autoturism urcat cu două roți pe trotuar într-o zonă îngustă, reducând spațiul de trecere pentru pietoni și cărucioare.
 Fisier foto: docs/field_photos/sesizare_06.heic"
+Status proiect: în afara ariei proiectului – exclusă din seed (0,1 m în afara poligonului din docs/design/cartier.geojson; D-009)
+Miniatură fără EXIF: docs/field_photos/sesizare_06.jpg
 
 07. Capac de canalizare asfaltat peste și tasat/crăpat în carosabil
 Categorie Principala: Străzi și iluminat
@@ -222,5 +224,7 @@ Coordonate GPS: 45,81709° N, 24,13252° E
 Data si ora: 15 noiembrie 2026 la ora 13:06
 Descriere: Vehicul comercial de transport auto (platformă cu remorcă) parcat pe marginea carosabilului, îngustând semnificativ banda de circulație pe o stradă cu dublu sens.
 Fisier foto: docs/field_photos/sesizare_24.heic"
+Status proiect: în afara ariei proiectului – exclusă din seed (7,0 m în afara poligonului din docs/design/cartier.geojson; D-009)
+Miniatură fără EXIF: docs/field_photos/sesizare_24.jpg
 
 

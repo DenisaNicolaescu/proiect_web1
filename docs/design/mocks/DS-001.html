@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- OSM tiles need a Referer: state the policy, so a browser default of no-referrer does not block them -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>DS-001 · Hartă și listă (Cartierul Tineretului, Sibiu) · draft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Map: Leaflet (D-002) with OpenStreetMap tiles (Q-005) and marker clusters -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+  <style>
+    /* ── Design tokens: docs/design/DESIGN.md (values copied 1:1) ─────────────
+       Light values are also declared on [data-theme="light"], so the map layer
+       (data-theme="light" in both themes) keeps the light values of pins,
+       clusters and the polygon, as the project guardrail requires. */
+    :root, [data-theme="light"] {
+      --color-bg: #f8fafc;
+      --color-surface: #ffffff;
+      --color-surface-elevated: #f1f5f9;
+      --color-border: #e2e8f0;
+      --color-border-subtle: #f1f5f9;
+      --color-border-input: #64748b;
+      --color-text: #0f172a;
+      --color-text-muted: #44526a;
+      --color-primary: #1e40af;
+      --color-primary-hover: #1e3a8a;
+      --color-on-primary: #ffffff;
+      --color-primary-subtle: #eff6ff;
+      --color-focus: #1e40af;
+      --color-status-noua: #0369a1;
+      --color-status-noua-bg: #e0f2fe;
+      --color-status-confirmata: #6d28d9;
+      --color-status-confirmata-bg: #ede9fe;
+      --color-status-in-lucru: #92400e;
+      --color-status-in-lucru-bg: #fef3c7;
+      --color-status-rezolvata: #047857;
+      --color-status-rezolvata-bg: #d1fae5;
+      --color-status-respinsa: #334155;
+      --color-status-respinsa-bg: #e2e8f0;
+      --color-status-fuzionata: #475569;
+      --color-status-fuzionata-bg: #f1f5f9;
+      --color-success: #047857;
+      --color-success-bg: #d1fae5;
+      --color-danger: #b91c1c;
+      --color-danger-bg: #fee2e2;
+    }
+    [data-theme="dark"] {
+      --color-bg: #0b0f19;
+      --color-surface: #151c2c;
+      --color-surface-elevated: #1e293b;
+      --color-border: #253248;
+      --color-border-subtle: #1b2436;
+      --color-border-input: #7c8ba1;
+      --color-text: #f8fafc;
+      --color-text-muted: #a3b1c6;
+      --color-primary: #60a5fa;
+      --color-primary-hover: #93c5fd;
+      --color-on-primary: #0b0f19;
+      --color-primary-subtle: #172554;
+      --color-focus: #93c5fd;
+      --color-status-noua: #7dd3fc;
+      --color-status-noua-bg: #0c2d48;
+      --color-status-confirmata: #c4b5fd;
+      --color-status-confirmata-bg: #2e1065;
+      --color-status-in-lucru: #fcd34d;
+      --color-status-in-lucru-bg: #422006;
+      --color-status-rezolvata: #6ee7b7;
+      --color-status-rezolvata-bg: #052e2b;
+      --color-status-respinsa: #e2e8f0;
+      --color-status-respinsa-bg: #334155;
+      --color-status-fuzionata: #a3b1c6;
+      --color-status-fuzionata-bg: #1e293b;
+      --color-success: #6ee7b7;
+      --color-success-bg: #052e2b;
+      --color-danger: #fca5a5;
+      --color-danger-bg: #450a0a;
+    }
+    :root {
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-numeric: tabular-nums;
+      --text-xs: 12px;   --lh-xs: 16px;
+      --text-sm: 14px;   --lh-sm: 20px;
+      --text-base: 16px; --lh-base: 24px;
+      --text-lg: 18px;   --lh-lg: 28px;
+      --text-xl: 24px;   --lh-xl: 32px;
+      --text-2xl: 30px;  --lh-2xl: 36px;
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+      --space-6: 24px; --space-8: 32px; --size-touch: 44px;
+      --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+
+      /* MOCK ONLY, not tokens: device frames. */
+      --mock-phone-w: 375px;  --mock-phone-h: 760px;
+      --mock-desk-w: 1280px;  --mock-desk-h: 800px;
+    }
+
+    /* ── Base ─────────────────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans); font-size: var(--text-base); line-height: var(--lh-base);
+      background: var(--color-bg); color: var(--color-text);
+    }
+    button, select, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--color-primary); }
+    :focus-visible { outline: calc(var(--space-1) / 2) solid var(--color-focus); outline-offset: calc(var(--space-1) / 2); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .i { width: var(--space-4); height: var(--space-4); flex: none; stroke: currentColor; fill: none;
+         stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .i-lg { width: var(--space-6); height: var(--space-6); }
+    .i-xl { width: var(--space-8); height: var(--space-8); }
+    .mono { font-family: var(--font-mono); }
+    .num { font-variant-numeric: var(--font-numeric); }
+    .muted { color: var(--color-text-muted); }
+
+    /* ── Mock chrome (not part of the screen) ─────────────────────────────── */
+    .mock-bar {
+      position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-6);
+      align-items: center; padding: var(--space-3) var(--space-6);
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
+    }
+    .mock-id { font-family: var(--font-mono); font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600;
+      color: var(--color-primary); background: var(--color-primary-subtle); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+    .mock-draft { font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-text-muted);
+      border: 1px solid var(--color-border-input); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+    .mock-group { display: flex; align-items: center; gap: var(--space-2); }
+    .mock-group > span { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); font-weight: 500; }
+    .seg { display: inline-flex; border: 1px solid var(--color-border-input); border-radius: var(--radius-md); overflow: hidden; }
+    .seg button { min-height: var(--size-touch); padding: 0 var(--space-3); border: 0; background: var(--color-surface);
+      font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; display: inline-flex; align-items: center; gap: var(--space-2); }
+    .seg button + button { border-left: 1px solid var(--color-border-input); }
+    .seg button[aria-pressed="true"] { background: var(--color-primary); color: var(--color-on-primary); }
+    .stage { display: flex; flex-wrap: wrap; gap: var(--space-8); padding: var(--space-8) var(--space-6); align-items: flex-start; justify-content: center; }
+    .frame { flex: none; border: 1px solid var(--color-border); border-radius: var(--radius-xl); overflow: hidden;
+      box-shadow: var(--shadow-lg); background: var(--color-bg); position: relative; }
+    .frame[data-size="phone"] { width: var(--mock-phone-w); height: var(--mock-phone-h); }
+    .frame[data-size="desktop"] { width: var(--mock-desk-w); height: var(--mock-desk-h); }
+    .frame-scroll { max-width: 100%; overflow-x: auto; padding-bottom: var(--space-2); }
+    .notes { flex: 1 1 calc(var(--space-8) * 10); max-width: calc(var(--space-8) * 16); font-size: var(--text-sm); line-height: var(--lh-sm);
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); }
+    .notes h2 { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; margin-bottom: var(--space-2); }
+    .notes h3 { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 600; margin: var(--space-4) 0 var(--space-1); }
+    .notes ul { padding-left: var(--space-4); display: grid; gap: var(--space-1); }
+
+    /* ── App shell ────────────────────────────────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100%; color: var(--color-text); }
+    .appbar { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-2) var(--space-4);
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border); min-height: calc(var(--size-touch) + var(--space-4)); }
+    .appbar { container-type: inline-size; }
+    @container (max-width: 340px) { .triage-label { display: none; } .triage { padding: 0; width: var(--size-touch); } }
+    .brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; flex: 1 1 auto; }
+    .brand-mark { width: var(--size-touch); height: var(--size-touch); border-radius: var(--radius-md); flex: none;
+      display: grid; place-items: center; background: var(--color-primary-subtle); color: var(--color-primary); }
+    .brand-text { min-width: 0; }
+    .brand-name { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-sub { font-size: var(--text-xs); line-height: var(--lh-xs); color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav { display: flex; gap: var(--space-1); }
+    .nav a { min-height: var(--size-touch); display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3);
+      border-radius: var(--radius-md); color: var(--color-text-muted); text-decoration: none; font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .nav a:hover { color: var(--color-text); background: var(--color-surface-elevated); }
+    .nav a[aria-current="page"] { color: var(--color-primary); background: var(--color-primary-subtle); font-weight: 600; }
+    .actions { display: flex; align-items: center; gap: var(--space-2); flex: none; }
+
+    .btn { min-height: var(--size-touch); min-width: var(--size-touch); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+      padding: 0 var(--space-4); border-radius: var(--radius-md); font-size: var(--text-base); line-height: var(--lh-base); font-weight: 500;
+      border: 1px solid transparent; text-decoration: none; white-space: nowrap; }
+    .btn-primary { background: var(--color-primary); color: var(--color-on-primary); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-secondary { background: var(--color-surface); color: var(--color-text); border-color: var(--color-border-input); }
+    .btn-secondary:hover { background: var(--color-surface-elevated); }
+    .btn-ghost { background: transparent; color: var(--color-primary); }
+    .btn-ghost:hover { background: var(--color-primary-subtle); }
+    .btn-icon { padding: 0; width: var(--size-touch); }
+    .btn-sm { font-size: var(--text-sm); line-height: var(--lh-sm); padding: 0 var(--space-3); }
+    .btn:disabled { opacity: 1; background: var(--color-surface-elevated); color: var(--color-text-muted); border-color: var(--color-border); cursor: not-allowed; }
+    .avatar { width: var(--size-touch); height: var(--size-touch); border-radius: var(--radius-full); border: 1px solid var(--color-border-input);
+      background: var(--color-surface-elevated); color: var(--color-text); display: grid; place-items: center; }
+
+    .body { flex: 1; min-height: 0; display: flex; position: relative; }
+    .frame[data-size="desktop"] .body { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+
+    /* ── List pane ────────────────────────────────────────────────────────── */
+    .listpane { display: flex; flex-direction: column; min-height: 0; min-width: 0; flex: 1; background: var(--color-surface); }
+    .frame[data-size="desktop"] .listpane { border-right: 1px solid var(--color-border); }
+    .listhead { padding: var(--space-4) var(--space-6) var(--space-3); }
+    .frame[data-size="phone"] .listhead { padding: var(--space-4) var(--space-4) var(--space-2); }
+    .listhead h1 { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+    .listhead h2 { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; }
+    .listhead p { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--space-6) var(--space-4); }
+    .frame[data-size="phone"] .scroll { padding: 0 var(--space-4) calc(var(--size-touch) + var(--space-8)); }
+
+    .filters { display: grid; gap: var(--space-3); padding: 0 var(--space-6) var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .filters .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+    .field { display: grid; gap: var(--space-1); min-width: 0; }
+    .field > span, .field legend { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; color: var(--color-text-muted); }
+    fieldset.field { border: 0; }
+    .select { min-height: var(--size-touch); width: 100%; min-width: 0; padding: 0 var(--space-3); border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-input); background: var(--color-surface); font-size: var(--text-sm); line-height: var(--lh-sm);
+      text-overflow: ellipsis; }
+    .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .chip { min-height: var(--size-touch); display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3);
+      border-radius: var(--radius-md); border: 1px solid var(--color-border-input); background: var(--color-surface);
+      font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; color: var(--color-text-muted); }
+    .chip[aria-pressed="true"] { color: var(--sc); background: var(--sbg); border-color: var(--sc); font-weight: 600; }
+    .chip .check { display: none; }
+    .chip[aria-pressed="true"] .check { display: inline-flex; }
+    .active-filters { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-bottom: var(--space-3); }
+    .active-filters > span { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .chip-rm { min-height: var(--size-touch); display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-2) 0 var(--space-3);
+      border-radius: var(--radius-full); border: 1px solid var(--color-primary); background: var(--color-primary-subtle); color: var(--color-primary);
+      font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+
+    /* Badges: status bg + 1 px border in the status color + icon + name */
+    .badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); min-height: calc(var(--lh-xs) + var(--space-2));
+      border-radius: var(--radius-sm); border: 1px solid var(--sc); background: var(--sbg); color: var(--sc);
+      font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; white-space: nowrap; }
+    .badge .i { width: var(--space-3); height: var(--space-3); stroke-width: 2.5; }
+    .badge-danger { --sc: var(--color-danger); --sbg: var(--color-danger-bg); white-space: normal; }
+    .st-noua { --sc: var(--color-status-noua); --sbg: var(--color-status-noua-bg); }
+    .st-confirmata { --sc: var(--color-status-confirmata); --sbg: var(--color-status-confirmata-bg); }
+    .st-in-lucru { --sc: var(--color-status-in-lucru); --sbg: var(--color-status-in-lucru-bg); }
+    .st-rezolvata { --sc: var(--color-status-rezolvata); --sbg: var(--color-status-rezolvata-bg); }
+    .st-respinsa { --sc: var(--color-status-respinsa); --sbg: var(--color-status-respinsa-bg); }
+    .st-fuzionata { --sc: var(--color-status-fuzionata); --sbg: var(--color-status-fuzionata-bg); }
+    .sla-ok { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); line-height: var(--lh-xs);
+      font-weight: 500; color: var(--color-text-muted); }
+    .sla-ok .i { width: var(--space-3); height: var(--space-3); }
+
+    /* Cards */
+    .cards { list-style: none; display: grid; gap: var(--space-3); }
+    .card { display: flex; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); text-decoration: none; color: inherit;
+      background: var(--color-surface); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
+    .card:hover { box-shadow: var(--shadow-md); border-color: var(--color-border-input); }
+    .card[aria-current="true"] { border-color: var(--color-primary); background: var(--color-primary-subtle); }
+    .thumb { width: calc(var(--space-8) * 2); height: calc(var(--space-8) * 2); flex: none; border-radius: var(--radius-md); overflow: hidden;
+      background: var(--color-surface-elevated); color: var(--color-text-muted); display: grid; place-items: center; }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* No photo yet: a placeholder shaped like a photo (sky, ground, image icon) */
+    .thumb-ph { background: linear-gradient(to bottom, var(--color-status-noua-bg) 55%, var(--color-border) 55%); color: var(--color-text-muted); }
+    .card-body { min-width: 0; flex: 1; display: grid; gap: var(--space-1); }
+    .card-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+    .card-id { font-family: var(--font-mono); font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-text-muted); }
+    .card-title { font-size: var(--text-base); line-height: var(--lh-base); font-weight: 600;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+    .meta { display: flex; align-items: flex-start; gap: var(--space-1); font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .meta .i { width: var(--space-4); height: var(--lh-sm); }
+    .meta span { min-width: 0; overflow-wrap: anywhere; }
+    .card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-3); align-items: center; }
+
+    /* Skeleton (static: DESIGN.md has no duration tokens, so no shimmer) */
+    .sk { background: var(--color-surface-elevated); border-radius: var(--radius-sm); height: var(--space-3); }
+    .sk-card { display: flex; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+    .sk-lines { flex: 1; display: grid; gap: var(--space-2); align-content: start; }
+
+    /* Messages */
+    .msg { display: grid; gap: var(--space-3); justify-items: start; padding: var(--space-4); border-radius: var(--radius-lg); }
+    .msg-title { display: flex; gap: var(--space-2); align-items: flex-start; font-weight: 600; }
+    .msg p { font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .msg-error { background: var(--color-danger-bg); border: 1px solid var(--color-danger); color: var(--color-text); }
+    .msg-error .msg-title { color: var(--color-danger); }
+    .msg-empty { border: 1px dashed var(--color-border-input); background: var(--color-surface); justify-items: center; text-align: center; padding: var(--space-6) var(--space-4); }
+    .msg-empty .ico { width: calc(var(--space-8) + var(--space-4)); height: calc(var(--space-8) + var(--space-4)); border-radius: var(--radius-full);
+      background: var(--color-surface-elevated); color: var(--color-text-muted); display: grid; place-items: center; }
+    .msg-empty .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
+    .loading-note { display: flex; gap: var(--space-2); align-items: center; font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); margin-bottom: var(--space-3); }
+
+    .export { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-3);
+      padding: var(--space-3) var(--space-6); border-top: 1px solid var(--color-border); background: var(--color-surface); }
+    .export p { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .export .btns { display: flex; gap: var(--space-2); }
+    .export-inline { margin-top: var(--space-6); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); display: grid; gap: var(--space-3); }
+    .export-inline p { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .export-inline .btns { display: flex; gap: var(--space-2); }
+
+    /* Phone toolbar */
+    .toolbar { display: flex; gap: var(--space-2); padding: var(--space-2) var(--space-4); background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
+    .toolbar .seg { flex: 1; }
+    .toolbar .seg button { flex: 1; justify-content: center; font-size: var(--text-base); line-height: var(--lh-base); }
+    .count-dot { min-width: var(--space-6); height: var(--space-6); padding: 0 var(--space-1); border-radius: var(--radius-full);
+      background: var(--color-primary); color: var(--color-on-primary); font-size: var(--text-xs); line-height: var(--space-6); font-weight: 600; text-align: center; }
+
+    /* ── Map ──────────────────────────────────────────────────────────────── */
+    .mapwrap { position: relative; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+    #map-slot { position: absolute; inset: 0; }
+    /* Leaflet host: light-scoped (the map stays light in dark mode); z-index 0 keeps Leaflet's panes under the overlays */
+    .leaflet-host { position: absolute; inset: 0; z-index: 0; color: var(--color-text); font-family: var(--font-sans); }
+    .leaflet-host .leaflet-control-attribution { font-size: var(--text-xs); line-height: var(--lh-xs); }
+    .area { stroke: var(--color-primary); stroke-width: 3; stroke-dasharray: 8 6; fill: var(--color-primary); fill-opacity: 0.06; }
+    .pin-icon, .cluster-icon { display: grid; place-items: center; background: none; border: 0; border-radius: var(--radius-full); }
+    .pin { width: var(--space-8); height: var(--space-8); border-radius: var(--radius-full); display: grid; place-items: center;
+      background: var(--sc); color: var(--color-on-primary); border: calc(var(--space-1) / 2) solid var(--color-surface); box-shadow: var(--shadow-md); position: relative; }
+    .pin .i { width: var(--space-4); height: var(--space-4); }
+    .pin.is-selected { outline: calc(var(--space-1) / 2) solid var(--sc); outline-offset: calc(var(--space-1) / 2); transform: scale(1.15); }
+    .pin-late { position: absolute; top: calc(var(--space-1) * -2); right: calc(var(--space-1) * -2); width: var(--space-4); height: var(--space-4);
+      border-radius: var(--radius-full); background: var(--color-danger); color: var(--color-on-primary); display: grid; place-items: center;
+      border: 1px solid var(--color-surface); }
+    .pin-late .i { width: var(--space-3); height: var(--space-3); stroke-width: 3; }
+    .cluster { min-width: var(--size-touch); height: var(--size-touch); padding: 0 var(--space-2); border-radius: var(--radius-full);
+      background: var(--color-primary); color: var(--color-on-primary); font-weight: 700; font-size: var(--text-sm); line-height: var(--lh-sm);
+      font-variant-numeric: var(--font-numeric); display: grid; place-items: center;
+      box-shadow: 0 0 0 var(--space-1) var(--color-primary-subtle), var(--shadow-md); border: calc(var(--space-1) / 2) solid var(--color-surface); }
+
+    .mapctl { position: absolute; top: var(--space-3); right: var(--space-3); display: grid; gap: var(--space-2); z-index: 3; }
+    .ctl-stack { display: grid; background: var(--color-surface-elevated); border: 1px solid var(--color-border-input); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md); overflow: hidden; }
+    .ctl-stack button { width: var(--size-touch); height: var(--size-touch); border: 0; background: transparent; display: grid; place-items: center; color: var(--color-text); }
+    .ctl-stack button + button { border-top: 1px solid var(--color-border-input); }
+    .ctl-stack button:hover { background: var(--color-surface); }
+    .map-float { position: absolute; z-index: 3; background: var(--color-surface-elevated); border: 1px solid var(--color-border-input);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+    .legend-btn { left: var(--space-3); top: var(--space-3); min-height: var(--size-touch); padding: 0 var(--space-3);
+      display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .legend { left: var(--space-3); top: calc(var(--size-touch) + var(--space-4)); padding: var(--space-3); display: grid; gap: var(--space-2);
+      font-size: var(--text-xs); line-height: var(--lh-xs); }
+    .legend h3 { font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-text-muted); }
+    .legend-row { display: flex; align-items: center; gap: var(--space-2); font-weight: 500; }
+    .legend .pin { width: var(--space-6); height: var(--space-6); box-shadow: none; }
+    .legend .pin .i { width: var(--space-3); height: var(--space-3); }
+    .legend-cluster { min-width: var(--space-6); height: var(--space-6); font-size: var(--text-xs); line-height: var(--lh-xs); box-shadow: none; border: 0; padding: 0; }
+    .legend-area { color: var(--color-primary); display: grid; place-items: center; width: var(--space-6); }
+
+    .map-status { position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      display: inline-flex; gap: var(--space-2); align-items: center; padding: var(--space-3) var(--space-4); border-radius: var(--radius-full);
+      background: var(--color-surface-elevated); border: 1px solid var(--color-border-input); box-shadow: var(--shadow-lg); font-weight: 500; white-space: nowrap; }
+    .map-banner { position: absolute; z-index: 4; left: var(--space-3); right: calc(var(--size-touch) + var(--space-6)); top: var(--space-3); box-shadow: var(--shadow-lg); }
+    .map-note { position: absolute; z-index: 4; left: 50%; top: var(--space-3); transform: translateX(-50%);
+      display: inline-flex; gap: var(--space-2); align-items: center; padding: var(--space-2) var(--space-3); border-radius: var(--radius-full);
+      background: var(--color-surface-elevated); border: 1px solid var(--color-border-input); box-shadow: var(--shadow-md);
+      font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; white-space: nowrap; }
+    .map-note-error { color: var(--color-danger); background: var(--color-danger-bg); border-color: var(--color-danger); }
+    .map-empty { position: absolute; z-index: 4; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(calc(100% - var(--space-8)), calc(var(--space-8) * 10));
+      box-shadow: var(--shadow-lg); }
+
+    .popup { position: absolute; z-index: 5; width: calc(var(--space-8) * 9); background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border-input); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: var(--space-3); display: grid; gap: var(--space-2); }
+    .popup-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+    .popup-top { flex: 1; align-self: center; }
+    .popup .close { width: var(--size-touch); height: var(--size-touch); margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0; border: 0; background: transparent; border-radius: var(--radius-md);
+      display: grid; place-items: center; color: var(--color-text-muted); flex: none; }
+    .popup .close:hover { background: var(--color-surface); color: var(--color-text); }
+    .popup h3 { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; overflow-wrap: anywhere; }
+
+    .bottom-stack { position: absolute; z-index: 6; left: var(--space-3); right: var(--space-3); bottom: var(--space-3); display: grid; gap: var(--space-3); justify-items: end; }
+    .bottom-stack .popup { position: static; width: 100%; }
+    .bottom-stack.over-map { bottom: var(--space-6); } /* keeps the OSM attribution visible */
+    .fab { min-height: calc(var(--size-touch) + var(--space-2)); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 0 var(--space-4);
+      font-weight: 600; }
+
+    /* Phone filter sheet */
+    .scrim { position: absolute; inset: 0; z-index: 20; background: var(--color-text); opacity: 0.4; }
+    .sheet { position: absolute; z-index: 21; left: 0; right: 0; bottom: 0; max-height: 85%; display: flex; flex-direction: column;
+      background: var(--color-surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: var(--shadow-lg); }
+    .sheet-head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); border-bottom: 1px solid var(--color-border); }
+    .sheet-head h2 { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+    .sheet-body { overflow-y: auto; padding: var(--space-4); display: grid; gap: var(--space-4); }
+    .sheet-foot { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Icon sprite (stroke icons, currentColor) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-noua" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="i-confirmata" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-in-lucru" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-check-square" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><polyline points="17 9 10.5 15.5 7 12"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+    <symbol id="i-rezolvata" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-respinsa" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></symbol>
+    <symbol id="i-fuzionata" viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-excl" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="13"/><line x1="12" y1="19" x2="12.01" y2="19"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="1" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="23"/><line x1="1" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="23" y2="12"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-login" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-votes" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.17a2 2 0 0 0-.59-1.42L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22"/><path d="M7 2v4.17a2 2 0 0 0 .59 1.42L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/></symbol>
+    <symbol id="i-triage" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-area" viewBox="0 0 24 24"><polygon points="3 7 12 3 21 8 20 18 9 21 3 15" stroke-dasharray="3 2"/></symbol>
+  </svg>
+
+  <!-- Mock controls (not part of the screen) -->
+  <header class="mock-bar" aria-label="Comenzi mock">
+    <div class="mock-group">
+      <span class="mock-id">DS-001</span>
+      <strong>Hartă și listă</strong>
+      <span class="mock-draft">draft</span>
+    </div>
+    <div class="mock-group"><span>Stare</span>
+      <div class="seg" data-ctl="state">
+        <button data-v="success">Succes</button><button data-v="empty">Gol</button><button data-v="loading">Încărcare</button><button data-v="error">Eroare</button><button data-v="long">Text lung</button>
+      </div>
+    </div>
+    <div class="mock-group"><span>Rol</span>
+      <div class="seg" data-ctl="role">
+        <button data-v="vizitator">Vizitator</button><button data-v="cetatean">Cetățean</button><button data-v="operator">Operator</button>
+      </div>
+    </div>
+    <div class="mock-group"><span>Mărime</span>
+      <div class="seg" data-ctl="size"><button data-v="phone">Telefon</button><button data-v="desktop">Desktop</button></div>
+    </div>
+    <div class="mock-group"><span>Temă</span>
+      <div class="seg" data-ctl="theme"><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script>
+    /* ── Data: sesizări from Field.md (15 nov 2026). Statuses, votes and SLA
+       values are example values for the mock (today = 25 nov 2026). ───────── */
+    const STATUS = {
+      'noua':       { name: 'Nouă',       icon: 'i-noua' },
+      'confirmata': { name: 'Confirmată', icon: 'i-confirmata' },
+      'in-lucru':   { name: 'În lucru',   icon: 'i-in-lucru' },
+      'rezolvata':  { name: 'Rezolvată',  icon: 'i-rezolvata' },
+      'respinsa':   { name: 'Respinsă',   icon: 'i-respinsa' },
+    }; // fuzionată is not filterable: merged pins are hidden from the map (D-005, Q-012)
+    const CATEGORIES = ['Animale pe domeniu public', 'Salubritate', 'Utilități', 'Trafic auto, semne de circulație și parcări',
+      'Fumat în spații interzise', 'Transport în comun', 'Angajați în serviciul public', 'Vandalism', 'Parcuri și spații verzi',
+      'Bicicliști', 'Protecția Mediului', 'Străzi și iluminat', 'Construcții', 'Diverse'];
+    const AGES = ['Oricând', 'Ultimele 7 zile', 'Ultimele 30 de zile', 'Ultimele 3 luni', 'Mai vechi de 3 luni']; // Q-011
+
+    // Neighbourhood polygon: copy of docs/design/cartier.geojson (a file:// page cannot fetch it; the app loads the file)
+    const CARTIER = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":{"type":"Polygon","coordinates":[[[24.1319945,45.8169214],[24.1323901,45.8171144],[24.1327857,45.8166916],[24.1369003,45.8143202],[24.1344606,45.8128496],[24.1306494,45.8141824],[24.1302933,45.8146511],[24.1307285,45.8158368],[24.1308735,45.816324],[24.1319945,45.8169214]]]}}]};
+
+    // The 22 sesizări of Field.md inside the polygon (D-009; #06 and #24 are outside and excluded), at their GPS coordinates, newest first (Q-015).
+    // sla: {left:n} = in time (working days left), {over:n} = SLA depășit; none for rezolvată / respinsă
+    const T = 'Trafic auto, semne de circulație și parcări', SI = 'Străzi și iluminat', PS = 'Parcuri și spații verzi';
+    const ISSUES = [
+      { id: 23, lat: 45.81628, lon: 24.13156, title: 'Cablu electric de încărcare auto întins pe trotuar din proprietate privată', cat: SI, sub: 'Altele - Străzi și Iluminat', street: 'Strada Viena', st: 'noua', sla: { left: 22 }, votes: 2 },
+      { id: 22, lat: 45.81610, lon: 24.13122, title: 'Groapă dreptunghiulară pe carosabil lângă bordură', cat: SI, sub: 'Groapă', street: 'Strada Viena', st: 'in-lucru', sla: { left: 22 }, votes: 4 },
+      { id: 21, lat: 45.81651, lon: 24.13238, title: 'Autoturism parcat neregulamentar complet pe trotuar', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Viena', st: 'noua', sla: { over: 3 }, votes: 3 },
+      { id: 20, lat: 45.81658, lon: 24.13263, title: 'Autoutilitară parcată pe trotuar în intersecție', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Rembrandt', st: 'rezolvata', votes: 6 },
+      { id: 19, lat: 45.81652, lon: 24.13270, title: 'Trotuar degradat și invadat de buruieni', cat: SI, sub: 'Trotuar deteriorat', street: 'Strada Rembrandt', st: 'noua', sla: { left: 22 }, votes: 2 },
+      { id: 18, lat: 45.81488, lon: 24.13294, title: 'Câine de talie mare lăsat liber pe stradă', cat: 'Animale pe domeniu public', sub: 'Animal fără lesă', street: 'Strada Klagenfurt', st: 'rezolvata', votes: 3 },
+      { id: 17, lat: 45.81414, lon: 24.13228, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat', cat: SI, sub: 'Altele - Străzi și Iluminat', street: 'Strada Klagenfurt', st: 'confirmata', sla: { left: 22 }, votes: 11 },
+      { id: 16, lat: 45.81438, lon: 24.13122, title: 'Groapa cu nisip din locul de joacă neîngrijită, cu deșeuri și buruieni', cat: PS, sub: 'Loc de joacă deteriorat', street: 'Strada Picasso', st: 'noua', sla: { left: 7 }, votes: 8 },
+      { id: 15, lat: 45.81424, lon: 24.13169, title: 'Trotuar crăpat cu o groapă interioară surpată și vegetație crescută', cat: SI, sub: 'Trotuar deteriorat', street: 'Strada Picasso', st: 'noua', sla: { left: 22 }, votes: 2 },
+      { id: 14, lat: 45.81410, lon: 24.13214, title: 'Trotuar pietonal fisurat și tasat pe o porțiune extinsă', cat: SI, sub: 'Trotuar deteriorat', street: 'Strada Picasso', st: 'confirmata', sla: { left: 22 }, votes: 4 },
+      { id: 13, lat: 45.81434, lon: 24.13326, title: 'Groapă cu pietriș desprins', cat: SI, sub: 'Groapă', street: 'Strada Oslo', st: 'in-lucru', sla: { left: 22 }, votes: 7 },
+      { id: 12, lat: 45.81460, lon: 24.13264, title: 'Canal astupat de noroi și adâncit în asfalt', cat: SI, sub: 'Capac canalizare lipsă / defect', street: 'Strada Oslo / Strada Klagenfurt', st: 'noua', sla: { left: 22 }, votes: 6 },
+      { id: 11, lat: 45.81479, lon: 24.13206, title: 'Autoutilitară parcată parțial pe trotuar lângă cutiile de utilități', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Oslo', st: 'confirmata', sla: { over: 3 }, votes: 5 },
+      { id: 10, lat: 45.81498, lon: 24.13156, title: 'Asfalt măcinat lângă bordură', cat: SI, sub: 'Groapă', street: 'Strada Oslo', st: 'respinsa', votes: 1 },
+      { id: 9, lat: 45.81583, lon: 24.13289, title: 'Indicator stradal ruginit și deteriorat', cat: T, sub: 'Semn de circulație lipsă sau deteriorat', street: 'Strada Orhideelor / Strada Lisabona', st: 'in-lucru', sla: { over: 3 }, votes: 2 },
+      { id: 8, lat: 45.81570, lon: 24.13334, title: 'Teren neîntreținut cu vegetație uscată și grămezi de pietriș', cat: PS, sub: 'Spațiu verde neîngrijit', street: 'Strada Orhideelor', st: 'noua', sla: { left: 7 }, votes: 1 },
+      { id: 7, lat: 45.81460, lon: 24.13635, title: 'Capac de canalizare asfaltat peste și tasat în carosabil', cat: SI, sub: 'Capac canalizare lipsă / defect', street: 'Strada Orhideelor', st: 'noua', sla: { left: 22 }, votes: 1 },
+      { id: 5, lat: 45.81476, lon: 24.13595, title: 'Autoutilitară parcată complet pe trotuar', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Orhideelor', st: 'noua', sla: { over: 3 }, votes: 9 },
+      { id: 4, lat: 45.81523, lon: 24.13476, title: 'Capac de canalizare denivelat cu asfalt măcinat pe margine', cat: SI, sub: 'Capac canalizare lipsă / defect', street: 'Strada Orhideelor', st: 'noua', sla: { left: 22 }, votes: 3 },
+      { id: 3, lat: 45.81464, lon: 24.13422, title: 'Autoturism parcat neregulamentar în intersecție, lângă indicatorul STOP', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Michelangelo', st: 'noua', sla: { over: 3 }, votes: 4 },
+      { id: 2, lat: 45.81455, lon: 24.13427, title: 'Teren viran neîngrijit cu vegetație uscată și moloz depozitat', cat: PS, sub: 'Spațiu verde neîngrijit', street: 'Strada Michelangelo', st: 'confirmata', sla: { left: 7 }, votes: 3 },
+      { id: 1, lat: 45.81419, lon: 24.13381, title: 'Asfalt surpat în jurul capacului de canal și bordură deteriorată', cat: SI, sub: 'Capac canalizare lipsă / defect', street: 'Strada Michelangelo', st: 'confirmata', sla: { left: 22 }, votes: 12 },
+    ].map(i => ({ age: 'acum 10 zile', ...i }));
+    const TOTAL = ISSUES.length;
+
+    // Long-text state: the list tests long values; the map keeps the 22 real pins, with these texts where the ID matches
+    const ISSUES_LONG = [
+      { id: 17, lat: 45.81414, lon: 24.13228, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat, fără protecție, cu pericol de împiedicare și electrocutare', cat: SI, sub: 'Altele - Străzi și Iluminat', street: 'Strada Klagenfurt', st: 'confirmata', sla: { left: 22 }, votes: 1248, age: 'acum 10 zile' },
+      { id: 9, lat: 45.81583, lon: 24.13289, title: 'Indicator stradal ruginit și deteriorat', cat: T, sub: 'Semn de circulație lipsă sau deteriorat', street: 'Intersecția Strada Orhideelor cu Strada Lisabona', st: 'in-lucru', sla: { over: 48 }, votes: 36, age: 'acum 3 luni' },
+      { id: 16, lat: 45.81438, lon: 24.13122, title: 'Groapa cu nisip din locul de joacă neîngrijită, cu deșeuri și buruieni și vegetație crescută', cat: PS, sub: 'Loc de joacă deteriorat', street: 'Strada Picasso', st: 'noua', sla: { left: 7 }, votes: 214, age: 'acum 10 zile' },
+      { id: 128, title: 'Câine de talie mare lăsat liber (fără lesă și stăpân) pe stradă', cat: 'Animale pe domeniu public', sub: 'Animal fără lesă', street: 'Strada Klagenfurt', st: 'noua', sla: { over: 12 }, votes: 0, age: 'acum 1 lună' },
+      { id: 20, lat: 45.81658, lon: 24.13263, title: 'Autoutilitară parcată pe trotuar în intersecție, făcând asigurarea șoferilor aproape imposibilă', cat: T, sub: 'Parcare neregulamentară', street: 'Strada Rembrandt', st: 'respinsa', votes: 1, age: 'acum 10 zile' },
+    ];
+    const TOTAL_LONG = 128;
+
+    // Default view = the whole neighbourhood. Desktop opens with one unclustered pin selected; the phone opens with none (tap a pin).
+    const S = { state: 'success', role: 'vizitator', size: 'phone', theme: 'light', view: 'map', sheet: false, legend: null, selected: null };
+    const defaultSel = () => S.size === 'phone' ? null : (S.state === 'long' ? 9 : 23);
+
+    /* ── Helpers ─────────────────────────────────────────────────────────── */
+    const ic = (id, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+    const fmt = n => n.toLocaleString('ro-RO');
+    // Romanian numerals: 20+ (and round hundreds) take "de"
+    const de = n => (n % 100 >= 20 || (n > 0 && n % 100 === 0)) ? 'de ' : '';
+    const plural = (n, one, many) => n === 1 ? `1 ${one}` : `${fmt(n)} ${de(n)}${many}`;
+    const statusBadge = st => `<span class="badge st-${st}">${ic(STATUS[st].icon)}${STATUS[st].name}</span>`;
+    const slaBadge = i => !i.sla ? '' : i.sla.over
+      ? `<span class="badge badge-danger">${ic('i-alert')}Termen depășit cu ${plural(i.sla.over, 'zi lucrătoare', 'zile lucrătoare')}</span>`
+      : `<span class="sla-ok">${ic('i-clock')}Mai ${i.sla.left === 1 ? 'este' : 'sunt'} ${plural(i.sla.left, 'zi lucrătoare', 'zile lucrătoare')}</span>`;
+    const votes = n => n === 0 ? 'Niciun vot încă' : plural(n, 'vot', 'voturi');
+    const slaText = i => !i.sla ? '' : i.sla.over ? `, termen depășit cu ${plural(i.sla.over, 'zi lucrătoare', 'zile lucrătoare')}` : ', în termen';
+    // Primăria names its catch-all subcategory "Altele - <categorie>"; it is shown by its own name only
+    const subName = sub => sub.startsWith('Altele - ') ? 'Altele' : sub;
+    const photo = (i, alt = '') => ISSUES.some(x => x.id === i.id)
+      ? `<span class="thumb"><img src="photos/sesizare_${String(i.id).padStart(2, '0')}.jpg" alt="${alt}" loading="lazy" width="64" height="64"></span>`
+      : `<span class="thumb thumb-ph" ${alt ? `role="img" aria-label="${alt}: fără fotografie"` : ''}>${ic('i-image', 'i-lg')}</span>`;
+    const isLong = () => S.state === 'long';
+    const issues = () => isLong() ? ISSUES_LONG : ISSUES;
+    const mapIssues = () => ISSUES.map(i => (isLong() && ISSUES_LONG.find(l => l.id === i.id)) || i);
+    const showPins = () => S.state === 'success' || isLong();
+    const selectedIssue = () => showPins() ? mapIssues().find(i => i.id === S.selected) : null;
+    const signedIn = () => S.role !== 'vizitator';
+    const filtersActive = () => S.state === 'empty';
+    const phone = () => S.size === 'phone';
+
+    /* ── App bar ─────────────────────────────────────────────────────────── */
+    function appbar() {
+      const brand = `<div class="brand">${phone() ? '' : `<span class="brand-mark">${ic('i-map', 'i-lg')}</span>`}
+        <div class="brand-text">${phone() ? '<h1 class="brand-name">Harta sesizărilor</h1>' : '<div class="brand-name">Harta sesizărilor</div>'}
+        <div class="brand-sub">Cartierul Tineretului, Sibiu</div></div></div>`;
+      if (phone()) {
+        // Phone: one menu (Statistici, Sesizările mele, Contul meu / Intră în cont); the operator also gets Triere in the bar
+        const triage = S.role === 'operator' ? `<a class="btn btn-ghost btn-sm triage" href="#DS-004" aria-label="Triere">${ic('i-triage')}<span class="triage-label">Triere</span></a>` : '';
+        return `<header class="appbar">${brand}<div class="actions">${triage}
+          <button class="btn btn-secondary btn-icon" aria-label="Meniu${signedIn() ? ' și contul meu' : ''}">${ic('i-menu')}</button></div></header>`;
+      }
+      const nav = [`<a href="#DS-001" aria-current="page">${ic('i-map')}Hartă</a>`, `<a href="#DS-005">${ic('i-chart')}Statistici</a>`];
+      if (signedIn()) nav.push(`<a href="#DS-009">${ic('i-bookmark')}Sesizările mele</a>`);
+      if (S.role === 'operator') nav.push(`<a href="#DS-004">${ic('i-triage')}Triere</a>`);
+      const right = signedIn()
+        ? `<a class="btn btn-primary" href="#DS-003">${ic('i-plus')}Raportează o problemă</a><button class="avatar" aria-label="Contul meu">${ic('i-user')}</button>`
+        : `<a class="btn btn-primary" href="#DS-007">${ic('i-login')}Intră în cont ca să raportezi</a>`;
+      return `<header class="appbar">${brand}<nav class="nav" aria-label="Principal">${nav.join('')}</nav><div class="actions">${right}</div></header>`;
+    }
+
+    /* ── Filters ─────────────────────────────────────────────────────────── */
+    function filterFields() {
+      const catSel = filtersActive() ? 'Bicicliști' : '';
+      const cat = `<label class="field"><span>Categorie</span><select class="select">
+        <option ${catSel ? '' : 'selected'}>Toate categoriile</option>${CATEGORIES.map(c => `<option ${c === catSel ? 'selected' : ''}>${c}</option>`).join('')}</select></label>`;
+      const age = `<label class="field"><span>Raportată</span><select class="select">${AGES.map(a => `<option>${a}</option>`).join('')}</select></label>`;
+      // None selected (default) = every status is shown; a selected chip is colored and carries a check
+      const chips = Object.entries(STATUS).map(([k, v]) => {
+        const on = filtersActive() && k === 'rezolvata';
+        return `<button class="chip st-${k}" aria-pressed="${on}"><span class="check">${ic('i-check-square')}</span>${ic(v.icon)}${v.name}</button>`;
+      }).join('');
+      return { cat, age, status: `<fieldset class="field"><legend>Status</legend><div class="chips">${chips}</div></fieldset>` };
+    }
+
+    function activeFilters() {
+      if (!filtersActive()) return '';
+      return `<div class="active-filters"><span>Filtre active:</span>
+        <button class="chip-rm" aria-label="Elimină filtrul Bicicliști">Bicicliști ${ic('i-x')}</button>
+        <button class="chip-rm" aria-label="Elimină filtrul Rezolvată">Rezolvată ${ic('i-x')}</button></div>`;
+    }
+
+    /* ── List content per state ──────────────────────────────────────────── */
+    function card(i) {
+      const cur = S.selected === i.id ? 'aria-current="true"' : '';
+      return `<li><a class="card" href="#DS-002" data-pin="${i.id}" ${cur}
+          aria-label="Sesizarea #${i.id}: ${i.title}. ${STATUS[i.st].name}${slaText(i)}.">
+        ${photo(i)}
+        <span class="card-body">
+          <span class="card-top"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}</span>
+          <span class="card-title" title="${i.title}">${i.title}</span>
+          <span class="meta">${ic('i-tag')}<span>${i.cat} · ${subName(i.sub)}</span></span>
+          <span class="meta">${ic('i-pin')}<span>${i.street} · ${i.age}</span></span>
+          <span class="card-foot">${slaBadge(i)}<span class="meta num">${ic('i-votes')}<span>${votes(i.votes)}</span></span></span>
+        </span></a></li>`;
+    }
+
+    function listContent() {
+      if (S.state === 'loading') {
+        const sk = `<li class="sk-card" aria-hidden="true"><span class="thumb"></span><span class="sk-lines">
+          <span class="sk" style="width:40%"></span><span class="sk" style="width:90%"></span><span class="sk" style="width:70%"></span><span class="sk" style="width:55%"></span></span></li>`;
+        return `<div class="loading-note" role="status">${ic('i-hourglass')}Se încarcă sesizările…</div><ul class="cards" aria-busy="true">${sk.repeat(4)}</ul>`;
+      }
+      if (S.state === 'error') {
+        return `<div class="msg msg-error" role="alert">
+          <div class="msg-title">${ic('i-alert')}Nu am putut încărca sesizările</div>
+          <p>Verifică-ți conexiunea la internet și încearcă din nou. Dacă problema continuă, revino peste câteva minute.</p>
+          <button class="btn btn-secondary">${ic('i-refresh')}Încearcă din nou</button></div>`;
+      }
+      if (S.state === 'empty') {
+        const report = signedIn() ? `<a class="btn btn-secondary" href="#DS-003">${ic('i-plus')}Raportează o problemă</a>` : '';
+        return `${activeFilters()}<div class="msg msg-empty">
+          <span class="ico">${ic('i-search', 'i-lg')}</span>
+          <div class="msg-title">Nicio sesizare pentru filtrele alese</div>
+          <p class="muted">Aici apar sesizările din Cartierul Tineretului care se potrivesc filtrelor. Șterge filtrele ca să le vezi pe toate.</p>
+          <div class="btns"><button class="btn btn-primary">Șterge filtrele</button>${report}</div></div>`;
+      }
+      return `<ul class="cards">${issues().map(card).join('')}</ul>`;
+    }
+
+    function countLine() {
+      if (S.state === 'loading') return 'Se încarcă…';
+      if (S.state === 'error') return 'Sesizările nu sunt disponibile acum';
+      if (S.state === 'empty') return '0 sesizări din ' + TOTAL;
+      return plural(isLong() ? TOTAL_LONG : TOTAL, 'sesizare', 'sesizări') + ' în aria cartierului';
+    }
+
+    const exportBtns = `<div class="btns">
+      <a class="btn btn-secondary btn-sm" href="#export-csv" aria-label="Exportă toate sesizările publice în format CSV">${ic('i-download')}CSV</a>
+      <a class="btn btn-secondary btn-sm" href="#export-geojson" aria-label="Exportă toate sesizările publice în format GeoJSON">${ic('i-download')}GeoJSON</a></div>`;
+
+    function listPane() {
+      if (phone()) {
+        return `<section class="listpane" aria-labelledby="list-h">
+          <div class="listhead"><h2 id="list-h">Listă</h2><p class="num">${countLine()}</p></div>
+          <div class="scroll">${listContent()}
+            <div class="export-inline"><p>Exportă toate sesizările publice, indiferent de filtre.</p>${exportBtns}</div></div></section>`;
+      }
+      const f = filterFields();
+      return `<section class="listpane" aria-labelledby="list-h">
+        <div class="listhead"><h1 id="list-h">Sesizări din cartier</h1><p class="num">${countLine()}</p></div>
+        <div class="filters"><div class="row">${f.cat}${f.age}</div>${f.status}</div>
+        <div class="scroll" style="padding-top: var(--space-4)">${listContent()}</div>
+        <div class="export"><p>Exportă toate sesizările publice</p>${exportBtns}</div></section>`;
+    }
+
+    /* ── Map (Leaflet, kept alive across renders) ─────────────────────────── */
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let map, cluster, area, mapEl, fitKey = '', userPick = false;
+    const markerById = {};
+
+    function initMap(slot) {
+      mapEl = document.createElement('div');
+      mapEl.className = 'leaflet-host';
+      mapEl.dataset.theme = 'light';
+      slot.appendChild(mapEl);
+      map = L.map(mapEl, { zoomControl: false, zoomSnap: 0.5, zoomAnimation: !reduceMotion, fadeAnimation: !reduceMotion, markerZoomAnimation: !reduceMotion });
+      map.attributionControl.setPrefix(false);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, referrerPolicy: 'strict-origin-when-cross-origin', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
+      area = L.geoJSON(CARTIER, { style: { className: 'area' }, interactive: false }).addTo(map);
+      cluster = L.markerClusterGroup({
+        maxClusterRadius: 40, disableClusteringAtZoom: 19, showCoverageOnHover: false, animate: !reduceMotion,
+        iconCreateFunction: c => {
+          const n = c.getChildCount();
+          return L.divIcon({ className: 'cluster-icon', iconSize: [44, 44],
+            html: `<span class="cluster" aria-hidden="true">${fmt(n)}</span><span class="sr-only">${plural(n, 'sesizare', 'sesizări')} grupate aici. Apropie harta ca să le vezi.</span>` });
+        } }).addTo(map);
+      map.on('move zoom moveend zoomend', placePopup);
+      cluster.on('animationend', placePopup);
+    }
+
+    function pinIcon(i) {
+      const late = i.sla && i.sla.over ? `<span class="pin-late">${ic('i-excl')}</span>` : '';
+      return L.divIcon({ className: 'pin-icon', iconSize: [44, 44],
+        html: `<span class="pin st-${i.st}${S.selected === i.id ? ' is-selected' : ''}">${ic(STATUS[i.st].icon)}${late}</span>` });
+    }
+
+    function updateMarkers() {
+      cluster.clearLayers();
+      for (const k in markerById) delete markerById[k];
+      if (!showPins()) return;
+      mapIssues().forEach(i => {
+        const m = L.marker([i.lat, i.lon], { icon: pinIcon(i), keyboard: true });
+        m.on('add', () => {
+          const el = m.getElement();
+          el.setAttribute('aria-label', `Sesizarea #${i.id}, ${STATUS[i.st].name}${slaText(i)}: ${i.title}`);
+          el.setAttribute('aria-pressed', String(S.selected === i.id));
+        });
+        m.on('click', () => { S.selected = i.id; userPick = true; render(); });
+        markerById[i.id] = m;
+        cluster.addLayer(m);
+      });
+    }
+
+    // Desktop: the preview floats next to the pin and follows it while the map moves
+    function placePopup() {
+      const el = document.getElementById('map-popup');
+      const i = selectedIssue();
+      if (!el || !i || !map) return;
+      const p = map.latLngToContainerPoint([i.lat, i.lon]), size = map.getSize();
+      const legend = document.querySelector('.legend');
+      const half = el.offsetWidth / 2, gap = 12;
+      const minX = (legend ? legend.offsetLeft + legend.offsetWidth + gap : gap) + half;
+      el.style.left = Math.min(size.x - half - gap - 56, Math.max(minX, p.x)) + 'px';
+      el.style.top = p.y + 'px';
+      el.style.transform = p.y < size.y * 0.45 ? 'translate(-50%, var(--space-6))' : 'translate(-50%, calc(-100% - var(--space-6)))';
+    }
+
+    // Selection changed: make sure the pin is out of its cluster, and on a phone above the preview card.
+    // Synchronous on purpose: markercluster's async zoomToShowLayer fires after the next render has replaced the markers.
+    function revealSelected() {
+      const m = markerById[S.selected];
+      if (!m || !userPick) return;
+      userPick = false;
+      if (cluster.getVisibleParent(m) !== m) map.setView(m.getLatLng(), 19, { animate: false });
+      if (phone()) {
+        const p = map.latLngToContainerPoint(m.getLatLng()), h = map.getSize().y;
+        if (p.y > h * 0.4) map.panBy([0, p.y - h * 0.3], { animate: false });
+      }
+      placePopup();
+    }
+
+    function mountMap() {
+      const slot = document.getElementById('map-slot');
+      if (!slot) { if (mapEl) mapEl.remove(); return; }
+      if (!map) initMap(slot); else slot.appendChild(mapEl);
+      map.invalidateSize();
+      const key = S.size + S.state; // each size and state opens on the whole neighbourhood
+      if (fitKey !== key) { fitKey = key; map.fitBounds(area.getBounds(), { padding: [16, 16], animate: false }); }
+      updateMarkers();
+      revealSelected();
+      placePopup();
+    }
+
+    function legend() {
+      const open = S.legend === null ? !phone() : S.legend;
+      const btn = `<button class="map-float legend-btn" aria-expanded="${open}" data-act="legend">${ic('i-layers')}Legendă</button>`;
+      if (!open) return btn;
+      // Each swatch is light-scoped, so it matches the map (light values in both themes); the text follows the theme
+      const rows = Object.entries(STATUS).map(([k, v]) => `<div class="legend-row"><span class="pin st-${k}" data-theme="light">${ic(v.icon)}</span>${v.name}</div>`).join('');
+      return btn + `<div class="map-float legend" role="group" aria-label="Legendă hartă"><h3>Status</h3>${rows}
+        <div class="legend-row"><span class="pin st-in-lucru" data-theme="light">${ic('i-in-lucru')}<span class="pin-late">${ic('i-excl')}</span></span>Termen depășit (semnul „!”)</div>
+        <div class="legend-row"><span class="cluster legend-cluster" data-theme="light">3</span>Grup de sesizări</div>
+        <div class="legend-row"><span class="legend-area" data-theme="light">${ic('i-area', 'i-lg')}</span>Aria cartierului</div></div>`;
+    }
+
+    function popup() {
+      const i = selectedIssue();
+      if (!i) return '';
+      const body = `<div class="popup-head">${photo(i, `Fotografia sesizării #${i.id}`)}<div class="card-top popup-top"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}</div>
+          <button class="close" data-act="close" aria-label="Închide previzualizarea">${ic('i-x')}</button></div>
+        <h3>${i.title}</h3>
+        <span class="meta">${ic('i-pin')}<span>${i.street} · ${i.age}</span></span>
+        <div class="card-foot">${slaBadge(i)}<span class="meta num">${ic('i-votes')}<span>${votes(i.votes)}</span></span></div>
+        <a class="btn btn-primary" href="#DS-002">Vezi detalii ${ic('i-chevron')}</a>`;
+      if (phone()) return `<div class="popup" role="dialog" aria-label="Sesizarea #${i.id}">${body}</div>`;
+      return `<div class="popup" id="map-popup" role="dialog" aria-label="Sesizarea #${i.id}">${body}</div>`;
+    }
+
+    function mapOverlay() {
+      if (S.state === 'loading') return `<div class="map-status" role="status">${ic('i-hourglass')}Se încarcă sesizările…</div>`;
+      // Desktop: the full error lives in the list; the map only says it in one line (like the empty state)
+      if (S.state === 'error' && !phone()) return `<div class="map-note map-note-error">${ic('i-alert')}Sesizările nu s-au încărcat</div>`;
+      if (S.state === 'error') return `<div class="map-banner msg msg-error" role="alert">
+        <div class="msg-title">${ic('i-alert')}Nu am putut încărca sesizările</div>
+        <p>Verifică-ți conexiunea și încearcă din nou.</p>
+        <button class="btn btn-secondary btn-sm">${ic('i-refresh')}Încearcă din nou</button></div>`;
+      // Desktop: the full empty state lives in the list; the map only says it in one line
+      if (S.state === 'empty' && !phone()) return `<div class="map-note">${ic('i-search')}Nicio sesizare pentru filtrele alese</div>`;
+      if (S.state === 'empty') return `<div class="map-empty msg msg-empty">
+        <span class="ico">${ic('i-search', 'i-lg')}</span>
+        <div class="msg-title">Nicio sesizare pentru filtrele alese</div>
+        <p class="muted">Șterge filtrele ca să vezi toate sesizările din cartier.</p>
+        <div class="btns"><button class="btn btn-primary">Șterge filtrele</button></div></div>`;
+      return '';
+    }
+
+    function mapPane() {
+      return `<section class="mapwrap" aria-label="Harta sesizărilor din Cartierul Tineretului">
+        <div id="map-slot"></div>
+        ${legend()}
+        <div class="mapctl"><div class="ctl-stack">
+          <button data-act="zoom-in" aria-label="Apropie harta">${ic('i-plus')}</button><button data-act="zoom-out" aria-label="Depărtează harta">${ic('i-minus')}</button></div>
+          <div class="ctl-stack"><button data-act="fit" aria-label="Centrează harta pe cartier">${ic('i-target')}</button></div></div>
+        ${mapOverlay()}
+        ${phone() ? '' : popup()}
+      </section>`;
+    }
+
+    /* ── Phone parts ─────────────────────────────────────────────────────── */
+    function phoneToolbar() {
+      const n = filtersActive() ? 2 : 0;
+      return `<div class="toolbar">
+        <div class="seg" role="group" aria-label="Vizualizare">
+          <button data-act="view" data-v="map" aria-pressed="${S.view === 'map'}">${ic('i-map')}Hartă</button>
+          <button data-act="view" data-v="list" aria-pressed="${S.view === 'list'}">${ic('i-list')}Listă</button></div>
+        <button class="btn btn-secondary" data-act="sheet" aria-haspopup="dialog" aria-label="Filtre${n ? `, ${n} active` : ''}">${ic('i-filter')}Filtre${n ? `<span class="count-dot">${n}</span>` : ''}</button>
+      </div>`;
+    }
+    function fab() {
+      return signedIn()
+        ? `<a class="btn btn-primary fab" href="#DS-003">${ic('i-plus', 'i-lg')}Raportează</a>`
+        : `<a class="btn btn-primary fab" href="#DS-007">${ic('i-login')}Intră în cont ca să raportezi</a>`;
+    }
+    function sheet() {
+      if (!S.sheet) return '';
+      const f = filterFields();
+      const n = filtersActive() ? 0 : (isLong() ? TOTAL_LONG : TOTAL);
+      return `<div class="scrim" data-act="sheet"></div>
+        <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+          <div class="sheet-head"><h2 id="sheet-h">Filtre</h2><button class="btn btn-icon btn-ghost" data-act="sheet" aria-label="Închide filtrele">${ic('i-x')}</button></div>
+          <div class="sheet-body">${f.cat}${f.status}${f.age}</div>
+          <div class="sheet-foot"><button class="btn btn-secondary">Șterge filtrele</button>
+            <button class="btn btn-primary num" data-act="sheet">Arată ${plural(n, 'sesizare', 'sesizări')}</button></div></div>`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      success: 'Sesizările s-au încărcat. Pe hartă: grupuri (clustere) și pin-uri cu iconița statusului; pin-urile cu termen depășit au un semn roșu „!”. Atinge un pin ca să vezi previzualizarea; cardul din listă se evidențiază.',
+      empty: 'Filtrele active (Bicicliști + Rezolvată) nu au rezultate. Mesajul complet e în listă: spune ce ar apărea și oferă „Șterge filtrele”; cetățeanul și operatorul primesc și „Raportează o problemă”. Pe desktop harta arată doar un mesaj scurt; pe telefon, în vederea hartă, mesajul complet e pe hartă (lista nu se vede).',
+      loading: 'Lista are scheleturi cu forma finală a cardurilor; harta arată deja poligonul și un mesaj de încărcare. Fără animație: DESIGN.md nu are tokeni de durată.',
+      error: 'Cererea pentru sesizări a eșuat. Mesajul complet e în listă: spune ce s-a întâmplat și ce să faci, cu „Încearcă din nou”. Pe desktop harta arată doar o etichetă scurtă; pe telefon, în vederea hartă, mesajul complet e pe hartă. Exportul rămâne disponibil.',
+      long: 'Titluri lungi (tăiate la 2 rânduri, întregi în atributul title și în detaliu), categoria cea mai lungă, intersecții, ID de 3 cifre, 1.248 de voturi, „Niciun vot încă”, termen depășit cu 48 de zile lucrătoare, 128 de sesizări. Harta păstrează cele 22 de pin-uri reale, cu textele lungi acolo unde ID-ul coincide.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Ce diferă pe roluri (propunere, Q-010)</h3>
+        <ul><li><strong>Vizitator:</strong> „Intră în cont ca să raportezi” (duce la DS-007); fără „Contul meu”.</li>
+          <li><strong>Cetățean:</strong> „Raportează o problemă” (DS-003), „Sesizările mele” (DS-009), „Contul meu”.</li>
+          <li><strong>Operator:</strong> tot ce are cetățeanul, plus „Triere” (DS-004).</li>
+          <li>Harta, lista, filtrele și exportul sunt la fel pentru toate rolurile.</li>
+          <li>Pe telefon, „Statistici”, „Sesizările mele” și contul sunt în meniu; „Triere” rămâne în bară pentru operator (doar iconiță sub 340 px).</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Harta: Leaflet (D-002) cu tile-uri OpenStreetMap (Q-005) și atribuirea vizibilă; cele 22 de sesizări din Field.md aflate în arie, la coordonatele lor GPS, grupate în clustere când sunt apropiate.</li>
+          <li>D-009: aria cartierului e exact poligonul din <code>docs/design/cartier.geojson</code>, fără buffer. #06 (0,1 m) și #24 (7,0 m) sunt în afara lui și nu apar pe hartă.</li>
+          <li>D-004: termenul (SLA) în zile lucrătoare. Cetățeanul vede „termen”, niciodată „SLA” (CONTEXT.md); „Termen depășit” e singurul roșu, mereu cu iconiță și text.</li>
+          <li>D-005: sesizările fuzionate nu apar pe hartă și nu sunt în filtrul de status.</li>
+          <li>D-006 / D-008: raportarea cere cont; operatorul vede tot ce vede cetățeanul.</li>
+          <li>Harta rămâne light în dark mode: pin-urile, clusterele și poligonul folosesc valorile light.</li>
+          <li>Pe telefon: harta și lista pe rând, cu comutator; filtrele într-o foaie de jos.</li>
+          <li>Filtrul de status: implicit niciun status ales, deci se văd toate; un status ales e colorat și are bifă.</li>
+          <li>Miniaturile sunt pozele de teren (docs/field_photos), convertite în JPEG 320 × 240 fără EXIF, în <code>mocks/photos/</code>. Fără poză: placeholder în formă de fotografie (#128).</li>
+          <li>Exportul CSV / GeoJSON include toate sesizările publice, indiferent de filtre (brief).</li></ul>
+        <h3>Întrebări deschise</h3>
+        <ul><li><strong>Q-010</strong> Ce vede diferit fiecare rol pe DS-001.</li>
+          <li><strong>Q-015</strong> În ce ordine e lista (aici: cele mai noi întâi).</li>
+          <li><strong>Q-013</strong> Cum își arată pin-ul numele statusului: aici iconiță pe pin, nume în legendă, eticheta accesibilă și previzualizare.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv (doar în mock, prefix <code>--mock-</code>) și dimensiunile iconițelor Leaflet (44 px = <code>--size-touch</code>, cerute în pixeli de API).</li>
+          <li>Bordurile de 1 px (cerute de DESIGN.md pentru badge-uri) și opacitatea de 6 % a poligonului.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: sesizări din Field.md; statusurile, voturile și termenele sunt exemple (azi = 25 nov 2026).</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      document.body.dataset.theme = S.theme;
+      document.querySelectorAll('[data-ctl]').forEach(g => g.querySelectorAll('button').forEach(b =>
+        b.setAttribute('aria-pressed', String(S[g.dataset.ctl] === b.dataset.v))));
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      if (mapEl) mapEl.remove(); // detach before the frame is rebuilt, so the map keeps its state
+      let body;
+      if (phone()) {
+        const content = S.view === 'map' ? mapPane() : listPane();
+        const stack = `<div class="bottom-stack${S.view === 'map' ? ' over-map' : ''}">${fab()}${S.view === 'map' ? popup() : ''}</div>`;
+        body = `<div class="body">${content}${stack}</div>${sheet()}`;
+        frame.innerHTML = `<div class="app">${appbar()}${phoneToolbar()}${body}</div>`;
+      } else {
+        frame.innerHTML = `<div class="app">${appbar()}<div class="body">${listPane()}${mapPane()}</div></div>`;
+      }
+      document.getElementById('notes').innerHTML = notes();
+      mountMap();
+    }
+
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        const k = ctl.parentElement.dataset.ctl;
+        S[k] = ctl.dataset.v;
+        if (k === 'state' || k === 'size') S.selected = defaultSel();
+        if (k === 'size') { S.legend = null; S.sheet = false; }
+        return render();
+      }
+      const zoom = e.target.closest('[data-act^="zoom-"], [data-act="fit"]');
+      if (zoom && map) {
+        const a = zoom.dataset.act;
+        if (a === 'zoom-in') map.zoomIn(); else if (a === 'zoom-out') map.zoomOut(); else map.fitBounds(area.getBounds(), { padding: [16, 16] });
+        return;
+      }
+      const pin = e.target.closest('[data-pin]');
+      if (pin) { e.preventDefault(); S.selected = Number(pin.dataset.pin); userPick = true; return render(); }
+      const act = e.target.closest('[data-act]');
+      if (act) {
+        const a = act.dataset.act;
+        if (a === 'close') S.selected = null;
+        if (a === 'legend') S.legend = !(S.legend === null ? !phone() : S.legend);
+        if (a === 'view') S.view = act.dataset.v;
+        if (a === 'sheet') S.sheet = !S.sheet;
+        return render();
+      }
+      if (e.target.closest('#frame a')) e.preventDefault();
+    });
+
+    render();
+  </script>
+</body>
+</html>

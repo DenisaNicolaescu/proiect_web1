@@ -8,5 +8,15 @@
 <!-- graffino-agentic:end -->
 
 ## Index
+- D-003 · Cartierul Tineretului polygon boundary enforcement · _superseded-by D-009_
 
 ---
+
+## D-003 · Cartierul Tineretului polygon boundary enforcement
+- **Status:** superseded-by D-009
+- **Date:** 2026-11-19
+- **Rule:** The platform scope is strictly bounded to Cartierul Tineretului via a closed polygon enclosing the surveyed streets from Field.md with a 50-100m buffer. Pins outside this boundary are strictly blocked on both client and server with the error message "Locația selectată este în afara ariei Cartierului Tineretului". The polygon is visibly outlined on the map.
+- **Why:** Prevents off-target submissions and keeps the platform scoped to the neighborhood association.
+- **Rejected:** Soft warnings without blocking, unbound city-wide reporting, automatic silent rejection.
+- **Evidence:** User approval of D-003 proposal; [Field.md](file:///home/deny/proiect_web1/Field.md); [brief.md](file:///home/deny/proiect_web1/docs/brief.md#L9).
+- **Source:** interview · confidence high
