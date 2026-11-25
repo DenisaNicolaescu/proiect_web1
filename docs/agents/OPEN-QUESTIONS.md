@@ -43,6 +43,7 @@
 - **Proposed answer:** Automated database seed script
 - **Answer:** An automated seed script (`npm run db:seed`) parses `Field.md`, converts the 24 `.heic` photos in `docs/field_photos/` to optimized web formats (JPEG/WebP) via `heic-convert` and `sharp` while stripping EXIF, and inserts the issues with their exact GPS coordinates into PostgreSQL/PostGIS along with default users and the 14 categories.
 - **Date:** 2026-11-19
+- **Note (2026-11-26):** The seed contains only the 22 field reports inside aria cartierului (D-009). #06 and #24 stay in Field.md, marked as excluded, and are not seeded.
 
 ## Q-003 · What email transport should be used for status notifications in dev vs prod?
 - **Status:** answered

@@ -9,7 +9,7 @@ designs:
   - id: DS-001
     name: Map & List
     kind: screen
-    status: draft
+    status: approved
     route: /
     roles: [vizitator]
     description: Public map with marker clusters and the Cartierul Tineretului polygon, filters by category, status and report date ("Raportată"), list view, and CSV / GeoJSON export of all public sesizări (the only place with export). On Mobile, map and list are shown one at a time with a toggle.
