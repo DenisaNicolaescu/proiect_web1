@@ -18,12 +18,12 @@
 - Q-007 · Are the per-category SLA values validated by Primăria Sibiu or the neighbourhood association?
 - Q-008 · Is email confirmation required at registration? · _answered_
 - Q-009 · Can an Admin do everything an Operator does, or are the roles separate? · _answered_
-- Q-010 · What does each role see differently on DS-001 (Map & List)? · _investigating_
+- Q-010 · What does each role see differently on DS-001 (Map & List)? · _answered_
 - Q-011 · Which intervals does the age filter ("vârstă") on DS-001 offer? · _answered_
 - Q-012 · Which statuses does DS-001 show by default, and in what order is the list? · _answered_
-- Q-013 · How does a map pin carry its status name, as DESIGN.md requires? · _investigating_
+- Q-013 · How does a map pin carry its status name, as DESIGN.md requires? · _answered_
 - Q-014 · The neighbourhood polygon leaves 4 field reports outside: change the polygon or D-003? · _answered_
-- Q-015 · In what order is the list on DS-001? · _investigating_
+- Q-015 · In what order is the list on DS-001? · _answered_
 
 ---
 
@@ -96,10 +96,12 @@
 - **Recorded as:** D-008
 
 ## Q-010 · What does each role see differently on DS-001 (Map & List)?
-- **Status:** investigating
+- **Status:** answered
 - **Blocks:** approval of the DS-001 mock (role variants)
 - **Who answers:** project owner
 - **Proposed answer:** Map, list, filters and export are the same for every role. Vizitator: the report action reads "Intră în cont ca să raportezi" and opens DS-007 (D-006: reporting needs an account). Cetățean: "Raportează o problemă" (DS-003) and "Sesizările mele" (DS-009). Operator: everything a Cetățean sees (D-008) plus "Triere" (DS-004). On a phone, Statistici, Sesizările mele and the account sit in one menu; "Triere" stays in the bar. Drawn this way in `docs/design/mocks/DS-001.html`.
+- **Answer:** Map, list, filters and export are the same for every role. Vizitator: the report action reads "Intră în cont ca să raportezi" and opens DS-007 (D-006: reporting needs an account). Cetățean: "Raportează o problemă" (DS-003) and "Sesizările mele" (DS-009). Operator: everything a Cetățean sees (D-008) plus "Triere" (DS-004). On a phone, Statistici, Sesizările mele and the account sit in one menu; "Triere" stays in the bar. Drawn this way in `docs/design/mocks/DS-001.html`. Confirmed with the approved DS-001 mock.
+- **Date:** 2026-11-26
 
 ## Q-011 · Which intervals does the age filter ("vârstă") on DS-001 offer?
 - **Status:** answered
@@ -118,11 +120,13 @@
 - **Date:** 2026-11-25
 
 ## Q-013 · How does a map pin carry its status name, as DESIGN.md requires?
-- **Status:** investigating
+- **Status:** answered
 - **Blocks:** the pin design on DS-001 and DS-002
 - **Who answers:** project owner
 - **Context:** DESIGN.md (project guardrails) says every status badge and pin carries its icon and its name. A visible name on every pin would cover the map at neighbourhood zoom.
 - **Proposed answer:** The pin shows the status icon and color; the name is in the pin's accessible label, in the always-reachable map legend, and in the preview that opens on tap. An overdue pin adds a red "!" mark, explained in the legend as "Termen depășit".
+- **Answer:** The pin shows the status icon and color; the name is in the pin's accessible label, in the always-reachable map legend, and in the preview that opens on tap. An overdue pin adds a red "!" mark, explained in the legend as "Termen depășit". Confirmed with the approved DS-001 mock.
+- **Date:** 2026-11-26
 
 ## Q-014 · The neighbourhood polygon leaves 4 field reports outside: change the polygon or D-003?
 - **Status:** answered
@@ -135,7 +139,9 @@
 - **Recorded as:** D-009
 
 ## Q-015 · In what order is the list on DS-001?
-- **Status:** investigating
+- **Status:** answered
 - **Blocks:** list order on DS-001 and its server query
 - **Who answers:** project owner
 - **Proposed answer:** Newest first, by report date. Split from Q-012, whose other half was answered.
+- **Answer:** Newest first, by report date. Confirmed with the approved DS-001 mock.
+- **Date:** 2026-11-26
