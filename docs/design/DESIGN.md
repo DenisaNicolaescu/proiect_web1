@@ -92,6 +92,36 @@ DS- IDs are for the tools (registry, mocks, board, Figma frames).
 
 <!-- graffino-agentic:end -->
 
+## Project guardrails (proiect_web1)
+These rules add to the guardrails above; where they are stricter, they win.
+
+- **Mobile-first.** The app is used mostly on a phone, outdoors. Design the Mobile
+  size first. Every hit target is at least `--size-touch` (44 × 44 px), with touch or
+  pointer; the 24 px pointer minimum above does not apply here.
+- **Sunlight contrast.** `--color-text` and `--color-text-muted` reach at least 7:1
+  on `--color-bg`, `--color-surface` and `--color-surface-elevated` in the light theme.
+- **Status = icon + text + color.** A status is never shown by color alone: every
+  status badge and pin carries its icon and its name. A badge has a 1 px border in
+  its status color (badge backgrounds alone are about 1.1:1 against the surface).
+- **Red means a problem that needs attention** (SLA depășit, eroare); no status is
+  red. `--color-danger` is used only for the "SLA depășit" badge and for error
+  messages, always with an icon and text. Nothing else is red, including
+  `respinsă` and non-error destructive actions.
+- **Green means success, red means a problem; otherwise statuses have their own
+  colors.** `--color-success` (same value as rezolvată) marks success and
+  confirmations that are not a status ("În interiorul ariei", report sent).
+- **No accent color.** The palette has the civic blue primary, neutrals, the six
+  status colors, success and danger. Do not add an accent: it would collide with a
+  status.
+- **Tone: friendly, addressing the user as „tu”.** Example: „Mulțumim! Sesizarea ta
+  a ajuns la operator.” Short, plain, active voice (see Copy above).
+- **The map stays light in dark mode.** OpenStreetMap tiles are not swapped for dark
+  tiles (tile provider: Q-005). Pins, clusters and the polygon on the map use the
+  light-theme values of their tokens in both themes.
+- **Fonts.** Inter (`--font-sans`) for everything. JetBrains Mono (`--font-mono`)
+  only for sesizare IDs (`#13`) and GPS coordinates. Counters and KPIs use Inter
+  with `--font-numeric`.
+
 ## Source
 - Design board: none yet (published from `mocks/`, never pulled)
 - Figma: none (regenerated on request)
@@ -100,40 +130,49 @@ DS- IDs are for the tools (registry, mocks, board, Figma frames).
 ## Tokens
 
 ### Color
+Contrast ratios (WCAG 2.x) were checked for every pair on 2026-11-25; the lowest
+value is given in "Use".
+
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `--color-bg` | `#f8fafc` | `#0b0f19` | Main page & map canvas background |
-| `--color-surface` | `#ffffff` | `#151c2c` | Card & sidebar sheet surface |
+| `--color-bg` | `#f8fafc` | `#0b0f19` | Page background |
+| `--color-surface` | `#ffffff` | `#151c2c` | Cards, sheets, sidebar |
 | `--color-surface-elevated` | `#f1f5f9` | `#1e293b` | Floating map controls, popups, headers |
-| `--color-border` | `#e2e8f0` | `#253248` | Card borders, dividers |
-| `--color-border-subtle` | `#f1f5f9` | `#1b2436` | Subtle inner dividers, table rows |
-| `--color-text` | `#0f172a` | `#f8fafc` | Primary text headings and body |
-| `--color-text-muted` | `#64748b` | `#94a3b8` | Secondary labels, timestamps, captions |
-| `--color-primary` | `#1e40af` | `#3b82f6` | Sibiu Civic Blue — Primary actions, active tabs |
-| `--color-primary-hover` | `#1d4ed8` | `#60a5fa` | Primary hover state |
-| `--color-primary-subtle` | `#eff6ff` | `#1e293b` | Primary tinted container background |
-| `--color-accent` | `#d97706` | `#fbbf24` | Sibiu Gold/Amber — Highlights, stars, badges |
-| `--color-accent-subtle` | `#fef3c7` | `#451a03` | Amber badge background |
-| `--color-status-noua` | `#0284c7` | `#38bdf8` | Sky Blue — Sesizare nouă / primită |
-| `--color-status-noua-bg` | `#f0f9ff` | `#082f49` | Nouă badge background |
-| `--color-status-confirmata` | `#4f46e5` | `#818cf8` | Royal Indigo — Sesizare confirmată |
-| `--color-status-confirmata-bg` | `#eef2ff` | `#1e1b4b` | Confirmată badge background |
-| `--color-status-in-lucru` | `#d97706` | `#fbbf24` | Warning Amber — Sesizare în lucru |
-| `--color-status-in-lucru-bg` | `#fffbeb` | `#451a03` | În lucru badge background |
-| `--color-status-rezolvata` | `#059669` | `#34d399` | Success Emerald — Sesizare rezolvată |
-| `--color-status-rezolvata-bg` | `#ecfdf5` | `#064e3b` | Rezolvată badge background |
-| `--color-status-respinsa` | `#dc2626` | `#f87171` | Destructive Crimson — Sesizare respinsă |
-| `--color-status-respinsa-bg` | `#fef2f2` | `#450a0a` | Respinsă badge background |
-| `--color-status-fuzionata` | `#64748b` | `#94a3b8` | Neutral Slate — Sesizare fuzionată (duplicat) |
+| `--color-border` | `#e2e8f0` | `#253248` | Decorative dividers and card borders (not for controls) |
+| `--color-border-subtle` | `#f1f5f9` | `#1b2436` | Inner dividers, table rows |
+| `--color-border-input` | `#64748b` | `#7c8ba1` | Borders of inputs and controls (≥ 4.76:1 on surface) |
+| `--color-text` | `#0f172a` | `#f8fafc` | Headings and body (≥ 13.98:1) |
+| `--color-text-muted` | `#44526a` | `#a3b1c6` | Labels, timestamps, captions (light ≥ 7.20:1, dark ≥ 6.73:1) |
+| `--color-primary` | `#1e40af` | `#60a5fa` | Civic blue: primary actions, links, active tabs (as text ≥ 6.69:1) |
+| `--color-primary-hover` | `#1e3a8a` | `#93c5fd` | Primary hover |
+| `--color-on-primary` | `#ffffff` | `#0b0f19` | Text and icons on `--color-primary` (≥ 7.53:1) |
+| `--color-primary-subtle` | `#eff6ff` | `#172554` | Primary tinted container |
+| `--color-focus` | `#1e40af` | `#93c5fd` | Focus ring (≥ 8.34:1) |
+| `--color-status-noua` | `#0369a1` | `#7dd3fc` | Nouă: blue (on badge ≥ 5.17:1) |
+| `--color-status-noua-bg` | `#e0f2fe` | `#0c2d48` | Nouă badge background |
+| `--color-status-confirmata` | `#6d28d9` | `#c4b5fd` | Confirmată: violet (≥ 5.98:1) |
+| `--color-status-confirmata-bg` | `#ede9fe` | `#2e1065` | Confirmată badge background |
+| `--color-status-in-lucru` | `#92400e` | `#fcd34d` | În lucru: amber (≥ 6.37:1) |
+| `--color-status-in-lucru-bg` | `#fef3c7` | `#422006` | În lucru badge background |
+| `--color-status-rezolvata` | `#047857` | `#6ee7b7` | Rezolvată: green (≥ 4.84:1) |
+| `--color-status-rezolvata-bg` | `#d1fae5` | `#052e2b` | Rezolvată badge background |
+| `--color-status-respinsa` | `#334155` | `#e2e8f0` | Respinsă: dark grey (≥ 8.40:1) |
+| `--color-status-respinsa-bg` | `#e2e8f0` | `#334155` | Respinsă badge background |
+| `--color-status-fuzionata` | `#475569` | `#a3b1c6` | Fuzionată: light grey (≥ 6.73:1) |
 | `--color-status-fuzionata-bg` | `#f1f5f9` | `#1e293b` | Fuzionată badge background |
-| `--color-sla-overdue` | `#be123c` | `#fb7185` | High-alert Crimson — SLA depășit alert ring |
-| `--color-sla-overdue-bg` | `#fff1f2` | `#4c0519` | SLA depășit badge background |
+| `--color-success` | `#047857` | `#6ee7b7` | Green: success and confirmations that are not a status (same values as rezolvată; ≥ 4.84:1 on success-bg) |
+| `--color-success-bg` | `#d1fae5` | `#052e2b` | Success message and chip background |
+| `--color-danger` | `#b91c1c` | `#fca5a5` | Red, the only one: "SLA depășit" badge and error messages (≥ 5.30:1 on danger-bg, ≥ 5.91:1 on bg/surface/elevated) |
+| `--color-danger-bg` | `#fee2e2` | `#450a0a` | "SLA depășit" badge and error message background (`--color-text` on it ≥ 14.61:1) |
+
+**Map pins** (light-theme values in both themes, on OSM tiles ≈ `#f2efe9`): pin color
+vs map ≥ 4.38:1, white icon on pin ≥ 5.02:1, for all six statuses and danger.
 
 ### Typography
 | Token | Family | Size / line height | Weight | Use |
 |---|---|---|---|---|
 | `--font-sans` | `'Inter', system-ui, sans-serif` | — | 400 / 500 / 600 / 700 | Primary UI, body, labels (diacritics: ș, ț, ă, î, â) |
-| `--font-mono` | `'JetBrains Mono', monospace` | — | 400 / 600 | GPS coordinates, issue IDs (`#01`) |
+| `--font-mono` | `'JetBrains Mono', monospace` | — | 400 / 600 | Only sesizare IDs (`#01`) and GPS coordinates |
 | `--font-numeric` | `tabular-nums` | — | — | Vote counters, SLA countdowns, KPI statistics |
 | `--text-xs` | `--font-sans` | 12px / 16px | 500 / 600 | Status tags, map pin bubbles, timestamps |
 | `--text-sm` | `--font-sans` | 14px / 20px | 400 / 500 | Secondary text, filter options, input labels |
@@ -151,6 +190,7 @@ DS- IDs are for the tools (registry, mocks, board, Figma frames).
 | `--space-4` | 16px | Standard card padding, form field gap |
 | `--space-6` | 24px | Sidebar padding, modal padding |
 | `--space-8` | 32px | Section gap on dashboard & statistics |
+| `--size-touch` | 44px | Minimum hit target (width and height) for every control |
 
 ### Radius, shadow, motion
 | Token | Value | Use |

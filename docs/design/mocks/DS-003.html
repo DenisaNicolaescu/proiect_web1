@@ -15,28 +15,30 @@
       --color-surface-elevated: #f1f5f9;
       --color-border: #e2e8f0;
       --color-border-subtle: #f1f5f9;
+      --color-border-input: #64748b;
       --color-text: #0f172a;
-      --color-text-muted: #64748b;
+      --color-text-muted: #44526a;
       --color-primary: #1e40af;
-      --color-primary-hover: #1d4ed8;
+      --color-primary-hover: #1e3a8a;
+      --color-on-primary: #ffffff;
       --color-primary-subtle: #eff6ff;
-      --color-accent: #d97706;
-      --color-accent-subtle: #fef3c7;
-      
-      --color-status-noua: #0284c7;
-      --color-status-noua-bg: #f0f9ff;
-      --color-status-confirmata: #4f46e5;
-      --color-status-confirmata-bg: #eef2ff;
-      --color-status-in-lucru: #d97706;
-      --color-status-in-lucru-bg: #fffbeb;
-      --color-status-rezolvata: #059669;
-      --color-status-rezolvata-bg: #ecfdf5;
-      --color-status-respinsa: #dc2626;
-      --color-status-respinsa-bg: #fef2f2;
-      --color-status-fuzionata: #64748b;
+      --color-focus: #1e40af;
+      --color-status-noua: #0369a1;
+      --color-status-noua-bg: #e0f2fe;
+      --color-status-confirmata: #6d28d9;
+      --color-status-confirmata-bg: #ede9fe;
+      --color-status-in-lucru: #92400e;
+      --color-status-in-lucru-bg: #fef3c7;
+      --color-status-rezolvata: #047857;
+      --color-status-rezolvata-bg: #d1fae5;
+      --color-status-respinsa: #334155;
+      --color-status-respinsa-bg: #e2e8f0;
+      --color-status-fuzionata: #475569;
       --color-status-fuzionata-bg: #f1f5f9;
-      --color-sla-overdue: #be123c;
-      --color-sla-overdue-bg: #fff1f2;
+      --color-success: #047857;
+      --color-success-bg: #d1fae5;
+      --color-danger: #b91c1c;
+      --color-danger-bg: #fee2e2;
 
       --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
@@ -61,6 +63,7 @@
       --space-4: 16px;
       --space-6: 24px;
       --space-8: 32px;
+      --size-touch: 44px;
 
       --radius-sm: 4px;
       --radius-md: 8px;
@@ -79,28 +82,30 @@
       --color-surface-elevated: #1e293b;
       --color-border: #253248;
       --color-border-subtle: #1b2436;
+      --color-border-input: #7c8ba1;
       --color-text: #f8fafc;
-      --color-text-muted: #94a3b8;
-      --color-primary: #3b82f6;
-      --color-primary-hover: #60a5fa;
-      --color-primary-subtle: #1e293b;
-      --color-accent: #fbbf24;
-      --color-accent-subtle: #451a03;
-
-      --color-status-noua: #38bdf8;
-      --color-status-noua-bg: #082f49;
-      --color-status-confirmata: #818cf8;
-      --color-status-confirmata-bg: #1e1b4b;
-      --color-status-in-lucru: #fbbf24;
-      --color-status-in-lucru-bg: #451a03;
-      --color-status-rezolvata: #34d399;
-      --color-status-rezolvata-bg: #064e3b;
-      --color-status-respinsa: #f87171;
-      --color-status-respinsa-bg: #450a0a;
-      --color-status-fuzionata: #94a3b8;
+      --color-text-muted: #a3b1c6;
+      --color-primary: #60a5fa;
+      --color-primary-hover: #93c5fd;
+      --color-on-primary: #0b0f19;
+      --color-primary-subtle: #172554;
+      --color-focus: #93c5fd;
+      --color-status-noua: #7dd3fc;
+      --color-status-noua-bg: #0c2d48;
+      --color-status-confirmata: #c4b5fd;
+      --color-status-confirmata-bg: #2e1065;
+      --color-status-in-lucru: #fcd34d;
+      --color-status-in-lucru-bg: #422006;
+      --color-status-rezolvata: #6ee7b7;
+      --color-status-rezolvata-bg: #052e2b;
+      --color-status-respinsa: #e2e8f0;
+      --color-status-respinsa-bg: #334155;
+      --color-status-fuzionata: #a3b1c6;
       --color-status-fuzionata-bg: #1e293b;
-      --color-sla-overdue: #fb7185;
-      --color-sla-overdue-bg: #4c0519;
+      --color-success: #6ee7b7;
+      --color-success-bg: #052e2b;
+      --color-danger: #fca5a5;
+      --color-danger-bg: #450a0a;
 
       --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
@@ -290,16 +295,16 @@
       line-height: var(--lh-sm);
       color: var(--color-text);
       background-color: var(--color-surface);
-      border: 1px solid var(--color-border);
+      border: 1px solid var(--color-border-input);
       border-radius: var(--radius-md);
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
       min-height: 44px; /* Touch target minimum */
     }
 
     .input:focus, .select:focus, .textarea:focus {
-      outline: none;
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--color-primary-subtle);
     }
 
     .textarea {
@@ -376,10 +381,10 @@
       align-items: center;
       gap: var(--space-1);
       font-size: var(--text-xs);
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-weight: 500;
-      color: var(--color-status-rezolvata);
-      background: var(--color-status-rezolvata-bg);
+      color: var(--color-success);
+      background: var(--color-success-bg);
       padding: 2px var(--space-2);
       border-radius: var(--radius-sm);
     }
@@ -387,11 +392,13 @@
     .remove-photo-btn {
       background: transparent;
       border: none;
-      color: var(--color-status-respinsa);
+      color: var(--color-text);
+      text-decoration: underline;
       font-size: var(--text-xs);
       font-weight: 600;
       cursor: pointer;
-      min-height: 24px;
+      min-height: var(--size-touch);
+      min-width: var(--size-touch);
     }
 
     /* Map Preview Frame */
@@ -412,8 +419,23 @@
       position: relative;
     }
 
-    [data-theme="dark"] .map-svg-mock {
-      background: #1b2436;
+    /* The map stays light in dark mode (DESIGN.md: project guardrails);
+       pins and the polygon use the light-theme token values in both themes. */
+    [data-theme="dark"] .map-frame {
+      --color-primary: #1e40af;
+      --color-danger: #b91c1c;
+      --color-status-noua: #0369a1;
+      --color-status-noua-bg: #e0f2fe;
+      --color-status-confirmata: #6d28d9;
+      --color-status-confirmata-bg: #ede9fe;
+      --color-status-in-lucru: #92400e;
+      --color-status-in-lucru-bg: #fef3c7;
+      --color-status-rezolvata: #047857;
+      --color-status-rezolvata-bg: #d1fae5;
+      --color-status-respinsa: #334155;
+      --color-status-respinsa-bg: #e2e8f0;
+      --color-status-fuzionata: #475569;
+      --color-status-fuzionata-bg: #f1f5f9;
     }
 
     .map-polygon-overlay {
@@ -446,6 +468,7 @@
       gap: var(--space-1);
       border: 1px solid var(--color-border);
       pointer-events: auto;
+      min-height: var(--size-touch);
     }
 
     .map-pin {
@@ -474,8 +497,8 @@
 
     /* Duplicate Alert Card */
     .duplicate-card {
-      background: var(--color-accent-subtle);
-      border: 1px solid var(--color-accent);
+      background: var(--color-primary-subtle);
+      border: 1px solid var(--color-primary);
       border-radius: var(--radius-md);
       padding: var(--space-4);
       margin-bottom: var(--space-4);
@@ -511,8 +534,8 @@
 
     /* Out of bounds error alert */
     .out-of-bounds-card {
-      background: var(--color-status-respinsa-bg);
-      border: 1px solid var(--color-status-respinsa);
+      background: var(--color-danger-bg);
+      border: 2px solid var(--color-danger);
       border-radius: var(--radius-md);
       padding: var(--space-4);
       margin-bottom: var(--space-4);
@@ -524,7 +547,7 @@
 
     .alert-icon {
       flex-shrink: 0;
-      color: var(--color-status-respinsa);
+      color: var(--color-danger);
       width: 20px;
       height: 20px;
     }
@@ -532,7 +555,7 @@
     .out-of-bounds-title {
       font-size: var(--text-sm);
       font-weight: 700;
-      color: var(--color-status-respinsa);
+      color: var(--color-danger);
       margin-bottom: 2px;
     }
 
@@ -596,7 +619,7 @@
 
     .btn-primary {
       background: var(--color-primary);
-      color: #ffffff;
+      color: var(--color-on-primary);
     }
 
     .btn-primary:hover:not(:disabled) {
@@ -605,7 +628,7 @@
 
     .btn-secondary {
       background: var(--color-surface);
-      border-color: var(--color-border);
+      border-color: var(--color-border-input);
       color: var(--color-text);
     }
 
@@ -613,9 +636,9 @@
       background: var(--color-surface-elevated);
     }
 
-    .btn-accent {
-      background: var(--color-accent);
-      color: #ffffff;
+    .btn:focus-visible, .remove-photo-btn:focus-visible, .map-tag:focus-visible {
+      outline: 3px solid var(--color-focus);
+      outline-offset: 2px;
     }
 
     .btn:disabled {
@@ -640,13 +663,13 @@
     .success-icon-wrap {
       width: 64px;
       height: 64px;
-      background: var(--color-status-rezolvata-bg);
-      color: var(--color-status-rezolvata);
+      background: var(--color-success-bg);
+      color: var(--color-success);
       border-radius: var(--radius-full);
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid var(--color-status-rezolvata);
+      border: 2px solid var(--color-success);
     }
 
     .sla-badge {
@@ -740,7 +763,7 @@
         <!-- Duplicate Alert Card (shown conditionally in state: duplicate) -->
         <div class="duplicate-card" id="duplicate-warning" style="display: none;">
           <div class="duplicate-header">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-accent); flex-shrink: 0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary); flex-shrink: 0;">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -751,7 +774,7 @@
             </div>
           </div>
           <div class="duplicate-actions">
-            <button type="button" class="btn btn-accent" style="padding: 6px var(--space-4);">
+            <button type="button" class="btn btn-primary" style="padding: 6px var(--space-4);">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
               Votează sesizarea existentă (#13)
             </button>
@@ -806,7 +829,7 @@
               <div class="photo-preview-bar">
                 <span class="exif-chip" id="exif-chip-label">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  GPS EXIF extras: 45.81434° N, 24.13326° E
+                  GPS EXIF extras: <span style="font-family: var(--font-mono);">45.81434° N, 24.13326° E</span>
                 </span>
                 <button type="button" class="remove-photo-btn" onclick="clearPhoto()">Șterge foto</button>
               </div>
@@ -848,7 +871,7 @@
           <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
               <label class="label" for="desc-input">Descrierea problemei</label>
-              <span id="char-counter" style="font-size: var(--text-xs); color: var(--color-text-muted); font-family: var(--font-mono);">0 / 500</span>
+              <span id="char-counter" style="font-size: var(--text-xs); color: var(--color-text-muted); font-variant-numeric: var(--font-numeric);">0 / 500</span>
             </div>
             <textarea id="desc-input" class="textarea" placeholder="Descrie detaliile observate (ex: adâncime groapă, număr imobil din apropiere, grad de pericol)..." oninput="updateCharCount()"></textarea>
           </div>
@@ -920,13 +943,13 @@
 
             <!-- Existing Neighbor Duplicate Pin (#13) -->
             <g id="duplicate-marker" transform="translate(195, 235)" style="display: none;">
-              <circle cx="0" cy="0" r="16" fill="rgba(217, 119, 6, 0.25)" />
+              <circle cx="0" cy="0" r="16" fill="rgba(146, 64, 14, 0.25)" />
               <circle cx="0" cy="0" r="8" fill="var(--color-status-in-lucru)" />
               <text x="12" y="4" font-size="10" font-weight="700" fill="var(--color-status-in-lucru)" font-family="var(--font-mono)">#13 (4z)</text>
             </g>
 
             <!-- 50m Duplicate Detection Radius Circle -->
-            <circle id="duplicate-radius" cx="180" cy="245" r="48" fill="rgba(2, 132, 199, 0.12)" stroke="var(--color-status-noua)" stroke-width="1.5" stroke-dasharray="3,3" style="display: none;" />
+            <circle id="duplicate-radius" cx="180" cy="245" r="48" fill="rgba(3, 105, 161, 0.12)" stroke="var(--color-status-noua)" stroke-width="1.5" stroke-dasharray="3,3" style="display: none;" />
           </svg>
 
           <!-- Interactive User Placed Pin -->
@@ -1110,8 +1133,8 @@
       submitBtn.disabled = false;
       polygonShape.setAttribute("stroke", "var(--color-primary)");
       polygonShape.setAttribute("fill", "rgba(30, 64, 175, 0.08)");
-      boundaryStatusChip.style.background = "var(--color-status-rezolvata-bg)";
-      boundaryStatusChip.style.color = "var(--color-status-rezolvata)";
+      boundaryStatusChip.style.background = "var(--color-success-bg)";
+      boundaryStatusChip.style.color = "var(--color-success)";
       boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> În interiorul ariei';
 
       if (state === "empty") {
@@ -1144,10 +1167,10 @@
         pin.style.top = "15px";
         pin.style.left = "20px";
         coordsText.textContent = "45.82010° N, 24.12800° E (În afara ariei)";
-        polygonShape.setAttribute("stroke", "var(--color-status-respinsa)");
-        polygonShape.setAttribute("fill", "rgba(220, 38, 38, 0.08)");
-        boundaryStatusChip.style.background = "var(--color-status-respinsa-bg)";
-        boundaryStatusChip.style.color = "var(--color-status-respinsa)";
+        polygonShape.setAttribute("stroke", "var(--color-danger)");
+        polygonShape.setAttribute("fill", "rgba(185, 28, 28, 0.08)");
+        boundaryStatusChip.style.background = "var(--color-danger-bg)";
+        boundaryStatusChip.style.color = "var(--color-danger)";
         boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> În afara ariei';
       } 
       else if (state === "loading") {
