@@ -8,6 +8,8 @@
 node_modules/
 dist/
 build/
+!.claude/skills/build/
+!.agents/skills/build/
 *.log
 .DS_Store
 Thumbs.db

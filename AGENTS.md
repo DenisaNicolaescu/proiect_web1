@@ -18,6 +18,10 @@ non-fast-forward or on uncommitted changes you did not make.
 | Structural work | `docs/agents/ARCHITECTURE.md` |
 | Old code or a past decision needs explaining | `docs/agents/DECISIONS-SUPERSEDED.md`, `PATTERNS-SUPERSEDED.md` (never obeyed) |
 | UI work | `docs/design/DESIGN.md`, `docs/design/registry.yaml` |
+| Any feature, scope or requirement question | `docs/brief.md` (the project requirements) |
+| You need what earlier sessions did or decided | `AI_LOG.md` (the work history) |
+| Seed data, field reports or photos | `Field.md`, `docs/field_photos/` |
+| User needs or the Primăria categories and SLAs | `Interview.md` |
 
 **Flow:** a change to more than a few lines, or one with a design choice, starts with
 `/plan`. The approved plan runs with `/build`. Small fixes go straight to build, with
@@ -68,7 +72,7 @@ without new evidence. A rejected proposal is added there with the reason.
 - Superseded entries stay (`status: superseded-by <ID>`) so old code stays explainable.
   Their index lines live in `DECISIONS-SUPERSEDED.md` / `PATTERNS-SUPERSEDED.md`, not
   in the always-loaded indexes; the lint (`--fix`) moves them.
-- After any ledger change: `py docs/agents/tools/ledger-lint.py --fix` (next free
+- After any ledger change: `python3 docs/agents/tools/ledger-lint.py --fix` (next free
   ID: `--next D`). It must pass.
 - **Confirmed:** when the user confirms an entry in a plan, set `- **Confirmed:** <date>`
   on it. Any edit to an entry removes its Confirmed line.
@@ -77,24 +81,31 @@ without new evidence. A rejected proposal is added there with the reason.
 <!-- graffino-agentic:end -->
 
 ## 1. What this repo is
-University Web project (Anul 3). A modern web application for coursework and laboratory requirements.
+University Web project (Anul 3), P08: a civic issue map with workflow for Cartierul Tineretului,
+Sibiu. Citizens report issues with photo and location, vote and follow status; an operator
+triages them against SLA deadlines. Requirements: `docs/brief.md`.
 
 ## 2. Stack and commands
-Web application (stack to be initialized in Q-001).
+Node.js + TypeScript server, React + TypeScript (Vite) + Leaflet client, PostgreSQL/PostGIS
+(D-002). Not scaffolded yet: no install, build, run or test commands exist.
 
 ```bash
-# Lint ledger
-py docs/agents/tools/ledger-lint.py
+# Lint the ledger (on Windows: py instead of python3)
+python3 docs/agents/tools/ledger-lint.py
+# Screenshot: not defined until the client exists (Q-006)
 ```
 
 ## 3. Layout
+- `docs/brief.md` — project requirements; `docs/field_photos/` — 24 field photos (.heic)
+- `Field.md` — 24 field reports; `Interview.md` — neighbour interviews and the Primăria reply
+- `AI_LOG.md` — AI session log (academic transparency); `README.md` — project overview
 - `docs/agents/` — Knowledge ledger (decisions, patterns, contracts, questions) and lint tooling
 - `docs/design/` — Design guardrails, token registry, screens and mocks
 - `.claude/` — Agent skills (/plan, /build) and agent role definitions
 - `.agents/` — Antigravity agent configuration and skills
 
 ## 4. Rules for this repo
-- Always run `py docs/agents/tools/ledger-lint.py` after editing ledger files.
+- Always run `python3 docs/agents/tools/ledger-lint.py` after editing ledger files.
 - Keep components modular with clear separation of structure, style, and behavior.
 
 ## 5. Release
@@ -102,6 +113,6 @@ py docs/agents/tools/ledger-lint.py
 
 ## 6. Definition of done
 - Automated tests pass once test runner is configured.
-- `py docs/agents/tools/ledger-lint.py` passes cleanly.
+- `python3 docs/agents/tools/ledger-lint.py` passes cleanly.
 - Visual elements adhere to design tokens in `docs/design/DESIGN.md`.
 - New practices recorded as candidate patterns; open points recorded as Q- entries.
