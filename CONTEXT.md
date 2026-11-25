@@ -35,7 +35,7 @@ _Avoid_: clonă, sesizare geamănă
 **Fuziune reversibilă** (noun) — An operator workflow action merging a secondary duplicate report into a primary report that aggregates comments and followers while computing unique votes as COUNT(DISTINCT user_id), with full ability to unmerge without loss of original data or status history.
 _Avoid_: merge distructiv, combinare definitivă
 
-**Raportare opțional anonimă** (noun) — The mode allowing an authenticated user to conceal their real name and email from public views and exports (rendered as "Cetățean anonim") while retaining accountability in the database.
+**Raportare opțional anonimă** (noun) — The mode allowing an authenticated user to conceal their real name and email from public views and exports (rendered as "Cetățean anonim" in lists and exports, and as "Raportată anonim" on the sesizare detail; no role sees the real author in the app, Q-018) while retaining accountability in the database.
 _Avoid_: guest submission, postare fără cont
 
 **Vizitator** (noun) — An unauthenticated user who can view the map, the list, the sesizare detail, the public statistics and the exports, but cannot change anything. Not an account role; the account roles are Cetățean, Operator and Admin.

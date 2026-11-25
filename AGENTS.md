@@ -96,7 +96,7 @@ python3 docs/agents/tools/ledger-lint.py
 ```
 
 ## 3. Layout
-- `docs/brief.md` — project requirements; `docs/field_photos/` — 24 field photos (.heic)
+- `docs/brief.md` — project requirements; `docs/field_photos/` — 24 field photos (.heic originals local only, D-010)
 - `Field.md` — 24 field reports; `Interview.md` — neighbour interviews and the Primăria reply
 - `AI_LOG.md` — AI session log (academic transparency); `README.md` — project overview
 - `docs/agents/` — Knowledge ledger (decisions, patterns, contracts, questions) and lint tooling

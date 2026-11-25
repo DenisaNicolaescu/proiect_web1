@@ -1,7 +1,8 @@
 Jurnal de Teren — Sesizări din Cartierul Tineretului, Sibiu
 
 Perioada colectarii: 15 noiembrie 2026
-Total sesizari: 24
+Total sesizari: 24 (22 în aria proiectului, intră în seed; #06 și #24 sunt excluse, D-009)
+Fotografii: originalele .heic (cu EXIF și GPS) sunt doar locale, nu în repo (D-010); GPS-ul lor a fost verificat față de coordonatele de mai jos (toate sub 1 m, 26 nov 2026).
 
 Lista sesizarilor:
 
@@ -160,6 +161,7 @@ Coordonate GPS: 45,81414° N, 24,13228° E
 Data si ora: 15 noiembrie 2026 la ora 12:55
 Descriere: Cablu de alimentare tras direct din curte peste întreaga lățime a trotuarului pietonal până la un autoturism staționat la bordură, fără protecție de cablu, creând pericol de împiedicare și electrocutare.
 Fisier foto: docs/field_photos/sesizare_17.heic"
+Notă: aceeași problemă, în două locuri diferite – descriere identică intenționat (vezi #23, la 244 m distanță)
 
 18. Câine de talie mare lăsat liber (fără lesă și stăpân) pe stradă
 Categorie: Animale pe domeniu public
@@ -215,6 +217,7 @@ Coordonate GPS: 45,81628° N, 24,13156° E
 Data si ora: 15 noiembrie 2026 la ora 13:03
 Descriere: Cablu de alimentare tras direct din curte peste întreaga lățime a trotuarului pietonal până la un autoturism staționat la bordură, fără protecție de cablu, creând pericol de împiedicare și electrocutare.
 Fisier foto: docs/field_photos/sesizare_23.heic"
+Notă: aceeași problemă, în două locuri diferite – descriere identică intenționat (vezi #17, la 244 m distanță)
 
 24. Autoplatformă (vehicul comercial cu remorcă) staționată pe carosabil
 Categorie Principala: Trafic auto, semne de circulație și parcări
