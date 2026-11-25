@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- OSM tiles need a Referer: state the policy, so a browser default of no-referrer does not block them -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>DS-002 · Detaliul sesizării (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Map: Leaflet (D-002) with OpenStreetMap tiles (Q-005) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- Tokens, mock bar, app header, badges, messages, pins: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-002 only. Tokens and shared parts: shared.css */
+    .page { flex: 1; min-height: 0; overflow-y: auto; }
+    .wrap { display: grid; gap: var(--space-6); padding: var(--space-4); }
+    .frame[data-size="desktop"] .wrap { grid-template-columns: minmax(0, 1fr) calc(var(--space-8) * 12); gap: var(--space-8);
+      align-items: start; padding: var(--space-6); }
+    .col { display: grid; gap: var(--space-6); min-width: 0; align-content: start; }
+    .top { display: grid; gap: var(--space-3); }
+    .frame[data-size="desktop"] .top { grid-column: 1 / -1; }
+    .back { justify-self: start; margin-left: calc(var(--space-3) * -1); }
+
+    h1.title { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; overflow-wrap: anywhere; }
+    h2.sec { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; }
+    h3.sub { font-size: var(--text-base); line-height: var(--lh-base); font-weight: 600; }
+    .idrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+    .head { display: grid; gap: var(--space-2); }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .desc { overflow-wrap: anywhere; }
+
+    /* Merged banner (fuzionată colors: it is a status, not an error) */
+    .merged { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-4); border-radius: var(--radius-lg);
+      background: var(--color-status-fuzionata-bg); border: 1px solid var(--color-status-fuzionata); }
+    .merged > .i { color: var(--color-status-fuzionata); margin-top: var(--space-1); }
+    .merged strong { display: block; }
+
+    /* Gallery */
+    .gallery { display: grid; gap: var(--space-2); }
+    .photo-main { position: relative; aspect-ratio: 3 / 4; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border); }
+    /* The field photos are portrait (960 × 1280): the frame keeps their shape, nothing is cropped */
+    .frame[data-size="desktop"] .photo-main { max-width: calc(var(--space-8) * 12); }
+    .photo-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-ph { width: 100%; height: 100%; display: grid; place-items: center; align-content: center; gap: var(--space-2); text-align: center;
+      background: linear-gradient(to bottom, var(--color-status-rezolvata-bg) 55%, var(--color-border) 55%); color: var(--color-text); padding: var(--space-4); }
+    .photo-ph span { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; background: var(--color-surface); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+    .photo-count { position: absolute; right: var(--space-2); bottom: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-sm);
+      background: var(--color-surface); color: var(--color-text); font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; }
+    .photo-tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .tab-thumb { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--size-touch); padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+      border: 1px solid var(--color-border-input); border-radius: var(--radius-md); background: var(--color-surface); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .tab-thumb .thumb { width: calc(var(--space-8) + var(--space-2)); height: calc(var(--space-8) + var(--space-2)); border-radius: var(--radius-sm); }
+    .tab-thumb[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-subtle); color: var(--color-primary); font-weight: 600; }
+    .caption { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+
+    /* Panels */
+    .panel { display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface);
+      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); min-width: 0; }
+    .panel-op { border-color: var(--color-primary); }
+    .panel-op .tag { justify-self: start; display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-sm);
+      background: var(--color-primary-subtle); color: var(--color-primary); font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; }
+    .divider { border: 0; border-top: 1px solid var(--color-border); }
+
+    .status-now { display: flex; align-items: center; gap: var(--space-3); }
+    .status-ico { width: var(--size-touch); height: var(--size-touch); flex: none; border-radius: var(--radius-full); display: grid; place-items: center;
+      background: var(--sbg); color: var(--sc); border: 1px solid var(--sc); }
+    .status-name { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; color: var(--sc); }
+    .termen { display: grid; gap: var(--space-1); justify-items: start; }
+    .termen .sla-ok { font-size: var(--text-base); line-height: var(--lh-base); color: var(--color-text); }
+    .termen .sla-ok .i { width: var(--space-4); height: var(--space-4); }
+
+    .count { display: flex; align-items: baseline; gap: var(--space-2); }
+    .count strong { font-size: var(--text-lg); line-height: var(--lh-lg); font-variant-numeric: var(--font-numeric); }
+    .btn-block { width: 100%; }
+    .btn-toggle[aria-pressed="true"] { background: var(--color-primary-subtle); color: var(--color-primary); border-color: var(--color-primary); font-weight: 600; }
+    .act { display: grid; gap: var(--space-2); }
+    .act .btn-ghost { justify-self: start; margin-left: calc(var(--space-3) * -1); }
+    .msg-success { padding: var(--space-3); }
+    .msg-error { padding: var(--space-3); }
+
+    /* Facts */
+    .facts { display: grid; gap: var(--space-3); }
+    .fact { display: grid; grid-template-columns: var(--space-6) minmax(0, 1fr); gap: var(--space-2); align-items: start; }
+    .fact > .i { color: var(--color-text-muted); margin-top: var(--space-1); }
+    .fact dt { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); font-weight: 500; }
+    .fact dd { overflow-wrap: anywhere; }
+    .minimap { position: relative; height: calc(var(--space-8) * 6); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border); }
+    .frame[data-size="desktop"] .minimap { height: calc(var(--space-8) * 8); }
+    #mini-slot { position: absolute; inset: 0; }
+
+    /* Timeline */
+    .tl { list-style: none; display: grid; }
+    .tl li { display: grid; grid-template-columns: var(--size-touch) minmax(0, 1fr); gap: var(--space-3); position: relative; padding-bottom: var(--space-4); }
+    .tl li:not(:last-child)::before { content: ''; position: absolute; left: calc(var(--size-touch) / 2); top: var(--size-touch); bottom: 0;
+      border-left: 2px solid var(--color-border); }
+    .tl .status-ico { width: var(--size-touch); height: var(--size-touch); }
+    .tl-body { display: grid; gap: var(--space-1); justify-items: start; padding-top: var(--space-2); min-width: 0; }
+    .tl-title { font-weight: 600; }
+    .tl-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+    .tl-reason { padding: var(--space-2) var(--space-3); border-left: 3px solid var(--color-status-respinsa); background: var(--color-surface-elevated);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .tl-photo { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .thumb-res { background: linear-gradient(to bottom, var(--color-status-rezolvata-bg) 55%, var(--color-border) 55%); }
+
+    /* Duplicates */
+    .dups { list-style: none; display: grid; gap: var(--space-3); }
+    .dup { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+    .dup .thumb { width: calc(var(--space-8) + var(--space-4)); height: calc(var(--space-8) + var(--space-4)); }
+    .dup-body { display: grid; gap: var(--space-1); min-width: 0; }
+    .dup-title { font-weight: 600; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .dup .btn { grid-column: 1 / -1; }
+
+    /* Comments */
+    .comments { list-style: none; display: grid; }
+    .comment { display: grid; grid-template-columns: var(--size-touch) minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-border); }
+    .comment .avatar { width: var(--size-touch); height: var(--size-touch); }
+    .comment-head { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); align-items: baseline; }
+    .comment-head strong { font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .comment p { overflow-wrap: anywhere; }
+    .from { font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-status-fuzionata); }
+    .form { display: grid; gap: var(--space-2); }
+    .form label { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; color: var(--color-text-muted); }
+    .textarea { width: 100%; min-height: calc(var(--space-8) * 3); padding: var(--space-3); border-radius: var(--radius-md); resize: vertical;
+      border: 1px solid var(--color-border-input); background: var(--color-surface); font: inherit; color: var(--color-text); }
+    .textarea[aria-invalid="true"] { border-color: var(--color-danger); }
+    .field-error { display: flex; gap: var(--space-1); align-items: flex-start; color: var(--color-danger); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .form .btn { justify-self: start; }
+
+    .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       The sesizare comes from seed.js (Field.md), by ?id=. Statuses, votes, termen, timeline
+       dates, the reason for rejection, the merge and the comments are example values (today = 25 nov 2026). */
+    const STATES = [['success', 'Succes'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung'],
+      ['anonim', 'Anonimă'], ['autor', 'Sesizarea ta'], ['respinsa', 'Respinsă'], ['rezolvata', 'Rezolvată'], ['fuzionata', 'Fuzionată'], ['ratelimit', 'Prea multe voturi']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator'];
+    // A special state opens on the seed sesizare that shows it (DS-001 has #10 respinsă and #20 rezolvată)
+    const STATE_ID = { respinsa: 10, rezolvata: 20, long: 17, fuzionata: 15 };
+    // Example merge: #15 into #14, same category and subcategory (Trotuar deteriorat), Strada Picasso, 38 m apart
+    const MERGE = { secondary: 15, primary: 14, when: '18 nov 2026, ora 12:30', votes: 5 };
+    // D-004: the SLA in working days of the main category
+    const SLA_DAYS = { 'Străzi și iluminat': 30, 'Trafic auto, semne de circulație și parcări': 5, 'Parcuri și spații verzi': 15, 'Animale pe domeniu public': 3 };
+
+    const S = mockState({ state: 'success', role: 'vizitator', size: 'phone', theme: 'light', voted: false, following: false,
+      photo: 0, resent: false, added: [], draft: '', draftError: false, sent: false }, { roles: ROLES, states: STATES.map(x => x[0]) });
+    S.id = Number(URLP.get('id')) || 9;
+    if (!SEED.some(x => x.id === S.id)) S.id = 9;
+    function fitIdToState() {
+      const want = STATE_ID[S.state];
+      if (!want) return;
+      if (S.state === 'fuzionata' && (S.id === MERGE.primary || S.id === MERGE.secondary)) return;
+      S.id = want;
+    }
+    fitIdToState();
+
+    const LONG = {
+      title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat, fără protecție, cu pericol de împiedicare și electrocutare',
+      votes: 1248,
+      desc: SEED.find(x => x.id === 17).desc + ' Cablul rămâne întins zi și noapte, inclusiv când plouă, iar seara nu se vede deloc pentru că trotuarul nu e luminat în porțiunea aceea. Pe aici trec zilnic copii spre școală, bătrâni și părinți cu cărucioare; cei mai mulți coboară pe carosabil ca să-l ocolească, chiar în dreptul mașinilor parcate. Am observat cablul în mai multe zile la rând, la ore diferite.',
+    };
+
+    const phone = () => S.size === 'phone';
+    const signedIn = () => signedInRole(S.role);
+    const canAct = () => S.role === 'cetatean' || S.role === 'operator';
+    const isOperator = () => S.role === 'operator';
+    // "Sesizarea ta": the signed-in account is the author (the seed account)
+    const isOwn = () => S.state === 'autor' && canAct();
+    const coord = n => n.toFixed(5).replace('.', ',');
+
+    function current() {
+      const base = SEED.find(x => x.id === S.id);
+      let i = { ...base, author: SEED_AUTHOR };
+      if (S.state === 'long') i = { ...i, ...LONG };
+      if (S.state === 'empty') i.votes = 0;
+      if (S.state === 'anonim') i.author = null;
+      if (S.state === 'fuzionata' && i.id === MERGE.secondary) i = { ...i, st: 'fuzionata', sla: null, mergedInto: MERGE.primary };
+      if (S.state === 'fuzionata' && i.id === MERGE.primary) i = { ...i, merged: [MERGE.secondary], votes: MERGE.votes };
+      return i;
+    }
+
+    /* Timeline: who and when, per status (example dates; "Operator" without a name, the owner's choice) */
+    function events(i) {
+      const ev = [{ st: 'noua', title: 'Sesizare trimisă', who: i.author ? i.author : null, when: `${SEED_DATE}, ora ${i.time}` }];
+      const op = (st, when, extra = {}) => ev.push({ st, title: STATUS_ALL[st].name, who: 'Operator', when, ...extra });
+      if (i.st === 'confirmata') op('confirmata', '17 nov 2026, ora 10:15');
+      if (i.st === 'in-lucru') { op('confirmata', '17 nov 2026, ora 10:15'); op('in-lucru', '19 nov 2026, ora 09:40'); }
+      if (i.st === 'rezolvata') { op('confirmata', '16 nov 2026, ora 09:30'); op('in-lucru', '18 nov 2026, ora 08:50'); op('rezolvata', '23 nov 2026, ora 14:20', { photo: true }); }
+      if (i.st === 'respinsa') op('respinsa', '17 nov 2026, ora 11:05', { reason: 'Nu am găsit problema la adresa indicată. Dacă o vezi în continuare, trimite o sesizare nouă cu o poză recentă.' });
+      if (i.st === 'fuzionata') op('fuzionata', MERGE.when, { title: `Unită cu #${i.mergedInto}` });
+      if (i.merged) ev.push({ st: 'fuzionata', merge: MERGE.secondary, title: `Sesizarea #${MERGE.secondary} a fost unită cu aceasta`, who: 'Operator', when: MERGE.when });
+      return ev;
+    }
+
+    /* Comments: text only (Q-004). Example texts by the two seed accounts, oldest first. */
+    function comments(i) {
+      if (S.state === 'empty' || i.st === 'fuzionata') return [...S.added];
+      const c = [{ who: SEED_AUTHOR, when: '16 nov 2026', text: 'Am trecut din nou pe aici azi: problema e tot acolo.' }];
+      if (['confirmata', 'in-lucru', 'rezolvata'].includes(i.st)) c.push({ who: 'Operator', when: '17 nov 2026', text: 'Am verificat la fața locului și am confirmat sesizarea. Mulțumim!' });
+      if (['in-lucru', 'rezolvata'].includes(i.st)) c.push({ who: 'Operator', when: '19 nov 2026', text: 'Echipa de intervenție a preluat lucrarea.' });
+      if (i.st === 'rezolvata') c.push({ who: SEED_AUTHOR, when: '24 nov 2026', text: 'Confirm, s-a rezolvat. Mulțumesc!' });
+      if (i.merged) c.push({ who: SEED_AUTHOR, when: '16 nov 2026', text: 'Aceeași problemă continuă și mai încolo, spre bordură.', from: MERGE.secondary });
+      if (S.state === 'long') {
+        const more = ['Și eu m-am împiedicat aseară de cablu.', 'Problema e tot acolo și astăzi, la prânz.',
+          'Am vorbit cu vecinii de pe stradă: toți ocolesc porțiunea pe carosabil, inclusiv cei cu cărucioare, pentru că pe trotuar nu se mai poate trece în siguranță, mai ales seara când nu se vede nimic.',
+          'Mulțumim pentru actualizare.', 'Când se intervine?', 'Am atașat detalii în descriere.'];
+        for (let k = 0; k < 12; k++) c.push({ who: k % 3 === 2 ? 'Operator' : SEED_AUTHOR, when: `${17 + Math.floor(k / 2)} nov 2026`, text: more[k % more.length] });
+      }
+      return [...c, ...S.added];
+    }
+
+    /** Possible duplicates: same category, under 50 m, last 30 days (D-005). All seed sesizări are from 15 nov. */
+    function duplicates(i) {
+      return SEED.filter(x => x.id !== i.id && x.cat === i.cat && !(S.state === 'fuzionata' && x.id === MERGE.secondary))
+        .map(x => ({ ...x, d: metres(i, x) })).filter(x => x.d < 50).sort((a, b) => a.d - b.d);
+    }
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    // Thumbnails (320 × 240, center crop) for small images; large photos (1280 px long side, no EXIF) for the gallery
+    const photoSrc = id => `photos/sesizare_${String(id).padStart(2, '0')}.jpg`;
+    const photoLarge = id => `photos/large/sesizare_${String(id).padStart(2, '0')}.jpg`;
+    // Example data (not from Field.md) carries a visible tag; it never goes into the seed (DESIGN.md → Example data in mocks)
+    const EX = '<span class="ex" title="Date de exemplu, nu din Field.md">exemplu</span>';
+    const backLink = () => `<a class="btn btn-ghost back" href="${mockHref('DS-001')}">${ic('i-back')}Înapoi la hartă</a>`;
+
+    function gallery(i) {
+      const photos = [{ label: 'La raportare', caption: `Fotografie de la raportare · ${SEED_DATE}` }];
+      if (i.st === 'rezolvata') photos.push({ label: 'La rezolvare', caption: 'Fotografie de la rezolvare · 23 nov 2026, de la operator', res: true });
+      const k = Math.min(S.photo, photos.length - 1), p = photos[k];
+      const main = p.res
+        ? `<div class="photo-ph" role="img" aria-label="Poza de la rezolvare a sesizării #${i.id}">${ic('i-camera', 'i-xl')}<span>Poza de la rezolvare</span></div>`
+        : `<img src="${photoLarge(i.id)}" alt="Fotografia sesizării #${i.id} la raportare: ${i.title}" width="960" height="1280">`;
+      const count = photos.length > 1 ? `<span class="photo-count num">${k + 1} / ${photos.length}</span>` : '';
+      const tabs = photos.length > 1 ? `<div class="photo-tabs" role="group" aria-label="Fotografii">${photos.map((x, n) => `<button class="tab-thumb" data-act="photo" data-v="${n}" aria-pressed="${n === k}">
+          ${x.res ? `<span class="thumb thumb-res">${ic('i-camera')}</span>` : `<span class="thumb"><img src="${photoSrc(i.id)}" alt=""></span>`}${x.label}</button>`).join('')}</div>` : '';
+      return `<section class="gallery" aria-label="Fotografii"><div class="photo-main">${main}${count}</div>${tabs}<p class="caption">${p.caption}</p></section>`;
+    }
+
+    function head(i) {
+      const by = i.author ? `Raportată de <strong>${i.author}</strong>${isOwn() ? ' (tu)' : ''}` : `${ic('i-user-off')}<span>Raportată anonim</span>`;
+      return `<div class="head">
+        <div class="idrow"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}</div>
+        <h1 class="title">${i.title}</h1>
+        <p class="meta">${i.author ? ic('i-user') : ''}<span>${by} · ${SEED_DATE}, ora ${i.time}</span></p></div>`;
+    }
+
+    function mergedBanner(i) {
+      if (!i.mergedInto) return '';
+      return `<div class="merged" role="note">${ic('i-fuzionata', 'i-lg')}<div>
+        <strong>Această sesizare a fost unită cu <a href="${mockHref('DS-002', { id: i.mergedInto, stare: 'fuzionata' })}">#${i.mergedInto}</a> ${EX}</strong>
+        <span class="hint">Voturile, comentariile și urmăritorii ei se văd acum la #${i.mergedInto}.</span></div></div>`;
+    }
+
+    function statusPanel(i) {
+      const ev = events(i);
+      const since = ev.filter(e => !e.merge).pop();
+      let termen = '';
+      if (i.sla && isOperator()) termen = `<div class="termen">${slaOperatorBadge(i)}<span class="hint">SLA: ${zile(SLA_DAYS[i.cat])} pentru ${i.cat}. Fără weekenduri și sărbători legale.</span></div>`;
+      else if (i.sla) termen = `<div class="termen">${slaBadge(i)}<span class="hint">Termenul se numără în zile lucrătoare, fără weekenduri și sărbători legale.</span></div>`;
+      return `<section class="panel" aria-labelledby="st-h"><h2 class="sec sr-only" id="st-h">Status</h2>
+        <div class="status-now st-${i.st}"><span class="status-ico">${ic(STATUS_ALL[i.st].icon, 'i-lg')}</span>
+          <div><div class="status-name">${STATUS_ALL[i.st].name}</div><div class="hint">din ${since.when.split(',')[0]}</div></div></div>
+        ${termen}</section>`;
+    }
+
+    function actions(i) {
+      const n = i.votes + (S.voted ? 1 : 0);
+      const count = n === 0 ? `<div class="count"><span class="muted">Niciun vot încă. Spune dacă te afectează și pe tine.</span></div>`
+        : `<div class="count"><strong>${fmt(n)}</strong><span class="muted">${n === 1 ? 'persoană afectată' : `${de(n)}persoane afectate`}</span></div>`;
+      if (i.mergedInto) return `<section class="panel" aria-labelledby="act-h"><h2 class="sec" id="act-h">Voturi și urmărire</h2>
+        <p class="hint">Votează, comentează și urmărește la sesizarea în care a fost unită.</p>
+        <a class="btn btn-primary btn-block" href="${mockHref('DS-002', { id: i.mergedInto, stare: 'fuzionata' })}">Mergi la #${i.mergedInto} ${ic('i-chevron')}</a></section>`;
+      if (S.role === 'vizitator') return `<section class="panel" aria-labelledby="act-h"><h2 class="sec" id="act-h">Te afectează și pe tine?</h2>${count}
+        <a class="btn btn-primary btn-block" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să votezi și să comentezi</a></section>`;
+      const blocked = S.role === 'neconfirmat', limited = S.state === 'ratelimit', own = isOwn();
+      // Q-016: a vote can be withdrawn; the author has no vote button (the report counts as their vote)
+      const vote = own ? ''
+        : S.voted
+        ? `<button class="btn btn-secondary btn-toggle btn-block" data-act="vote" aria-pressed="true" aria-describedby="vote-h">${ic('i-rezolvata')}Ai votat</button>
+           <button class="btn btn-ghost btn-sm" data-act="unvote">${ic('i-undo')}Retrage votul</button>`
+        : `<button class="btn btn-secondary btn-toggle btn-block" data-act="vote" aria-pressed="false" ${blocked || limited ? 'disabled' : ''}>${ic(blocked ? 'i-lock' : 'i-votes')}Mă afectează și pe mine</button>`;
+      const follow = `<button class="btn btn-secondary btn-toggle btn-block" data-act="follow" aria-pressed="${S.following}" ${blocked ? 'disabled' : ''}>${ic(blocked ? 'i-lock' : S.following ? 'i-rezolvata' : 'i-bell')}${S.following ? 'Urmărești' : 'Urmărește'}</button>`;
+      const verify = blocked ? (S.resent
+        ? `<div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Ți-am trimis din nou emailul</div><p>Deschide linkul din email, apoi revino aici.</p></div>`
+        : `<div class="msg msg-note"><div class="msg-title">${ic('i-mail')}Verifică-ți emailul ca să poți vota</div>
+          <p>Ți-am trimis un link de confirmare când ți-ai făcut contul. Până îl deschizi, nu poți vota, comenta sau urmări sesizări.</p>
+          <button class="btn btn-secondary btn-sm" data-act="resend">${ic('i-refresh')}Retrimite emailul</button></div>`) : '';
+      const rate = limited && !S.voted && !own ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Prea multe voturi într-un timp scurt</div>
+          <p>Ai votat sau ți-ai retras votul de prea multe ori în ultimele minute. Votul tău nu s-a schimbat; încearcă din nou peste câteva minute.</p></div>` : '';
+      const thanks = own ? `<p class="hint">${ic('i-user')} Ai raportat-o tu, așa că votul tău e deja inclus în număr.</p>`
+        : S.voted ? `<p class="hint" id="vote-h" role="status">Mulțumim! Ai un singur vot la fiecare sesizare; îl poți retrage oricând.</p>`
+        : S.unvoted ? `<p class="hint" role="status">Ți-ai retras votul.</p>` : `<p class="hint">Un singur vot pe cont.</p>`;
+      return `<section class="panel" aria-labelledby="act-h"><h2 class="sec" id="act-h">Te afectează și pe tine?</h2>${verify}${count}
+        <div class="act">${vote}${rate}${blocked ? '' : thanks}</div><hr class="divider">
+        <div class="act">${follow}<p class="hint">${S.following ? 'Primești un email când se schimbă statusul.' : 'Urmărește ca să primești un email când se schimbă statusul.'}</p></div></section>`;
+    }
+
+    function facts(i) {
+      return `<section class="panel" aria-labelledby="desc-h"><h2 class="sec" id="desc-h">Descriere</h2><p class="desc">${i.desc}</p>
+        <dl class="facts">
+          <div class="fact">${ic('i-tag')}<div><dt>Categorie</dt><dd>${i.cat}</dd></div></div>
+          <div class="fact">${ic('i-layers')}<div><dt>Subcategorie</dt><dd>${subName(i.sub)}</dd></div></div>
+          <div class="fact">${ic('i-pin')}<div><dt>Adresă</dt><dd>${i.street}, Cartierul Tineretului, Sibiu</dd>
+            <dd class="hint mono">${coord(i.lat)}° N, ${coord(i.lon)}° E</dd></div></div></dl>
+        <div class="minimap" aria-label="Harta: locul sesizării #${i.id} în aria Cartierului Tineretului" role="img"><div id="mini-slot"></div></div></section>`;
+    }
+
+    function timeline(i) {
+      const items = events(i).map(e => {
+        const who = e.who ? `de ${e.who} · ${e.when}` : `Trimisă anonim · ${e.when}`;
+        const reason = e.reason ? `<div class="tl-reason"><strong>Motivul respingerii:</strong> ${EX} ${e.reason}</div>` : '';
+        const photo = e.photo ? `<div class="tl-photo"><span class="thumb thumb-res">${ic('i-camera')}</span><button class="btn btn-ghost btn-sm" data-act="photo" data-v="1">Vezi poza de la rezolvare</button></div>` : '';
+        const undo = e.merge ? `<span class="hint"><a href="${mockHref('DS-002', { id: e.merge, stare: 'fuzionata' })}">Vezi #${e.merge}</a></span>${isOperator()
+          ? `<a class="btn btn-secondary btn-sm" href="${mockHref('DS-012', { id: i.id, cu: e.merge, mod: 'anulare' })}">${ic('i-undo')}Anulează unirea</a>` : ''}` : '';
+        return `<li><span class="status-ico st-${e.st}">${ic(STATUS_ALL[e.st].icon)}</span><div class="tl-body">
+          <span class="tl-head"><span class="tl-title">${e.title}</span>${e.who === 'Operator' ? EX : ''}</span><span class="hint">${who}</span>${reason}${photo}${undo}</div></li>`;
+      }).join('');
+      return `<section class="panel" aria-labelledby="tl-h"><h2 class="sec" id="tl-h">Cronologie</h2><ol class="tl">${items}</ol></section>`;
+    }
+
+    function operatorPanel(i) {
+      if (!isOperator()) return '';
+      if (i.mergedInto) return `<section class="panel panel-op" aria-labelledby="op-h"><span class="tag">${ic('i-triage')}Operator</span><h2 class="sec" id="op-h">Triaj</h2>
+        <p class="hint">Sesizarea e unită cu #${i.mergedInto}. Poți anula unirea din cronologia sesizării #${i.mergedInto}.</p>
+        <a class="btn btn-secondary" href="${mockHref('DS-002', { id: i.mergedInto, stare: 'fuzionata' })}">Mergi la #${i.mergedInto} ${ic('i-chevron')}</a></section>`;
+      const closed = i.st === 'rezolvata' || i.st === 'respinsa';
+      const dups = closed ? [] : duplicates(i);
+      const list = dups.length ? `<ul class="dups">${dups.map(x => `<li class="dup">
+          <span class="thumb"><img src="${photoSrc(x.id)}" alt="" width="48" height="48"></span>
+          <div class="dup-body"><div class="idrow"><a class="card-id" href="${mockHref('DS-002', { id: x.id })}">#${x.id}</a>${statusBadge(x.st)}</div>
+            <span class="dup-title">${x.title}</span><span class="meta">${ic('i-pin')}<span class="num">la ${Math.round(x.d)} m · ${subName(x.sub)}</span></span></div>
+          <a class="btn btn-secondary btn-sm" href="${mockHref('DS-012', { id: i.id, cu: x.id })}" aria-label="Unește #${x.id} cu #${i.id}">${ic('i-fuzionata')}Unește</a></li>`).join('')}</ul>`
+        : `<p class="hint">${closed ? 'Sesizarea e închisă: nu mai caută duplicate.' : 'Nicio sesizare din aceeași categorie la mai puțin de 50 m, din ultimele 30 de zile.'}</p>`;
+      return `<section class="panel panel-op" aria-labelledby="op-h"><span class="tag">${ic('i-triage')}Operator</span><h2 class="sec" id="op-h">Triaj</h2>
+        <a class="btn btn-primary btn-block" href="${mockHref('DS-011', { id: i.id })}">${ic('i-refresh')}Schimbă statusul</a>
+        <hr class="divider"><h3 class="sub">Posibile duplicate${dups.length ? ` <span class="muted num">(${dups.length})</span>` : ''}</h3>
+        <p class="hint">Aceeași categorie, sub 50 m, din ultimele 30 de zile.</p>${list}</section>`;
+    }
+
+    function commentsPanel(i) {
+      if (i.mergedInto) return '';
+      const list = comments(i);
+      const items = list.map(c => `<li class="comment"><span class="avatar" aria-hidden="true">${ic(c.who === 'Operator' ? 'i-triage' : 'i-user')}</span><div>
+          <div class="comment-head"><strong>${c.who}</strong><span class="hint">${c.when}</span>${c.from ? `<span class="from">din #${c.from}</span>` : ''}${c.who === 'Tu' ? '' : EX}</div>
+          <p>${c.text}</p></div></li>`).join('');
+      const empty = `<div class="msg msg-empty"><span class="ico">${ic('i-comment', 'i-lg')}</span><div class="msg-title">Niciun comentariu încă</div>
+          <p class="muted">${canAct() ? 'Aici apar comentariile vecinilor și ale operatorului. Scrie primul comentariu.' : 'Aici apar comentariile vecinilor și ale operatorului.'}</p></div>`;
+      let form = '';
+      if (S.role === 'vizitator') form = `<p class="hint"><a href="${mockHref('DS-007')}">Intră în cont</a> ca să votezi și să comentezi.</p>`;
+      else if (S.role === 'neconfirmat') form = `<p class="hint">${ic('i-lock')} Confirmă-ți emailul ca să poți comenta.</p>`;
+      else form = `<div class="form"><label for="c-text">Comentariul tău</label>
+          <textarea class="textarea" id="c-text" placeholder="Scrie ce ai observat" ${S.draftError ? 'aria-invalid="true" aria-describedby="c-err"' : ''}>${S.draft}</textarea>
+          ${S.draftError ? `<p class="field-error" id="c-err">${ic('i-alert')}Scrie comentariul înainte să-l trimiți.</p>` : `<p class="hint">Doar text.</p>`}
+          ${S.sent ? `<p class="hint" role="status">Comentariul tău a fost publicat.</p>` : ''}
+          <button class="btn btn-primary" data-act="comment">${ic('i-send')}Trimite comentariul</button></div>`;
+      return `<section class="panel" aria-labelledby="c-h"><h2 class="sec" id="c-h">Comentarii <span class="muted num">(${list.length})</span></h2>
+        ${list.length ? `<ol class="comments">${items}</ol>` : empty}${form}</section>`;
+    }
+
+    /* ── States without content ──────────────────────────────────────────── */
+    function loadingView() {
+      const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="width:${w}; height:${h}"></span>`;
+      const block = h => `<div class="sk-block" style="height:${h}"></div>`;
+      const left = `<div class="col">${block('calc(var(--space-8) * 8)')}<div class="head">${sk('30%')}${sk('90%', 'var(--space-6)')}${sk('60%')}</div>
+        <div class="panel">${sk('40%')}${sk('100%')}${sk('80%')}${block('calc(var(--space-8) * 4)')}</div></div>`;
+      const right = `<div class="col"><div class="panel">${sk('50%')}${sk('70%')}</div><div class="panel">${sk('40%')}${block('var(--size-touch)')}${block('var(--size-touch)')}</div></div>`;
+      return `<div class="wrap"><div class="top">${backLink()}<div class="loading-note" role="status">${ic('i-hourglass')}Se încarcă sesizarea…</div></div>
+        <div aria-busy="true" style="display: contents">${left}${right}</div></div>`;
+    }
+    function errorView() {
+      return `<div class="wrap"><div class="top">${backLink()}<div class="msg msg-error" role="alert">
+        <div class="msg-title">${ic('i-alert')}Nu am putut încărca sesizarea #${S.id}</div>
+        <p>Verifică-ți conexiunea la internet și încearcă din nou. Dacă problema continuă, revino peste câteva minute.</p>
+        <div class="idrow"><button class="btn btn-secondary">${ic('i-refresh')}Încearcă din nou</button><a class="btn btn-ghost" href="${mockHref('DS-001')}">Înapoi la hartă</a></div></div></div></div>`;
+    }
+
+    function content() {
+      if (S.state === 'loading') return loadingView();
+      if (S.state === 'error') return errorView();
+      const i = current();
+      const top = `<div class="top">${backLink()}${mergedBanner(i)}</div>`;
+      if (phone()) return `<div class="wrap">${top}${gallery(i)}${head(i)}${statusPanel(i)}${actions(i)}${operatorPanel(i)}${facts(i)}${timeline(i)}${commentsPanel(i)}</div>`;
+      return `<div class="wrap">${top}<div class="col">${gallery(i)}${head(i)}${facts(i)}${timeline(i)}${commentsPanel(i)}</div>
+        <div class="col">${statusPanel(i)}${actions(i)}${operatorPanel(i)}</div></div>`;
+    }
+
+    /* ── Mini map (Leaflet, kept alive across renders; light in both themes) ── */
+    let map, area, marker, mapEl, fitKey = '';
+    function mountMap() {
+      const slot = document.getElementById('mini-slot');
+      if (!slot) { if (mapEl) mapEl.remove(); return; }
+      if (!map) {
+        mapEl = document.createElement('div');
+        mapEl.className = 'leaflet-host';
+        mapEl.dataset.theme = 'light';
+        slot.appendChild(mapEl);
+        map = L.map(mapEl, { zoomControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false,
+          touchZoom: false, zoomSnap: 0.5, zoomAnimation: !reduceMotion, fadeAnimation: !reduceMotion });
+        map.attributionControl.setPrefix(false);
+        osmTiles().addTo(map);
+        area = areaLayer().addTo(map);
+      } else slot.appendChild(mapEl);
+      map.invalidateSize();
+      const i = current();
+      if (marker) marker.remove();
+      // A merged sesizare keeps its pin here (its own detail); the main map hides it (D-005)
+      marker = L.marker([i.lat, i.lon], { interactive: false, keyboard: false, icon: L.divIcon({ className: 'pin-icon', iconSize: [44, 44],
+        html: `<span class="pin st-${i.st}">${ic(STATUS_ALL[i.st].icon)}</span>` }) }).addTo(map);
+      const key = S.size + S.id;
+      if (fitKey !== key) { fitKey = key; map.fitBounds(area.getBounds(), { padding: [12, 12], animate: false }); }
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      success: 'Sesizarea s-a încărcat. Încearcă „Mă afectează și pe mine” (devine „Ai votat”, cu „Retrage votul”) și „Urmărește” (devine „Urmărești”). Schimbă sesizarea din DS-001 („Vezi detalii” sau un card din listă) sau cu ?id= în URL.',
+      empty: 'Fără voturi și fără comentarii: „Niciun vot încă”; lista de comentarii spune ce va apărea și, pentru cine poate comenta, oferă formularul.',
+      loading: 'Scheleturi cu forma finală (galerie, titlu, panouri); butonul „Înapoi la hartă” e deja activ. Fără animație: DESIGN.md nu are tokeni de durată.',
+      error: 'Sesizarea nu s-a încărcat: mesajul spune ce s-a întâmplat și ce să faci, cu „Încearcă din nou” și drumul înapoi la hartă.',
+      long: 'Titlu lung (#17), descriere lungă (textul din Field.md plus un adaos de exemplu), 1.248 de voturi și 15 comentarii, unul lung. Titlurile și textele se rup pe rânduri, fără scroll orizontal.',
+      anonim: 'Aceeași sesizare, trimisă cu „Raportează anonim”: autorul apare ca „Raportată anonim”, și în cronologie („Trimisă anonim”), pentru toate rolurile, inclusiv operatorul (Q-018). În liste și exporturi apare „Cetățean anonim”.',
+      autor: 'Cetățeanul (sau operatorul) e autorul sesizării: nu are buton de vot, raportarea contează ca votul lui și e inclusă în număr (Q-016). Poate urmări și comenta. Vizitatorul și contul neconfirmat văd varianta lor.',
+      respinsa: 'Sesizarea #10 (respinsă și în DS-001): în cronologie, operatorul, data și motivul respingerii. Fără termen. Respinsă e gri, nu roșu.',
+      rezolvata: 'Sesizarea #20 (rezolvată și în DS-001): galeria are două poze, „La raportare” și „La rezolvare”; cronologia arată poza la pasul „Rezolvată”. Poza de rezolvare e un placeholder: nu există încă o poză reală „după”.',
+      fuzionata: 'Exemplu de unire: #15 în #14 (aceeași categorie și subcategorie, Strada Picasso, la 38 m). Pe #15: bannerul „Această sesizare a fost unită cu #14”, cu link. Pe #14: în cronologie, unirea; operatorul vede „Anulează unirea” (DS-012). Voturile unice (5) și comentariile cu „din #15” urmează D-005.',
+      ratelimit: 'Cetățeanul a votat sau și-a retras votul de prea multe ori într-un timp scurt (D-006: cel mult 30 de voturi în 10 minute; retragerile intră în limită, Q-016): votul nu s-a schimbat, butonul e blocat, mesajul spune ce să facă. Vizitatorul și contul neconfirmat nu pot vota, deci văd varianta lor.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Ce diferă pe roluri</h3>
+        <ul><li><strong>Vizitator:</strong> vede tot; în locul acțiunilor, „Intră în cont ca să votezi și să comentezi” (DS-007).</li>
+          <li><strong>Cetățean:</strong> votează („Mă afectează și pe mine” → „Ai votat”, cu „Retrage votul”; fără vot pe sesizarea lui), urmărește („Urmărește” → „Urmărești”), comentează.</li>
+          <li><strong>Cont neconfirmat</strong> (D-007): acțiunile sunt blocate, cu „Verifică-ți emailul ca să poți vota” și „Retrimite emailul”. În DS-001 apare ca cetățean.</li>
+          <li><strong>Operator</strong> (D-008): tot ce vede cetățeanul, plus panoul „Triaj”: SLA-ul în zile lucrătoare, „Schimbă statusul” (DS-011), „Posibile duplicate” cu „Unește” (DS-012) și, în cronologie, „Anulează unirea”. Cetățeanul vede „termen”, niciodată „SLA”.</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Statusul: iconiță + nume + culoare, în badge, în panoul de status și în cronologie. Roșu doar pentru „Termen depășit” / „SLA depășit” și erori.</li>
+          <li>Posibilele duplicate se calculează din seed: aceeași categorie, sub 50 m, ultimele 30 de zile (D-005). Exemplu: #14 are #17 (12 m) și #15 (38 m).</li>
+          <li>Harta mică: OSM (Q-005), poligonul din <code>cartier.geojson</code> (D-009), pin-ul în culoarea statusului; rămâne light în dark mode.</li>
+          <li>Comentariile sunt doar text (Q-004). Cronologia e în ordine cronologică; comentariile, de la cel mai vechi.</li>
+          <li>Linkurile duc la mock-urile existente, cu rolul, tema și mărimea în URL; un ecran nedesenat duce la <a href="${mockHref('DS-007').split('#')[0]}">Toate ecranele</a>.</li></ul>
+        <h3>Întrebări închise (26 nov 2026)</h3>
+        <ul><li><strong>Q-016</strong> Votul se poate retrage („Retrage votul”); retragerile intră în limita de voturi. Autorul nu are buton de vot: raportarea e votul lui.</li>
+          <li><strong>Q-017</strong> Rezolvată și respinsă păstrează votul, comentariile și urmărirea; fuzionată nu are acțiuni proprii și trimite la sesizarea principală.</li>
+          <li><strong>Q-018</strong> Pe detaliu: „Raportată anonim”; în liste și exporturi: „Cetățean anonim”. Nimeni nu vede autorul real în aplicație.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv (doar în mock, <code>--mock-</code>), dimensiunile iconițelor Leaflet (44 px = <code>--size-touch</code>) și bordurile de 1–3 px.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: sesizarea din Field.md (titlu, descriere, categorie, adresă, GPS, poză, ora). Autor: contul seed „Denisa N.”. Statusurile, voturile, termenele, datele din cronologie, motivul respingerii, unirea și comentariile sunt exemple (azi = 25 nov 2026). Galeria folosește pozele mari din <code>mocks/photos/large/</code> (1280 px pe latura lungă, fără EXIF, din originalele .heic); miniaturile de 320 × 240 rămân pentru listă, popup și imaginile mici. Ce e marcat „exemplu” nu intră niciodată în seed.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      syncUrl(S, { id: S.id });
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      if (mapEl) mapEl.remove(); // detach before the frame is rebuilt, so the map keeps its state
+      frame.innerHTML = `<div class="app">${appbar(S, { brandH1: false })}<div class="page">${content()}</div></div>`;
+      document.getElementById('notes').innerHTML = notes();
+      mountMap();
+    }
+
+    document.addEventListener('input', e => { if (e.target.id === 'c-text') { S.draft = e.target.value; } });
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        const k = ctl.parentElement.dataset.ctl;
+        S[k] = ctl.dataset.v;
+        if (k === 'state') { fitIdToState(); S.photo = 0; S.voted = false; S.unvoted = false; S.added = []; S.sent = false; S.draftError = false; }
+        if (k === 'role') { S.voted = false; S.unvoted = false; S.following = false; S.resent = false; }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (act) {
+        const a = act.dataset.act;
+        if (a === 'vote') { S.voted = true; S.unvoted = false; } // "Ai votat" pressed again keeps the vote; "Retrage votul" withdraws it (Q-016)
+        if (a === 'unvote') { S.voted = false; S.unvoted = true; }
+        if (a === 'follow') S.following = !S.following;
+        if (a === 'resend') S.resent = true;
+        if (a === 'photo') S.photo = Number(act.dataset.v);
+        if (a === 'comment') {
+          const t = S.draft.trim();
+          S.draftError = !t; S.sent = !!t;
+          if (t) { S.added = [...S.added, { who: 'Tu', when: 'acum', text: t }]; S.draft = ''; }
+        }
+        return render();
+      }
+      if (e.target.closest('#frame a[href^="#"]')) e.preventDefault();
+    });
+
+    mockBar({ id: 'DS-002', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

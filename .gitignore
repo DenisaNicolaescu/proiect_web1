@@ -13,3 +13,10 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+
+# Field photo originals (with EXIF and GPS): local only (D-010)
+docs/field_photos/*.heic
+
+# Windows copy leftovers (temporary files, download zone marks)
+*.TMP
+*:Zone.Identifier

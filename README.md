@@ -6,7 +6,7 @@
 ## 1. Prezentare generală
 
 Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home/deny/proiect_web1/docs/brief.md) și a cercetării reale de teren desfășurate în **Cartierul Tineretului, Sibiu**:
-- **Cercetare de teren:** 24 de sesizări reale culese la fața locului, dintre care 22 sunt în aria proiectului și intră în seed (#06 și #24 sunt în afara poligonului, D-009) (gropi, capace de canal, trotuare surpate, mașini pe trotuar, cabluri electrice expuse, animale fără stăpân) documentate cu coordonate GPS, descrieri și fotografii în [Field.md](file:///home/deny/proiect_web1/Field.md) și [docs/field_photos/](file:///home/deny/proiect_web1/docs/field_photos/).
+- **Cercetare de teren:** 24 de sesizări reale culese la fața locului, dintre care 22 sunt în aria proiectului și intră în seed (#06 și #24 sunt în afara poligonului, D-009) (gropi, capace de canal, trotuare surpate, mașini pe trotuar, cabluri electrice expuse, animale fără stăpân) documentate cu coordonate GPS, descrieri și fotografii în [Field.md](file:///home/deny/proiect_web1/Field.md) și [docs/field_photos/](file:///home/deny/proiect_web1/docs/field_photos/) (originalele .heic, cu EXIF și GPS, sunt doar locale, D-010; în repo sunt doar imagini fără EXIF).
 - **Interviuri cu cetățenii:** 5 vecini intervievați din Cartierul Tineretului (Aleea Monet, Str. Viena), evidențiind bariere reale: lipsa de feedback, teama de tensiuni între vecini (necesitatea raportării anonime) și dorința de a susține problemele printr-un simplu vot ([Interview.md](file:///home/deny/proiect_web1/Interview.md)).
 - **Validare administrativă:** Răspunsul oficial al Primăriei Municipiului Sibiu (înregistrat cu nr. **93006/16.11.2026** în [Interview.md](file:///home/deny/proiect_web1/Interview.md)), oferind taxonomia completă de 14 categorii oficiale și intervalul general de intervenție („de la 1–3 zile lucrătoare la 6 luni – 1 an”). SLA-urile pe categorie sunt estimări proprii ale proiectului, încă nevalidate (Q-007).
 
@@ -24,7 +24,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 
 ### 2.2. Taxonomie categorii & Motor de calcul SLA în zile lucrătoare
 - **Categorii oficiale:** Sunt implementate toate cele 14 categorii și subcategoriile aferente comunicate de Primăria Sibiu.
-- **SLA-uri (estimări proprii):** Valorile de mai jos au fost stabilite de autoare pornind de la intervalul comunicat de Primărie („de la 1–3 zile lucrătoare la 6 luni – 1 an”). Nu sunt comunicate de Primărie și urmează să fie validate cu Primăria sau asociația ([Q-007](file:///home/deny/proiect_web1/docs/agents/OPEN-QUESTIONS.md)).
+- **SLA-uri (estimări proprii):** Valorile de mai jos au fost stabilite de autoare pornind de la intervalul comunicat de Primărie („de la 1–3 zile lucrătoare la 6 luni – 1 an”). Nu sunt comunicate de Primărie și urmează să fie validate cu Primăria sau asociația ([Q-007](docs/agents/questions/data-and-seed.md)).
   1. *Animale pe domeniu public* — **3 zile lucrătoare**
   2. *Salubritate* — **3 zile lucrătoare**
   3. *Utilități (apă, canalizare, gaz, electricitate)* — **5 zile lucrătoare**
@@ -78,6 +78,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   1. Extracția automată a coordonatelor GPS din metadatele EXIF ale fotografiilor (inclusiv formate `.heic` culese pe teren) ca sugestie de locație.
   2. Ștergerea completă a metadatelor EXIF (inclusiv GPS) înainte de salvarea publică.
   3. Redimensionare și optimizare web (JPEG/WebP).
+  - Seed-ul trece prin același proces ca o poză încărcată (D-011); GPS-ul din EXIF doar verifică coordonatele din Field.md (abatere > 10 m oprește seed-ul). Fără originale, seed-ul folosește JPEG-urile fără EXIF din repo.
 - **Notificări prin email:** Job de fundal ce rulează la 5 minute, grupând până la 10 schimbări de status per utilizator într-o singură notificare. Mediu de dezvoltare configurat implicit cu transport local (Mailpit / preview log).
 - **Decizie:** [D-002](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-002--full-stack-technology-stack-nodejs-react-postgresqlpostgis).
 

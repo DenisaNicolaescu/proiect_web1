@@ -58,3 +58,31 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
   - Mock-urile se deschid prin `python3 -m http.server` din `docs/design/mocks` (notat în `DESIGN.md`).
   
   Modificările au fost verificate cu `python3 docs/agents/tools/ledger-lint.py`.
+
+---
+
+## Sesiunea 4 — 26 noiembrie 2026
+
+- **Data:** 2026-11-26
+- **Ce am cerut (What I asked):**  
+  Mock-ul DS-002 (detaliul unei sesizări), status `draft`, în stilul DS-001 și doar cu tokenii din `DESIGN.md`: galerie, titlu, categorie, descriere, adresă, hartă mică cu pinul și conturul cartierului, status și cronologie, termen („Mai sunt N zile lucrătoare” / „Termen depășit…”, SLA doar pentru operator), vot „Mă afectează și pe mine”, urmărire, comentarii doar text, autor sau „Raportată anonim”, buton înapoi. Variante pentru vizitator, cetățean, cont neconfirmat și operator (panou de triaj cu „Schimbă statusul”, „Posibile duplicate” și „Anulează unirea”), toate stările de bază și cele speciale (respinsă, rezolvată, fuzionată, prea multe voturi). Apoi legarea mock-urilor: fișiere comune, pagina cu toate ecranele, rolul / tema / mărimea păstrate în URL. Am cerut apoi pozele mari pentru galerie, verificarea sesizărilor #17 și #23, marcarea datelor de exemplu, recomandări pentru Q-016…Q-018 și împărțirea `OPEN-QUESTIONS.md`.
+
+- **Ce am primit (What I received):**  
+  `docs/design/mocks/DS-002.html`, fișierele comune `shared.css`, `shared.js` și `seed.js`, `docs/design/mocks/index.html`, DS-001 mutat pe fișierele comune, regula „Linking mocks” și „Example data in mocks” în `DESIGN.md`, pozele mari în `docs/design/mocks/photos/large/` (1280 px pe latura lungă, fără EXIF, din originalele .heic) și întrebările Q-016 (retragerea votului), Q-017 (acțiuni pe sesizări închise sau fuzionate) și Q-018 („Raportată anonim” vs. „Cetățean anonim”). Asistentul a semnalat că pozele de teren sunt în portret și că miniaturile de 320 × 240 sunt decupate pe centru. Verificarea automată prin capturi nu a rulat (comanda a fost blocată de permisiuni), deci mock-urile trebuie verificate manual în browser.
+
+- **Ce am făcut cu răspunsul (What I did with the response):**  
+  Am decis următoarele:
+  - **Autorul sesizărilor din seed:** contul „Denisa N.” – eu am documentat toate sesizările pe teren. În cronologie, schimbările de status apar cu rolul „Operator”, fără nume.
+  - **Q-004:** comentariile sunt doar text.
+  - **#17 și #23:** aceeași problemă, cu descriere identică intenționat; sunt la 244 m una de alta (peste pragul de 50 m), deci nu sunt duplicat. Am adăugat o notă în `Field.md` la ambele.
+  - **Date de exemplu:** cronologia, motivul respingerii, comentariile și unirea #15 → #14 sunt marcate vizibil „exemplu” în mock și nu intră niciodată în seed.
+  - `OPEN-QUESTIONS.md` a fost împărțit pe topicuri în `docs/agents/questions/`.
+  - **Q-016, Q-017, Q-018 (închise):** votul se poate retrage („Retrage votul”), iar autorul nu are buton de vot pe sesizarea lui (raportarea e votul lui); rezolvată și respinsă păstrează votul, comentariile și urmărirea, fuzionata trimite la sesizarea principală; pe detaliu „Raportată anonim”, în liste și exporturi „Cetățean anonim”, nimeni nu vede autorul real în aplicație. DS-002 și `CONTEXT.md` au fost actualizate.
+  - **Fotografii originale (D-010):** cele 24 de .heic (cu EXIF și GPS) erau în git și pe GitHub (repo public). Le-am scos din repo (`.gitignore` + `git rm --cached`); rămân doar local. Istoricul git rămâne neschimbat.
+  - **Seed (D-011):** seed-ul trece prin același proces ca o poză încărcată (citire GPS → redimensionare → ștergere EXIF); GPS-ul din EXIF doar verifică coordonatele din `Field.md` (abatere > 10 m oprește seed-ul). Fără originale, seed-ul folosește JPEG-urile fără EXIF din repo și coordonatele din `Field.md`.
+  - **#20 (Q-019):** comparația GPS din EXIF cu `Field.md` a arătat că poza lui #20 era de fapt a doua poză a lui #11. #20 e o problemă separată pe Strada Rembrandt; am înlocuit poza cu cea corectă (acum la 0,2 m de coordonatele din `Field.md`). Numărul de sesizări rămâne 22. Asistentul a refăcut miniatura și varianta mare pentru #20.
+
+  - **Verificare în browser:** am verificat eu DS-001 și DS-002. DS-002 este confirmat (`approved`); DS-001 rămâne `approved` după mutarea pe fișierele comune.
+  - Am șters din `docs/field_photos/` două fișiere rămase de la copierea pe Windows (un `.TMP` cu o copie HEIF și un `:Zone.Identifier`) și le-am adăugat tiparele în `.gitignore`.
+
+  Modificările au fost verificate cu `python3 docs/agents/tools/ledger-lint.py`, apoi salvate pe branch-ul `chore/ds-002-mock`, unite în `main` și trimise pe GitHub.

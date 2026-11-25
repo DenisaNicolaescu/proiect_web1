@@ -139,6 +139,44 @@ does not send one. A mock with a map states `<meta name="referrer"
 content="strict-origin-when-cross-origin">` and sets the same `referrerPolicy` on the
 tile layer; it never uses `no-referrer`.
 
+## Linking mocks
+Every mock is part of one clickable set (owner's rule, 2026-11-26):
+
+1. **Shared files.** A mock loads `mocks/shared.css` (the tokens above, the mock
+   control bar, the app header, badges, messages, pins) before its own `<style>`, and
+   `mocks/seed.js` (the 22 seed sesizări and the polygon) and `mocks/shared.js` (the
+   screen list, icons, control bar, app header, URL parameters, map helpers) before its
+   own script. A mock never copies tokens or the app header into its own file.
+2. **Index.** `mocks/index.html` lists every screen of `registry.yaml`, grouped by
+   role, with its status (planned / draft / approved) and a link to its mock. The list
+   lives in `SCREENS` in `shared.js`: a change to `registry.yaml` (new screen, new
+   status, new mock) changes `SCREENS` in the same commit.
+3. **URL parameters.** Role, theme and size travel from one mock to the next:
+   `?rol=vizitator|cetatean|neconfirmat|operator&tema=light|dark&marime=telefon|desktop`.
+   `stare` (the mock's state) and screen data such as `id` belong to one mock. A mock
+   that does not draw a role falls back to the nearest one (`neconfirmat` → `cetatean`).
+4. **Links.** Every action that opens another screen links to it with
+   `mockHref('<DS-id>', {…})`. A screen without a mock links to
+   `index.html#<DS-id>`, which says "încă nedesenat". Links inside one screen that go
+   nowhere yet stay `#`.
+5. **Control bar.** Every mock has the shared control bar (state, role, size, theme)
+   with a small "Toate ecranele" link to `index.html`.
+
+## Example data in mocks
+Only Field.md is real data: title, description, category, subcategory, street, GPS,
+time and photo of each sesizare. Everything else a mock needs to show a state
+(timeline steps, reasons for rejection, comments, merges, and the statuses, termene
+and votes in `mocks/seed.js`) is example data. A mock marks the example values it
+shows on screen with the tag `exemplu` (class `.ex` in `shared.css`).
+
+**Example data never goes into the seed.** The app's seed (`npm run db:seed`, Q-002)
+takes only the Field.md values; it never copies a status, vote, comment, reason, merge
+or date from a mock or from `mocks/seed.js`.
+
+**Photos.** `mocks/photos/` holds the 320 × 240 thumbnails (center crop) for lists,
+popups and small images; `mocks/photos/large/` holds the gallery photos (1280 px on
+the long side, no EXIF), made from the originals in `docs/field_photos/`.
+
 ## Source
 - Design board: none yet (published from `mocks/`, never pulled)
 - Figma: none (regenerated on request)

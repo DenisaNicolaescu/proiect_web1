@@ -18,14 +18,15 @@ designs:
   - id: DS-002
     name: Sesizare Detail
     kind: screen
-    status: planned
+    status: approved
     route: /issues/:id
     roles: [vizitator]
     description: >-
       Photo gallery (before / after), map pin, status timeline with SLA indicator (remaining / depășit), vote count, comments.
       One screen with role variants (states in one mock):
-      vizitator — read-only, "Intră în cont ca să votezi" instead of actions;
-      cetatean — "Mă afectează și pe mine" vote, comment, follow;
+      vizitator — read-only, "Intră în cont ca să votezi și să comentezi" instead of actions;
+      cetatean — "Mă afectează și pe mine" vote ("Ai votat", "Retrage votul"; no vote button for the author, Q-016), text-only comments (Q-004), follow ("Urmărești");
+      unconfirmed account (D-007) — actions blocked, "Verifică-ți emailul ca să poți vota" with resend;
       operator — adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
       fuzionata — banner linking to the primary sesizare.
     brief: Detaliu per sesizare; vot "mă afectează și pe mine", comentarii, urmărire; indicator de depășire; fuziune
