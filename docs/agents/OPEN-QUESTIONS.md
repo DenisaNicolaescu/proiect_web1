@@ -14,6 +14,7 @@
 - Q-003 · What email transport should be used for status notifications in dev vs prod? · _answered_
 - Q-004 · Should citizen comments support image attachments or remain text-only?
 - Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation?
+- Q-006 · How do we take screenshots of the app for the design check?
 
 ---
 
@@ -52,4 +53,10 @@
 - **Status:** open
 - **Blocks:** client map layer configuration
 - **Who answers:** project owner
-- **Proposed answer:** Standard OpenStreetMap tile server (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) with standard attribution, avoiding external API key requirements during academic demo evaluation. 
+- **Proposed answer:** Standard OpenStreetMap tile server (`https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`) with standard attribution, avoiding external API key requirements during academic demo evaluation.
+
+## Q-006 · How do we take screenshots of the app for the design check?
+- **Status:** open
+- **Blocks:** the screenshot step of `/build` and DESIGN.md (AGENTS.md section 2 has no command)
+- **Who answers:** project owner, once the client is scaffolded
+- **Proposed answer:** A Playwright script against the Vite dev server, light and dark, saved to `docs/design/screens/<DS-id>.<light|dark>.png`. Not confirmed; no client exists yet.
