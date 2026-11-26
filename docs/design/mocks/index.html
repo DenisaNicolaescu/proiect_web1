@@ -57,7 +57,7 @@
       const groups = SCREEN_GROUPS.map(([g, label]) => {
         const rows = SCREENS.filter(s => s.group === g).map(s => `<li class="row" id="${s.id}">
             <span class="mock-id">${s.id}</span>
-            <span class="row-name">${s.ro}<small>${s.name}${s.legacy ? ' · desenat înainte de fișierele comune' : ''}</small></span>
+            <span class="row-name">${s.ro}<small>${s.name}</small></span>
             <span class="row-end"><span class="st st-${s.status}">${STATUS_LABEL[s.status]}</span>
               ${s.file ? `<a class="btn btn-secondary btn-sm" href="${mockHref(s.id)}">Deschide mock-ul ${ic('i-chevron')}</a>` : '<span class="undrawn">încă nedesenat</span>'}</span></li>`).join('');
         return `<section aria-labelledby="g-${g}"><h2 id="g-${g}">${label}</h2><ul class="rows">${rows}</ul></section>`;

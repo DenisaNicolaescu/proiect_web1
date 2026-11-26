@@ -52,3 +52,6 @@ _Avoid_: webmaster, superuser, root
 
 **Aria cartierului** (noun) — The closed polygon in `docs/design/cartier.geojson`, drawn by the project owner around Cartierul Tineretului, with no buffer (D-009), outside of which pins and GPS reports are strictly rejected.
 _Avoid_: perimetru general, raza orașului, zonă Sibiu
+
+**Reper** (noun) — The optional free-text landmark a reporter adds to the street of a sesizare ("în fața nr. 12", "intersecția cu Strada Lisabona"). The street itself is one of the area's streets, typed with suggestions or deduced from the pin (D-014).
+_Avoid_: adresă (for the reper alone), stradă liberă

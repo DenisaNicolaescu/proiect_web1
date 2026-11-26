@@ -63,10 +63,21 @@ designs:
   - id: DS-003
     name: Report a Sesizare
     kind: screen
-    status: draft
+    status: approved
     route: /report
     roles: [cetatean]
-    description: Photo upload with EXIF GPS suggestion, map pin with strict polygon validation (D-003), category / subcategory, description, "Raportează anonim", live duplicate card "există deja, votează-o" (D-005). Operator / admin variant (D-012, to draw when DS-003 moves onto the shared mock files): the duplicate card reads "Vezi sesizarea existentă (#N)" instead of "Votează sesizarea existentă".
+    description: >-
+      Photo upload with the EXIF GPS suggestion ("Am găsit locația din poză, o folosești?"; the photo is resized and its EXIF stripped before publication, D-011),
+      map pin checked against the exact polygon of cartier.geojson (D-009), "Folosește locația mea" (browser GPS), category / subcategory (D-004), title (Q-020),
+      description, "Stradă" as a text field with suggestions from the area's 16 streets, deduced from the pin, checked when leaving the field ("Strada nu e în aria…",
+      "Nu am găsit strada…"), with the street → map highlight, and an optional "Reper" (D-014),
+      "Raportează anonim" (Q-018), live duplicate card (same category, under 50 m, last 30 days, D-005), rate limit (D-006).
+      One screen with role variants (states in one mock):
+      vizitator — no form, "Intră în cont ca să raportezi" (DS-007);
+      cetatean — the full form; the report counts as their vote (Q-016) and they follow it automatically; duplicate card "Există deja, votează-o" → DS-002 of the existing sesizare;
+      unconfirmed account (D-007) — form blocked, "Verifică-ți emailul ca să poți raporta" with resend;
+      operator (and admin) — the same form; the report is not a vote and is not followed (D-012); the duplicate card reads "Vezi sesizarea existentă (#N)".
+      After sending — DS-002 of the new sesizare (the example #25 in mocks/shared.js).
     brief: Raportare (categorie, descriere, poză, locație, opțional anonim); detecție de duplicate la raportare
 
   - id: DS-009

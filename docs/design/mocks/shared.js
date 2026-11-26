@@ -20,8 +20,7 @@ const SCREENS = [
   { id: 'DS-005', ro: 'Statistici publice', name: 'Public Statistics', group: 'public', status: 'planned' },
   { id: 'DS-007', ro: 'Intră în cont și înregistrare', name: 'Sign In & Register', group: 'auth', status: 'planned' },
   { id: 'DS-008', ro: 'Resetarea parolei', name: 'Password Reset', group: 'auth', status: 'planned' },
-  // DS-003 was drawn before the shared files: it does not read rol / tema / marime yet
-  { id: 'DS-003', ro: 'Raportează o sesizare', name: 'Report a Sesizare', group: 'cetatean', status: 'draft', file: 'DS-003.html', legacy: true },
+  { id: 'DS-003', ro: 'Raportează o sesizare', name: 'Report a Sesizare', group: 'cetatean', status: 'approved', file: 'DS-003.html' },
   { id: 'DS-009', ro: 'Sesizările mele', name: 'My Sesizări', group: 'cetatean', status: 'planned' },
   { id: 'DS-010', ro: 'Profil și notificări', name: 'Profile & Notifications', group: 'cetatean', status: 'planned' },
   { id: 'DS-014', ro: 'Email grupat de notificare', name: 'Grouped Notification Email', group: 'cetatean', status: 'planned' },
@@ -158,6 +157,37 @@ const slaOperatorBadge = i => !i.sla ? '' : i.sla.over
   : `<span class="sla-ok">${ic('i-clock')}SLA: mai ${i.sla.left === 1 ? 'este' : 'sunt'} ${zile(i.sla.left)}</span>`;
 const votes = n => n === 0 ? 'Niciun vot încă' : plural(n, 'vot', 'voturi');
 
+/* ── Categories (D-004: the 14 categories and subcategories of Primăria Sibiu, Interview.md; SLA in working days
+   on the main category, inherited by its subcategories). Ordered by SLA, as in DS-001. ─────────────────── */
+const CATEGORY_TREE = [
+  { name: 'Animale pe domeniu public', sla: 3, subs: ['Câine agresiv', 'Animal fără lesă', 'Animal mort abandonat'] },
+  { name: 'Salubritate', sla: 3, subs: ['Stradă murdară', 'Deșeuri abandonate', 'Coș de gunoi lipsă sau deteriorat', 'Pubele neridicate'] },
+  { name: 'Utilități', sla: 5, subs: ['Capac lipsă (canalizare, telecomunicații, etc.)', 'Defecte (țevi sparte, branșament gaz, canalizare, hidranți, etc.)'] },
+  { name: 'Trafic auto, semne de circulație și parcări', sla: 5, subs: ['Semn de circulație lipsă sau deteriorat', 'Semafor defect', 'Indicator poziționat greșit', 'Parcare neregulamentară', 'Vehicul abandonat'] },
+  { name: 'Fumat în spații interzise', sla: 5, subs: ['Restaurant/Bar/Club/Cafenea', 'Terasă închisă', 'Administrație Publică', 'Transport Public', 'Loc de joacă', 'Instituție de învățământ'] },
+  { name: 'Transport în comun', sla: 10, subs: ['Stații de autobuz', 'Autobuz'] },
+  { name: 'Angajați în serviciul public', sla: 10, subs: ['Personal cu comportament abuziv', 'Personal cu comportament inadecvat'] },
+  { name: 'Vandalism', sla: 15, subs: ['Bănci', 'Locuri de joacă', 'Stâlpi de iluminat', 'Semnalizare rutieră', 'Stâlpi delimitare'] },
+  { name: 'Parcuri și spații verzi', sla: 15, subs: ['Spațiu verde neîngrijit', 'Lipsă iluminat', 'Alee în parc blocată', 'Loc de joacă deteriorat', 'Copac cu risc de prăbușire'] },
+  { name: 'Bicicliști', sla: 15, subs: ['Pista blocată', 'Pistă deteriorată', 'Semnalizare greșită', 'Semnalizare deteriorată'] },
+  { name: 'Protecția Mediului', sla: 15, subs: ['Protecția Mediului'] },
+  { name: 'Străzi și iluminat', sla: 30, subs: ['Groapă', 'Stradă inundată', 'Drum înzăpezit sau înghețat', 'Copac prăbușit sau cu risc', 'Stradă blocată',
+    'Iluminat public defect / lipsă', 'Capac canalizare lipsă / defect', 'Trotuar deteriorat', 'Altele - Străzi și Iluminat'] },
+  { name: 'Construcții', sla: 30, subs: ['Construcție ilegală', 'Șantier neîngrădit', 'Construcție periculoasă', 'Construcție dezafectată sau abandonată'] },
+  { name: 'Diverse', sla: 30, subs: ['Diverse'] },
+];
+const slaDays = cat => (CATEGORY_TREE.find(c => c.name === cat) || {}).sla;
+
+/* ── Example sesizare created in DS-003 and opened in DS-002 (?id=25) ─────────────────────────────
+   NOT from Field.md: every value is example data, marked "exemplu" on screen, never in the seed
+   (DESIGN.md → Example data in mocks). Salubritate has no seed sesizare, so it has no possible duplicate.
+   No photo: the mocks show a placeholder instead of the reporter's photo. */
+const EXAMPLE_NEW = { id: 25, example: true, lat: 45.81420, lon: 24.13190, title: 'Coș de gunoi rupt pe trotuar',
+  cat: 'Salubritate', sub: 'Coș de gunoi lipsă sau deteriorat', street: 'Strada Picasso', st: 'noua', sla: { left: 3 }, votes: 1,
+  reper: 'pe trotuarul dinspre locul de joacă', date: '25 nov 2026', time: '10:42', desc: 'Coșul de gunoi de pe trotuar e rupt de la prindere și stă aplecat; gunoiul cade pe jos.' };
+/** A sesizare by id: the seed, or the example created in DS-003. */
+const findIssue = id => SEED.find(x => x.id === id) || (id === EXAMPLE_NEW.id ? EXAMPLE_NEW : null);
+
 /* ── Mock control bar ────────────────────────────────────────────────────── */
 const ROLE_LABELS = { vizitator: 'Vizitator', cetatean: 'Cetățean', neconfirmat: 'Cont neconfirmat', operator: 'Operator', admin: 'Admin' };
 /**
@@ -224,6 +254,65 @@ function osmTiles() {
     maxZoom: 19, referrerPolicy: 'strict-origin-when-cross-origin', attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
 }
 const areaLayer = () => L.geoJSON(CARTIER, { style: { className: 'area' }, interactive: false });
+/** Aria cartierului (D-009): is the point inside the polygon of cartier.geojson? Ray casting, no buffer. */
+function insideArea(lat, lon) {
+  const ring = CARTIER.features[0].geometry.coordinates[0];
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+/* ── Streets (D-014): the Stradă field, its suggestions and the pin → street rule ── */
+// The 16 valid streets (in the area) and the 6 known streets around it (never valid, never suggested)
+const STREET_NAMES = STRAZI.features.filter(f => f.properties.in_area).map(f => f.properties.name).sort((a, b) => a.localeCompare(b, 'ro'));
+const STREETS_AROUND = STRAZI.features.filter(f => !f.properties.in_area).map(f => f.properties.name);
+const STREET_KEEP_M = 10; // a street chosen by hand stays if the pin is at most 10 m from it (D-013, kept in D-014)
+/** Matching key: no case, no diacritics, no punctuation, no "Strada" / "Str." / "Str" / "Aleea" / "Al." prefix (D-014). */
+const streetKey = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[.,;:/\\-]/g, ' ')
+  .replace(/^\s*(strada|str|aleea|al)\b/, '').replace(/\s+/g, ' ').trim();
+// Every spelling that resolves to a street: its name and its aliases (e.g. "Botticelli" → "Strada Boticelli")
+const STREET_KEYS = STRAZI.features.flatMap(f => [f.properties.name, ...(f.properties.aliases || [])]
+  .map(k => ({ key: streetKey(k), name: f.properties.name, inArea: f.properties.in_area })));
+/** Suggestions while typing: the valid streets whose name (or alias) contains the typed text, alphabetical. */
+function streetSuggestions(text) {
+  const q = streetKey(text);
+  if (!q) return [];
+  const names = new Set(STREET_KEYS.filter(k => k.inArea && k.key.includes(q)).map(k => k.name));
+  return STREET_NAMES.filter(n => names.has(n));
+}
+/** The typed text, when the person leaves the field: { status: 'empty' | 'ok' | 'outside' | 'none', name }. */
+function resolveStreet(text) {
+  const q = streetKey(text);
+  if (!q) return { status: 'empty' };
+  const hit = STREET_KEYS.find(k => k.key === q);
+  if (!hit) return { status: 'none' };
+  return hit.inArea ? { status: 'ok', name: hit.name } : { status: 'outside', name: hit.name };
+}
+/** Distance in metres from a point {lat, lon} to a street (point to segment, local flat projection). */
+function streetDistance(p, name) {
+  const f = STRAZI.features.find(x => x.properties.name === name);
+  if (!f) return Infinity;
+  const r = Math.PI / 180, R = 6371000, k = Math.cos(p.lat * r);
+  const xy = ([lon, lat]) => [(lon - p.lon) * r * k * R, (lat - p.lat) * r * R]; // the point is the origin
+  let best = Infinity;
+  for (const line of f.geometry.coordinates) for (let i = 0; i < line.length - 1; i++) {
+    const [ax, ay] = xy(line[i]), [bx, by] = xy(line[i + 1]), dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+    const t = L ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0;
+    best = Math.min(best, Math.hypot(ax + t * dx, ay + t * dy));
+  }
+  return best;
+}
+/** The nearest valid street to a point: { name, d }. */
+const nearestStreet = p => STREET_NAMES.map(name => ({ name, d: streetDistance(p, name) })).sort((a, b) => a.d - b.d)[0];
+/** D-013 / D-014: after the pin moves, the street a person chose stays if it is at most 10 m away; otherwise the nearest one, "dedusă din pin". */
+function streetForPin(p, chosen, chosenByHand) {
+  if (chosen && chosenByHand && streetDistance(p, chosen) <= STREET_KEEP_M) return { name: chosen, auto: false };
+  return { name: nearestStreet(p).name, auto: true };
+}
+const streetLayer = name => L.geoJSON(STRAZI.features.find(f => f.properties.name === name), { style: { className: 'street-hl' }, interactive: false });
+
 /** Distance in metres between two sesizări (equirectangular; exact enough under 1 km). */
 function metres(a, b) {
   const r = Math.PI / 180, R = 6371000;

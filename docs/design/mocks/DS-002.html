@@ -132,6 +132,8 @@
     .form .btn { justify-self: start; }
 
     .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+    /* #25, the example sesizare from DS-003: no real photo, a placeholder shaped like one */
+    .photo-ph-new { background: linear-gradient(to bottom, var(--color-status-noua-bg) 55%, var(--color-border) 55%); }
   </style>
 </head>
 <body data-theme="light">
@@ -157,13 +159,12 @@
     const STATE_ID = { respinsa: 10, rezolvata: 20, long: 17, fuzionata: 15 };
     // Example merge: #15 into #14, same category and subcategory (Trotuar deteriorat), Strada Picasso, 38 m apart
     const MERGE = { secondary: 15, primary: 14, when: '18 nov 2026, ora 12:30', votes: 5 };
-    // D-004: the SLA in working days of the main category
-    const SLA_DAYS = { 'Străzi și iluminat': 30, 'Trafic auto, semne de circulație și parcări': 5, 'Parcuri și spații verzi': 15, 'Animale pe domeniu public': 3 };
 
     const S = mockState({ state: 'success', role: 'vizitator', size: 'phone', theme: 'light', voted: false, following: false,
       photo: 0, resent: false, added: [], draft: '', draftError: false, sent: false }, { roles: ROLES, states: STATES.map(x => x[0]) });
     S.id = Number(URLP.get('id')) || 9;
-    if (!SEED.some(x => x.id === S.id)) S.id = 9;
+    if (!findIssue(S.id)) S.id = 9; // the seed, or #25: the example sesizare just sent from DS-003 (shared.js)
+    S.anon = URLP.get('anonim') === '1'; // #25 sent with "Raportează anonim" 
     function fitIdToState() {
       const want = STATE_ID[S.state];
       if (!want) return;
@@ -184,11 +185,16 @@
     const isOperator = () => triageRole(S.role); // Operator or Admin (D-012)
     // "Sesizarea ta": the signed-in account is the author (the seed account)
     const isOwn = () => S.state === 'autor' && canAct();
+    // A Cetățean follows their own sesizare automatically; an Operator or Admin does not (D-012)
+    const autoFollow = () => isOwn() && S.role === 'cetatean';
+    S.following = autoFollow();
     const coord = n => n.toFixed(5).replace('.', ',');
 
     function current() {
-      const base = SEED.find(x => x.id === S.id);
+      const base = findIssue(S.id);
       let i = { ...base, author: SEED_AUTHOR };
+      // #25 (example): the report counts as the author's vote only for a Cetățean (Q-016, D-012)
+      if (i.example) { i.votes = triageRole(S.role) ? 0 : 1; if (S.anon) i.author = null; }
       if (S.state === 'long') i = { ...i, ...LONG };
       if (S.state === 'empty') i.votes = 0;
       if (S.state === 'anonim') i.author = null;
@@ -199,7 +205,7 @@
 
     /* Timeline: who and when, per status (example dates; "Operator" without a name, the owner's choice) */
     function events(i) {
-      const ev = [{ st: 'noua', title: 'Sesizare trimisă', who: i.author ? i.author : null, when: `${SEED_DATE}, ora ${i.time}` }];
+      const ev = [{ st: 'noua', title: 'Sesizare trimisă', who: i.author ? i.author : null, when: `${i.date || SEED_DATE}, ora ${i.time}` }];
       const op = (st, when, extra = {}) => ev.push({ st, title: STATUS_ALL[st].name, who: 'Operator', when, ...extra });
       if (i.st === 'confirmata') op('confirmata', '17 nov 2026, ora 10:15');
       if (i.st === 'in-lucru') { op('confirmata', '17 nov 2026, ora 10:15'); op('in-lucru', '19 nov 2026, ora 09:40'); }
@@ -212,7 +218,7 @@
 
     /* Comments: text only (Q-004). Example texts by the two seed accounts, oldest first. */
     function comments(i) {
-      if (S.state === 'empty' || i.st === 'fuzionata') return [...S.added];
+      if (S.state === 'empty' || i.st === 'fuzionata' || i.example) return [...S.added];
       const c = [{ who: SEED_AUTHOR, when: '16 nov 2026', text: 'Am trecut din nou pe aici azi: problema e tot acolo.' }];
       if (['confirmata', 'in-lucru', 'rezolvata'].includes(i.st)) c.push({ who: 'Operator', when: '17 nov 2026', text: 'Am verificat la fața locului și am confirmat sesizarea. Mulțumim!' });
       if (['in-lucru', 'rezolvata'].includes(i.st)) c.push({ who: 'Operator', when: '19 nov 2026', text: 'Echipa de intervenție a preluat lucrarea.' });
@@ -242,10 +248,12 @@
     const backLink = () => `<a class="btn btn-ghost back" href="${mockHref('DS-001')}">${ic('i-back')}Înapoi la hartă</a>`;
 
     function gallery(i) {
-      const photos = [{ label: 'La raportare', caption: `Fotografie de la raportare · ${SEED_DATE}` }];
+      const photos = [{ label: 'La raportare', caption: `Fotografie de la raportare · ${i.date || SEED_DATE}`, ph: i.example }];
       if (i.st === 'rezolvata') photos.push({ label: 'La rezolvare', caption: 'Fotografie de la rezolvare · 23 nov 2026, de la operator', res: true });
       const k = Math.min(S.photo, photos.length - 1), p = photos[k];
-      const main = p.res
+      const main = p.ph
+        ? `<div class="photo-ph photo-ph-new" role="img" aria-label="Poza sesizării #${i.id} la raportare (exemplu)">${ic('i-image', 'i-xl')}<span>Poza trimisă de tine ${EX}</span></div>`
+        : p.res
         ? `<div class="photo-ph" role="img" aria-label="Poza de la rezolvare a sesizării #${i.id}">${ic('i-camera', 'i-xl')}<span>Poza de la rezolvare</span></div>`
         : `<img src="${photoLarge(i.id)}" alt="Fotografia sesizării #${i.id} la raportare: ${i.title}" width="960" height="1280">`;
       const count = photos.length > 1 ? `<span class="photo-count num">${k + 1} / ${photos.length}</span>` : '';
@@ -259,7 +267,7 @@
       return `<div class="head">
         <div class="idrow"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}</div>
         <h1 class="title">${i.title}</h1>
-        <p class="meta">${i.author ? ic('i-user') : ''}<span>${by} · ${SEED_DATE}, ora ${i.time}</span></p></div>`;
+        <p class="meta">${i.author ? ic('i-user') : ''}<span>${by} · ${i.date || SEED_DATE}, ora ${i.time}${i.example ? ` ${EX}` : ''}</span></p></div>`;
     }
 
     function mergedBanner(i) {
@@ -273,7 +281,7 @@
       const ev = events(i);
       const since = ev.filter(e => !e.merge).pop();
       let termen = '';
-      if (i.sla && isOperator()) termen = `<div class="termen">${slaOperatorBadge(i)}<span class="hint">SLA: ${zile(SLA_DAYS[i.cat])} pentru ${i.cat}. Fără weekenduri și sărbători legale.</span></div>`;
+      if (i.sla && isOperator()) termen = `<div class="termen">${slaOperatorBadge(i)}<span class="hint">SLA: ${zile(slaDays(i.cat))} pentru ${i.cat}. Fără weekenduri și sărbători legale.</span></div>`;
       else if (i.sla) termen = `<div class="termen">${slaBadge(i)}<span class="hint">Termenul se numără în zile lucrătoare, fără weekenduri și sărbători legale.</span></div>`;
       return `<section class="panel" aria-labelledby="st-h"><h2 class="sec sr-only" id="st-h">Status</h2>
         <div class="status-now st-${i.st}"><span class="status-ico">${ic(STATUS_ALL[i.st].icon, 'i-lg')}</span>
@@ -328,7 +336,7 @@
         <dl class="facts">
           <div class="fact">${ic('i-tag')}<div><dt>Categorie</dt><dd>${i.cat}</dd></div></div>
           <div class="fact">${ic('i-layers')}<div><dt>Subcategorie</dt><dd>${subName(i.sub)}</dd></div></div>
-          <div class="fact">${ic('i-pin')}<div><dt>Adresă</dt><dd>${i.street}, Cartierul Tineretului, Sibiu</dd>
+          <div class="fact">${ic('i-pin')}<div><dt>Adresă</dt><dd>${i.street}, Cartierul Tineretului, Sibiu</dd>${i.reper ? `<dd>Reper: ${i.reper}${i.example ? ` ${EX}` : ''}</dd>` : ''}
             <dd class="hint mono">${coord(i.lat)}° N, ${coord(i.lon)}° E</dd></div></div></dl>
         <div class="minimap" aria-label="Harta: locul sesizării #${i.id} în aria Cartierului Tineretului" role="img"><div id="mini-slot"></div></div></section>`;
     }
@@ -446,7 +454,7 @@
       error: 'Sesizarea nu s-a încărcat: mesajul spune ce s-a întâmplat și ce să faci, cu „Încearcă din nou” și drumul înapoi la hartă.',
       long: 'Titlu lung (#17), descriere lungă (textul din Field.md plus un adaos de exemplu), 1.248 de voturi și 15 comentarii, unul lung. Titlurile și textele se rup pe rânduri, fără scroll orizontal.',
       anonim: 'Aceeași sesizare, trimisă cu „Raportează anonim”: autorul apare ca „Raportată anonim”, și în cronologie („Trimisă anonim”), pentru toate rolurile, inclusiv operatorul (Q-018). În liste și exporturi apare „Cetățean anonim”.',
-      autor: 'Cetățeanul e autorul sesizării: nu are buton de vot, raportarea contează ca votul lui și e inclusă în număr (Q-016). Operatorul autor vede că raportarea lui nu contează ca vot și nu urmărește sesizarea (D-012). Amândoi pot comenta; doar cetățeanul urmărește. Vizitatorul și contul neconfirmat văd varianta lor.',
+      autor: 'Cetățeanul e autorul sesizării: nu are buton de vot, raportarea contează ca votul lui și e inclusă în număr (Q-016). Cetățeanul autor urmărește automat sesizarea („Urmărești”). Operatorul autor vede că raportarea lui nu contează ca vot și nu urmărește sesizarea (D-012). Amândoi pot comenta. Sesizarea #25 (din DS-003, „Vezi sesizarea”) e un exemplu complet: nu e în seed, n-are poză reală și nici comentarii. Vizitatorul și contul neconfirmat văd varianta lor.',
       respinsa: 'Sesizarea #10 (respinsă și în DS-001): în cronologie, operatorul, data și motivul respingerii. Fără termen. Respinsă e gri, nu roșu.',
       rezolvata: 'Sesizarea #20 (rezolvată și în DS-001): galeria are două poze, „La raportare” și „La rezolvare”; cronologia arată poza la pasul „Rezolvată”. Poza de rezolvare e un placeholder: nu există încă o poză reală „după”.',
       fuzionata: 'Exemplu de unire: #15 în #14 (aceeași categorie și subcategorie, Strada Picasso, la 38 m). Pe #15: bannerul „Această sesizare a fost unită cu #14”, cu link. Pe #14: în cronologie, unirea; operatorul vede „Anulează unirea” (DS-012). Voturile unice (5) și comentariile cu „din #15” urmează D-005.',
@@ -472,13 +480,13 @@
           <li><strong>Q-018</strong> Pe detaliu: „Raportată anonim”; în liste și exporturi: „Cetățean anonim”. Nimeni nu vede autorul real în aplicație.</li></ul>
         <h3>Valori care nu sunt tokeni</h3>
         <ul><li>Ramele de dispozitiv (doar în mock, <code>--mock-</code>), dimensiunile iconițelor Leaflet (44 px = <code>--size-touch</code>) și bordurile de 1–3 px.</li></ul>
-        <p class="muted" style="margin-top: var(--space-4)">Datele: sesizarea din Field.md (titlu, descriere, categorie, adresă, GPS, poză, ora). Autor: contul seed „Denisa N.”. Statusurile, voturile, termenele, datele din cronologie, motivul respingerii, unirea și comentariile sunt exemple (azi = 25 nov 2026). Galeria folosește pozele mari din <code>mocks/photos/large/</code> (1280 px pe latura lungă, fără EXIF, din originalele .heic); miniaturile de 320 × 240 rămân pentru listă, popup și imaginile mici. Ce e marcat „exemplu” nu intră niciodată în seed.</p>`;
+        <p class="muted" style="margin-top: var(--space-4)">Datele: sesizarea din Field.md (titlu, descriere, categorie, adresă, GPS, poză, ora). Autor: contul seed „Denisa N.”. Statusurile, voturile, termenele, datele din cronologie, motivul respingerii, unirea și comentariile sunt exemple (azi = 25 nov 2026). Galeria folosește pozele mari din <code>mocks/photos/large/</code> (1280 px pe latura lungă, fără EXIF, din originalele .heic); miniaturile de 320 × 240 rămân pentru listă, popup și imaginile mici. Sesizarea #25 (cea trimisă din DS-003) e în întregime un exemplu, definit în <code>shared.js</code>, nu în <code>seed.js</code>. Ce e marcat „exemplu” nu intră niciodată în seed.</p>`;
     }
 
     /* ── Render ──────────────────────────────────────────────────────────── */
     function render() {
       syncBar(S);
-      syncUrl(S, { id: S.id });
+      syncUrl(S, S.anon && S.id === EXAMPLE_NEW.id ? { id: S.id, anonim: 1 } : { id: S.id });
       const frame = document.getElementById('frame');
       frame.dataset.size = S.size;
       if (mapEl) mapEl.remove(); // detach before the frame is rebuilt, so the map keeps its state
@@ -493,8 +501,8 @@
       if (ctl) {
         const k = ctl.parentElement.dataset.ctl;
         S[k] = ctl.dataset.v;
-        if (k === 'state') { fitIdToState(); S.photo = 0; S.voted = false; S.unvoted = false; S.added = []; S.sent = false; S.draftError = false; }
-        if (k === 'role') { S.voted = false; S.unvoted = false; S.following = false; S.resent = false; }
+        if (k === 'state') { fitIdToState(); S.photo = 0; S.voted = false; S.unvoted = false; S.added = []; S.sent = false; S.draftError = false; S.following = autoFollow(); }
+        if (k === 'role') { S.voted = false; S.unvoted = false; S.following = autoFollow(); S.resent = false; }
         return render();
       }
       const act = e.target.closest('[data-act]');

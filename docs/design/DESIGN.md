@@ -144,7 +144,7 @@ Every mock is part of one clickable set (owner's rule, 2026-11-26):
 
 1. **Shared files.** A mock loads `mocks/shared.css` (the tokens above, the mock
    control bar, the app header, badges, messages, pins) before its own `<style>`, and
-   `mocks/seed.js` (the 22 seed sesizări and the polygon) and `mocks/shared.js` (the
+   `mocks/seed.js` (the 22 seed sesizări, the polygon and the streets) and `mocks/shared.js` (the
    screen list, icons, control bar, app header, URL parameters, map helpers) before its
    own script. A mock never copies tokens or the app header into its own file.
 2. **Index.** `mocks/index.html` lists every screen of `registry.yaml`, grouped by
@@ -152,9 +152,10 @@ Every mock is part of one clickable set (owner's rule, 2026-11-26):
    lives in `SCREENS` in `shared.js`: a change to `registry.yaml` (new screen, new
    status, new mock) changes `SCREENS` in the same commit.
 3. **URL parameters.** Role, theme and size travel from one mock to the next:
-   `?rol=vizitator|cetatean|neconfirmat|operator&tema=light|dark&marime=telefon|desktop`.
+   `?rol=vizitator|cetatean|neconfirmat|operator|admin&tema=light|dark&marime=telefon|desktop`.
    `stare` (the mock's state) and screen data such as `id` belong to one mock. A mock
-   that does not draw a role falls back to the nearest one (`neconfirmat` → `cetatean`).
+   that does not draw a role falls back to the nearest one (`neconfirmat` → `cetatean`,
+   `admin` → `operator`).
 4. **Links.** Every action that opens another screen links to it with
    `mockHref('<DS-id>', {…})`. A screen without a mock links to
    `index.html#<DS-id>`, which says "încă nedesenat". Links inside one screen that go
@@ -169,6 +170,9 @@ time and photo of each sesizare. Everything else a mock needs to show a state
 and votes in `mocks/seed.js`) is example data. A mock marks the example values it
 shows on screen with the tag `exemplu` (class `.ex` in `shared.css`).
 
+The sesizare a mock creates (DS-003 → DS-002, `?id=25`) is `EXAMPLE_NEW` in
+`mocks/shared.js`, never in `mocks/seed.js`: every value of it is example data.
+
 **Example data never goes into the seed.** The app's seed (`npm run db:seed`, Q-002)
 takes only the Field.md values; it never copies a status, vote, comment, reason, merge
 or date from a mock or from `mocks/seed.js`.
@@ -180,6 +184,10 @@ the long side, no EXIF), made from the originals in `docs/field_photos/`.
 ## Source
 - Design board: none yet (published from `mocks/`, never pulled)
 - Figma: none (regenerated on request)
+- Map data: `cartier.geojson` (the polygon, drawn by the owner, D-009) and `strazi.geojson`
+  (the 16 streets of the area and the 6 known streets around it, D-014) — street data © OpenStreetMap contributors, available
+  under the Open Database License (ODbL) 1.0, https://www.openstreetmap.org/copyright.
+  The attribution is kept in the file and in every map (tile layer attribution).
 - Token source in code: pending stack initialization
 
 ## Tokens

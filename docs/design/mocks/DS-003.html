@@ -3,1199 +3,667 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DS-003 · Raportare sesizare nouă (Cartierul Tineretului, Sibiu)</title>
+  <!-- OSM tiles need a Referer: state the policy, so a browser default of no-referrer does not block them -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>DS-003 · Raportează o sesizare (Cartierul Tineretului, Sibiu) · approved</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Map: Leaflet (D-002) with OpenStreetMap tiles (Q-005) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- Tokens, mock bar, app header, badges, messages, pins: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
   <style>
-    /* Design Tokens from docs/design/DESIGN.md */
-    :root {
-      --color-bg: #f8fafc;
-      --color-surface: #ffffff;
-      --color-surface-elevated: #f1f5f9;
-      --color-border: #e2e8f0;
-      --color-border-subtle: #f1f5f9;
-      --color-border-input: #64748b;
-      --color-text: #0f172a;
-      --color-text-muted: #44526a;
-      --color-primary: #1e40af;
-      --color-primary-hover: #1e3a8a;
-      --color-on-primary: #ffffff;
-      --color-primary-subtle: #eff6ff;
-      --color-focus: #1e40af;
-      --color-status-noua: #0369a1;
-      --color-status-noua-bg: #e0f2fe;
-      --color-status-confirmata: #6d28d9;
-      --color-status-confirmata-bg: #ede9fe;
-      --color-status-in-lucru: #92400e;
-      --color-status-in-lucru-bg: #fef3c7;
-      --color-status-rezolvata: #047857;
-      --color-status-rezolvata-bg: #d1fae5;
-      --color-status-respinsa: #334155;
-      --color-status-respinsa-bg: #e2e8f0;
-      --color-status-fuzionata: #475569;
-      --color-status-fuzionata-bg: #f1f5f9;
-      --color-success: #047857;
-      --color-success-bg: #d1fae5;
-      --color-danger: #b91c1c;
-      --color-danger-bg: #fee2e2;
-
-      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --font-numeric: tabular-nums;
-
-      --text-xs: 12px;
-      --lh-xs: 16px;
-      --text-sm: 14px;
-      --lh-sm: 20px;
-      --text-base: 16px;
-      --lh-base: 24px;
-      --text-lg: 18px;
-      --lh-lg: 28px;
-      --text-xl: 24px;
-      --lh-xl: 32px;
-      --text-2xl: 30px;
-      --lh-2xl: 36px;
-
-      --space-1: 4px;
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-6: 24px;
-      --space-8: 32px;
-      --size-touch: 44px;
-
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
-      --radius-xl: 16px;
-      --radius-full: 9999px;
-
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-    }
-
-    [data-theme="dark"] {
-      --color-bg: #0b0f19;
-      --color-surface: #151c2c;
-      --color-surface-elevated: #1e293b;
-      --color-border: #253248;
-      --color-border-subtle: #1b2436;
-      --color-border-input: #7c8ba1;
-      --color-text: #f8fafc;
-      --color-text-muted: #a3b1c6;
-      --color-primary: #60a5fa;
-      --color-primary-hover: #93c5fd;
-      --color-on-primary: #0b0f19;
-      --color-primary-subtle: #172554;
-      --color-focus: #93c5fd;
-      --color-status-noua: #7dd3fc;
-      --color-status-noua-bg: #0c2d48;
-      --color-status-confirmata: #c4b5fd;
-      --color-status-confirmata-bg: #2e1065;
-      --color-status-in-lucru: #fcd34d;
-      --color-status-in-lucru-bg: #422006;
-      --color-status-rezolvata: #6ee7b7;
-      --color-status-rezolvata-bg: #052e2b;
-      --color-status-respinsa: #e2e8f0;
-      --color-status-respinsa-bg: #334155;
-      --color-status-fuzionata: #a3b1c6;
-      --color-status-fuzionata-bg: #1e293b;
-      --color-success: #6ee7b7;
-      --color-success-bg: #052e2b;
-      --color-danger: #fca5a5;
-      --color-danger-bg: #450a0a;
-
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-sans);
-      background-color: var(--color-bg);
-      color: var(--color-text);
-      line-height: var(--lh-base);
-      font-size: var(--text-base);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    /* Top Showcase Bar */
-    .mock-header {
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
-      padding: var(--space-3) var(--space-6);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--space-3);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .mock-meta {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-    }
-
-    .mock-badge {
-      background: var(--color-primary-subtle);
-      color: var(--color-primary);
-      font-size: var(--text-xs);
-      font-weight: 600;
-      padding: 2px var(--space-2);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-    }
-
-    .mock-controls {
-      display: flex;
-      align-items: center;
-      gap: var(--space-3);
-    }
-
-    .control-label {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      font-weight: 500;
-    }
-
-    .pill-selector {
-      display: inline-flex;
-      background: var(--color-surface-elevated);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 2px;
-      gap: 2px;
-    }
-
-    .pill-btn {
-      background: transparent;
-      border: none;
-      padding: 6px var(--space-3);
-      font-size: var(--text-xs);
-      font-weight: 500;
-      color: var(--color-text-muted);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .pill-btn:hover {
-      color: var(--color-text);
-    }
-
-    .pill-btn.active {
-      background: var(--color-surface);
-      color: var(--color-primary);
-      font-weight: 600;
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* Main Container */
-    .app-layout {
-      display: flex;
-      flex: 1;
-      max-width: 1200px;
-      width: 100%;
-      margin: 0 auto;
-      padding: var(--space-6);
-      gap: var(--space-6);
-    }
-
-    @media (max-width: 900px) {
-      .app-layout {
-        flex-direction: column;
-        padding: var(--space-4);
-      }
-    }
-
-    /* Form Column */
-    .form-col {
-      flex: 1.2;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-6);
-    }
-
-    /* Map Preview Column */
-    .map-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-      position: sticky;
-      top: 80px;
-      height: fit-content;
-    }
-
-    .card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .card-title {
-      font-size: var(--text-xl);
-      line-height: var(--lh-xl);
-      font-weight: 700;
-      color: var(--color-text);
-      margin-bottom: var(--space-2);
-      display: flex;
-      align-items: center;
-      gap: var(--space-2);
-    }
-
-    .card-subtitle {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      margin-bottom: var(--space-6);
-    }
-
-    .form-group {
-      margin-bottom: var(--space-4);
-    }
-
-    .label {
-      display: block;
-      font-size: var(--text-sm);
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-2);
-    }
-
-    .label-hint {
-      font-size: var(--text-xs);
-      font-weight: 400;
-      color: var(--color-text-muted);
-      margin-left: var(--space-1);
-    }
-
-    .input, .select, .textarea {
-      width: 100%;
-      padding: 10px var(--space-3);
-      font-family: var(--font-sans);
-      font-size: var(--text-sm);
-      line-height: var(--lh-sm);
-      color: var(--color-text);
-      background-color: var(--color-surface);
-      border: 1px solid var(--color-border-input);
-      border-radius: var(--radius-md);
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      min-height: 44px; /* Touch target minimum */
-    }
-
-    .input:focus, .select:focus, .textarea:focus {
-      outline: 3px solid var(--color-focus);
-      outline-offset: 2px;
-      border-color: var(--color-primary);
-    }
-
-    .textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    /* Photo Upload Zone */
-    .upload-dropzone {
-      border: 2px dashed var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: var(--space-6);
-      text-align: center;
-      background: var(--color-surface-elevated);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .upload-dropzone:hover {
-      border-color: var(--color-primary);
-      background: var(--color-primary-subtle);
-    }
-
-    .upload-icon {
-      width: 44px;
-      height: 44px;
-      margin: 0 auto var(--space-2);
-      color: var(--color-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .upload-title {
-      font-size: var(--text-sm);
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: var(--space-1);
-    }
-
-    .upload-subtitle {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-    }
-
-    /* Photo Preview with EXIF Badge */
-    .photo-preview-box {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      overflow: hidden;
-      background: var(--color-surface-elevated);
-      position: relative;
-    }
-
-    .photo-preview-img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .photo-preview-bar {
-      padding: var(--space-2) var(--space-3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--color-surface);
-      border-top: 1px solid var(--color-border);
-    }
-
-    .exif-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-1);
-      font-size: var(--text-xs);
-      font-family: var(--font-sans);
-      font-weight: 500;
-      color: var(--color-success);
-      background: var(--color-success-bg);
-      padding: 2px var(--space-2);
-      border-radius: var(--radius-sm);
-    }
-
-    .remove-photo-btn {
-      background: transparent;
-      border: none;
-      color: var(--color-text);
-      text-decoration: underline;
-      font-size: var(--text-xs);
-      font-weight: 600;
-      cursor: pointer;
-      min-height: var(--size-touch);
-      min-width: var(--size-touch);
-    }
-
-    /* Map Preview Frame */
-    .map-frame {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg);
-      height: 380px;
-      position: relative;
-      overflow: hidden;
-      background: var(--color-surface-elevated);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .map-svg-mock {
-      width: 100%;
-      height: 100%;
-      background: #e2e8f0;
-      position: relative;
-    }
-
-    /* The map stays light in dark mode (DESIGN.md: project guardrails);
-       pins and the polygon use the light-theme token values in both themes. */
-    [data-theme="dark"] .map-frame {
-      --color-primary: #1e40af;
-      --color-danger: #b91c1c;
-      --color-status-noua: #0369a1;
-      --color-status-noua-bg: #e0f2fe;
-      --color-status-confirmata: #6d28d9;
-      --color-status-confirmata-bg: #ede9fe;
-      --color-status-in-lucru: #92400e;
-      --color-status-in-lucru-bg: #fef3c7;
-      --color-status-rezolvata: #047857;
-      --color-status-rezolvata-bg: #d1fae5;
-      --color-status-respinsa: #334155;
-      --color-status-respinsa-bg: #e2e8f0;
-      --color-status-fuzionata: #475569;
-      --color-status-fuzionata-bg: #f1f5f9;
-    }
-
-    .map-polygon-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .map-hud {
-      position: absolute;
-      top: var(--space-3);
-      left: var(--space-3);
-      right: var(--space-3);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      pointer-events: none;
-    }
-
-    .map-tag {
-      background: var(--color-surface);
-      color: var(--color-text);
-      font-size: var(--text-xs);
-      font-weight: 600;
-      padding: var(--space-1) var(--space-3);
-      border-radius: var(--radius-full);
-      box-shadow: var(--shadow-md);
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-1);
-      border: 1px solid var(--color-border);
-      pointer-events: auto;
-      min-height: var(--size-touch);
-    }
-
-    .map-pin {
-      position: absolute;
-      transform: translate(-50%, -100%);
-      cursor: grab;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
-      transition: all 0.2s ease;
-    }
-
-    .map-pin svg {
-      display: block;
-      width: 36px;
-      height: 44px;
-    }
-
-    .coords-bar {
-      margin-top: var(--space-2);
-      font-family: var(--font-mono);
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* Duplicate Alert Card */
-    .duplicate-card {
-      background: var(--color-primary-subtle);
-      border: 1px solid var(--color-primary);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
-      margin-bottom: var(--space-4);
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-3);
-      animation: fadeIn 0.2s ease-in-out;
-    }
-
-    .duplicate-header {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-2);
-    }
-
-    .duplicate-title {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--color-text);
-    }
-
-    .duplicate-text {
-      font-size: var(--text-xs);
-      line-height: var(--lh-sm);
-      color: var(--color-text);
-    }
-
-    .duplicate-actions {
-      display: flex;
-      gap: var(--space-2);
-      flex-wrap: wrap;
-    }
-
-    /* Out of bounds error alert */
-    .out-of-bounds-card {
-      background: var(--color-danger-bg);
-      border: 2px solid var(--color-danger);
-      border-radius: var(--radius-md);
-      padding: var(--space-4);
-      margin-bottom: var(--space-4);
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-3);
-      animation: shake 0.3s ease-in-out;
-    }
-
-    .alert-icon {
-      flex-shrink: 0;
-      color: var(--color-danger);
-      width: 20px;
-      height: 20px;
-    }
-
-    .out-of-bounds-title {
-      font-size: var(--text-sm);
-      font-weight: 700;
-      color: var(--color-danger);
-      margin-bottom: 2px;
-    }
-
-    .out-of-bounds-text {
-      font-size: var(--text-xs);
-      color: var(--color-text);
-    }
-
-    /* Anonymous Switch */
-    .checkbox-row {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--space-3);
-      padding: var(--space-3);
-      background: var(--color-surface-elevated);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-    }
-
-    .checkbox-input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--color-primary);
-      cursor: pointer;
-      margin-top: 2px;
-    }
-
-    .checkbox-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .checkbox-title {
-      font-size: var(--text-sm);
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    .checkbox-desc {
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-      font-family: var(--font-sans);
-      font-size: var(--text-sm);
-      font-weight: 600;
-      padding: 10px var(--space-6);
-      border-radius: var(--radius-md);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      min-height: 44px; /* Accessible hit target */
-    }
-
-    .btn-primary {
-      background: var(--color-primary);
-      color: var(--color-on-primary);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--color-primary-hover);
-    }
-
-    .btn-secondary {
-      background: var(--color-surface);
-      border-color: var(--color-border-input);
-      color: var(--color-text);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--color-surface-elevated);
-    }
-
-    .btn:focus-visible, .remove-photo-btn:focus-visible, .map-tag:focus-visible {
-      outline: 3px solid var(--color-focus);
-      outline-offset: 2px;
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .btn-block {
-      width: 100%;
-    }
-
-    /* Success Card View */
-    .success-card {
-      text-align: center;
-      padding: var(--space-8) var(--space-6);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--space-4);
-    }
-
-    .success-icon-wrap {
-      width: 64px;
-      height: 64px;
-      background: var(--color-success-bg);
-      color: var(--color-success);
-      border-radius: var(--radius-full);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid var(--color-success);
-    }
-
-    .sla-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-1);
-      background: var(--color-primary-subtle);
-      color: var(--color-primary);
-      border: 1px solid var(--color-primary);
-      font-size: var(--text-sm);
-      font-weight: 600;
-      padding: var(--space-2) var(--space-4);
-      border-radius: var(--radius-md);
-      font-variant-numeric: var(--font-numeric);
-    }
-
-    /* Spinner */
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--color-border);
-      border-top-color: var(--color-primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      display: inline-block;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-4px); }
-      40%, 80% { transform: translateX(4px); }
-    }
+    /* DS-003 only. Tokens and shared parts: shared.css */
+    .page { flex: 1; min-height: 0; overflow-y: auto; }
+    .wrap { display: grid; gap: var(--space-6); padding: var(--space-4); }
+    .frame[data-size="desktop"] .wrap { grid-template-columns: minmax(0, 1fr) calc(var(--space-8) * 14); gap: var(--space-8);
+      align-items: start; padding: var(--space-6); max-width: calc(var(--space-8) * 36); margin: 0 auto; }
+    .col { display: grid; gap: var(--space-6); min-width: 0; align-content: start; }
+    .top { display: grid; gap: var(--space-3); }
+    .frame[data-size="desktop"] .top { grid-column: 1 / -1; }
+    .frame[data-size="desktop"] .side { position: sticky; top: 0; }
+    .back { justify-self: start; margin-left: calc(var(--space-3) * -1); }
+    h1.title { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .hint .i { vertical-align: text-bottom; }
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+    /* Sections of the form: one panel per step */
+    .panel { display: grid; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface);
+      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); min-width: 0; }
+    .panel > legend { float: left; width: 100%; padding: 0; }
+    fieldset.panel { margin: 0; }
+    fieldset.panel > legend + * { clear: both; }
+    .step { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; }
+    .step-n { width: var(--space-8); height: var(--space-8); flex: none; border-radius: var(--radius-full); display: grid; place-items: center;
+      background: var(--color-primary-subtle); color: var(--color-primary); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 700; }
+
+    /* Fields: 44 px high at least, 16 px text (no zoom on focus on a phone) */
+    .field { display: grid; gap: var(--space-1); }
+    .field label, .label { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 600; }
+    .input, .select, .textarea { width: 100%; min-height: var(--size-touch); padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--color-border-input); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text);
+      font-size: var(--text-base); line-height: var(--lh-base); }
+    .textarea { min-height: calc(var(--space-8) * 4); resize: vertical; }
+    [aria-invalid="true"] { border-color: var(--color-danger); }
+    .field-error { display: flex; gap: var(--space-1); align-items: flex-start; color: var(--color-danger); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .field-error .i { margin-top: calc(var(--space-1) / 2); }
+    .two { display: grid; gap: var(--space-4); }
+    .frame[data-size="desktop"] .two { grid-template-columns: 1fr 1fr; }
+    .termen { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text); }
+    .termen .i { color: var(--color-text-muted); margin-top: calc(var(--space-1) / 2); }
+
+    /* Photo */
+    .photo-btns { display: grid; gap: var(--space-2); }
+    .frame[data-size="desktop"] .photo-btns { grid-template-columns: 1fr 1fr; }
+    .drop { display: grid; gap: var(--space-3); justify-items: center; text-align: center; padding: var(--space-6) var(--space-4);
+      border: 1px dashed var(--color-border-input); border-radius: var(--radius-lg); background: var(--color-surface-elevated); }
+    .drop .ico { width: calc(var(--space-8) + var(--space-4)); height: calc(var(--space-8) + var(--space-4)); border-radius: var(--radius-full);
+      background: var(--color-surface); color: var(--color-primary); display: grid; place-items: center; }
+    .drop[aria-invalid="true"] { border-color: var(--color-danger); }
+    .preview { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; }
+    .preview .thumb { width: calc(var(--space-8) * 3); height: calc(var(--space-8) * 3); }
+    .preview-body { display: grid; gap: var(--space-2); justify-items: start; min-width: 0; }
+    .progress { width: 100%; height: var(--space-2); border-radius: var(--radius-full); background: var(--color-surface-elevated); overflow: hidden;
+      border: 1px solid var(--color-border-input); }
+    .progress > span { display: block; height: 100%; background: var(--color-primary); }
+    .exif { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .exif .i { color: var(--color-success); margin-top: calc(var(--space-1) / 2); }
+
+    /* Location */
+    .map { position: relative; height: calc(var(--space-8) * 7); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-border-input); }
+    .frame[data-size="desktop"] .map { height: calc(var(--space-8) * 13); }
+    #map-slot { position: absolute; inset: 0; }
+    .map-hint { position: absolute; left: var(--space-2); right: var(--space-2); bottom: var(--space-2); z-index: 1; pointer-events: none;
+      padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text);
+      box-shadow: var(--shadow-md); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; text-align: center; }
+    .chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); min-height: calc(var(--lh-xs) + var(--space-2));
+      border-radius: var(--radius-sm); border: 1px solid currentColor; font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; }
+    .chip .i { width: var(--space-3); height: var(--space-3); stroke-width: 2.5; }
+    .chip-ok { color: var(--color-success); background: var(--color-success-bg); }
+    .chip-bad { color: var(--color-danger); background: var(--color-danger-bg); }
+    .coords { font-family: var(--font-mono); font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .pin-new { --sc: var(--color-primary); }
+    /* Zoom buttons: as in DS-001 (Leaflet's own are under 44 px) */
+    .mapctl { position: absolute; top: var(--space-2); right: var(--space-2); z-index: 1; }
+    .ctl-stack { display: grid; background: var(--color-surface-elevated); border: 1px solid var(--color-border-input); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md); overflow: hidden; }
+    .ctl-stack button { width: var(--size-touch); height: var(--size-touch); border: 0; background: transparent; display: grid; place-items: center; color: var(--color-text); }
+    .ctl-stack button + button { border-top: 1px solid var(--color-border-input); }
+    .ctl-stack button:hover { background: var(--color-surface); }
+    .msg-note .btns, .msg-error .btns, .msg-success .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+    /* Street suggestions (D-014): in the flow, under the field; every row is a 44 px target */
+    .sugs { list-style: none; border: 1px solid var(--color-border-input); border-radius: var(--radius-md); background: var(--color-surface);
+      box-shadow: var(--shadow-md); overflow: hidden; }
+    .sugs li { min-height: var(--size-touch); display: flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3); cursor: pointer; }
+    .sugs li + li { border-top: 1px solid var(--color-border-subtle); }
+    .sugs li .i { color: var(--color-text-muted); }
+    .sugs li:hover, .sugs li[aria-selected="true"] { background: var(--color-primary-subtle); color: var(--color-primary); }
+
+    /* Duplicates */
+    .dups { list-style: none; display: grid; gap: var(--space-3); width: 100%; }
+    .dup { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg);
+      background: var(--color-surface); border: 1px solid var(--color-border); }
+    .dup .thumb { width: calc(var(--space-8) + var(--space-6)); height: calc(var(--space-8) + var(--space-6)); }
+    .dup-body { display: grid; gap: var(--space-1); min-width: 0; }
+    .dup-title { font-weight: 600; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .dup .btn { grid-column: 1 / -1; }
+
+    /* Anonymous */
+    .check { display: grid; grid-template-columns: var(--size-touch) minmax(0, 1fr); gap: var(--space-2); align-items: start; cursor: pointer; }
+    .check input { width: var(--size-touch); height: var(--size-touch); margin: 0; accent-color: var(--color-primary); }
+    .check strong { display: block; padding-top: var(--space-2); }
+
+    /* Submit */
+    .submit { display: grid; gap: var(--space-3); }
+    .btn-block { width: 100%; }
+    .frame[data-size="desktop"] .submit .btns { display: flex; gap: var(--space-2); }
+    .frame[data-size="phone"] .submit .btns { display: grid; gap: var(--space-2); }
+    .err-list { padding-left: var(--space-4); display: grid; gap: var(--space-1); font-size: var(--text-sm); line-height: var(--lh-sm); }
+    /* Honeypot (D-006): out of sight and out of the accessibility tree; a person never fills it */
+    .hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+    /* Success */
+    .done { display: grid; gap: var(--space-6); padding: var(--space-4); max-width: calc(var(--space-8) * 20); margin: 0 auto; }
+    .frame[data-size="desktop"] .done { padding: var(--space-8) var(--space-6); }
+    .summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); }
+    .summary .thumb { width: calc(var(--space-8) * 2); height: calc(var(--space-8) * 2); }
+    .summary-body { display: grid; gap: var(--space-1); min-width: 0; justify-items: start; }
+    .summary-title { font-weight: 600; overflow-wrap: anywhere; }
+    .done .btns { display: grid; gap: var(--space-2); }
+    .frame[data-size="desktop"] .done .btns { display: flex; flex-wrap: wrap; }
   </style>
 </head>
 <body data-theme="light">
 
-  <!-- Top Mock Controller (Allows testing all states & themes) -->
-  <header class="mock-header">
-    <div class="mock-meta">
-      <span class="mock-badge">DS-003</span>
-      <strong style="font-size: var(--text-sm);">Raportare sesizare nouă</strong>
-      <span style="font-size: var(--text-xs); color: var(--color-text-muted);">Cartierul Tineretului, Sibiu</span>
-    </div>
-    
-    <div class="mock-controls">
-      <span class="control-label">Stare:</span>
-      <div class="pill-selector">
-        <button class="pill-btn active" onclick="setState('empty')">1. Implicit (Gol)</button>
-        <button class="pill-btn" onclick="setState('duplicate')">2. Duplicat &lt;50m</button>
-        <button class="pill-btn" onclick="setState('out-of-bounds')">3. Eroare poligon</button>
-        <button class="pill-btn" onclick="setState('loading')">4. Încărcare EXIF</button>
-        <button class="pill-btn" onclick="setState('success')">5. Succes &amp; SLA</button>
-        <button class="pill-btn" onclick="setState('long-text')">6. Text lung &amp; Anonim</button>
-      </div>
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
 
-      <span class="control-label" style="margin-left: var(--space-3);">Temă:</span>
-      <div class="pill-selector">
-        <button class="pill-btn active" id="btn-theme-light" onclick="setTheme('light')">☀️ Light</button>
-        <button class="pill-btn" id="btn-theme-dark" onclick="setTheme('dark')">🌙 Dark</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Screen View -->
-  <main class="app-layout">
-
-    <!-- Left Column: Report Form -->
-    <section class="form-col" id="form-container">
-      <div class="card">
-        <h1 class="card-title">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 20h9"/>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-          </svg>
-          Adaugă o sesizare civică
-        </h1>
-        <p class="card-subtitle">Semnalează o problemă din Cartierul Tineretului. Operatorii o vor tria în funcție de termenul estimat de rezolvare.</p>
-
-        <!-- Hidden honeypot for bot spam protection (Decision D-006) -->
-        <input type="text" name="neighborhood_bot_honey" style="display:none;" tabindex="-1" autocomplete="off">
-
-        <!-- Duplicate Alert Card (shown conditionally in state: duplicate) -->
-        <div class="duplicate-card" id="duplicate-warning" style="display: none;">
-          <div class="duplicate-header">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary); flex-shrink: 0;">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <div>
-              <div class="duplicate-title">Există deja o sesizare similară în apropiere (18 m distanță)</div>
-              <p class="duplicate-text">Pe Strada Oslo a fost raportată acum 4 zile: <em>„Groapă adâncă pe carosabil cu stratul de asfalt măcinat”</em> (Sesizarea #13). Susține sesizarea existentă pentru a-i crește prioritatea la primărie!</p>
-            </div>
-          </div>
-          <div class="duplicate-actions">
-            <button type="button" class="btn btn-primary" style="padding: 6px var(--space-4);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
-              Votează sesizarea existentă (#13)
-            </button>
-            <button type="button" class="btn btn-secondary" style="padding: 6px var(--space-3);" onclick="dismissDuplicate()">
-              Este o problemă diferită, trimite oricum
-            </button>
-          </div>
-        </div>
-
-        <!-- Out of Bounds Error Alert (shown conditionally in state: out-of-bounds) -->
-        <div class="out-of-bounds-card" id="out-of-bounds-alert" style="display: none;">
-          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-          <div>
-            <div class="out-of-bounds-title">Locația selectată este în afara ariei Cartierului Tineretului</div>
-            <p class="out-of-bounds-text">Platforma este dedicată exclusiv străzilor din Cartierul Tineretului, Sibiu (~10 străzi, perimetru aprobat prin D-003). Te rugăm să plasezi pin-ul pe hartă în interiorul conturului albastru.</p>
-          </div>
-        </div>
-
-        <!-- Form Fields -->
-        <form id="report-form" onsubmit="event.preventDefault(); setState('success');">
-
-          <!-- 1. Photo Upload Field -->
-          <div class="form-group">
-            <label class="label">Fotografie la fața locului <span class="label-hint">(obligatoriu · EXIF GPS este extras automat)</span></label>
-            
-            <div id="upload-empty" class="upload-dropzone">
-              <div class="upload-icon">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5"/>
-                  <polyline points="21 15 16 10 5 21"/>
-                </svg>
-              </div>
-              <div class="upload-title">Încarcă fotografia problemei (.jpg, .png, .heic)</div>
-              <div class="upload-subtitle">Apasă aici sau trage fișierul. Metadatele EXIF vor fi curățate înainte de publicare.</div>
-            </div>
-
-            <!-- Upload Loading State -->
-            <div id="upload-loading" class="upload-dropzone" style="display: none; padding: var(--space-8);">
-              <div class="spinner" style="margin-bottom: var(--space-3);"></div>
-              <div class="upload-title">Se procesează fotografia și se extrage locația GPS...</div>
-              <div class="upload-subtitle">Se verifică metadatele EXIF și duplicitatea în raza de 50m.</div>
-            </div>
-
-            <!-- Upload Completed Preview -->
-            <div id="upload-preview" class="photo-preview-box" style="display: none;">
-              <img id="preview-image" src="" alt="Dovadă sesizare" class="photo-preview-img">
-              <div class="photo-preview-bar">
-                <span class="exif-chip" id="exif-chip-label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  GPS EXIF extras: <span style="font-family: var(--font-mono);">45.81434° N, 24.13326° E</span>
-                </span>
-                <button type="button" class="remove-photo-btn" onclick="clearPhoto()">Șterge foto</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Category & Subcategory Selection (The 14 Official Primăria Sibiu Categories) -->
-          <div class="form-group" style="display: flex; gap: var(--space-4);">
-            <div style="flex: 1;">
-              <label class="label" for="category-select">Categorie principală <span class="label-hint">(14 categorii oficiale Sibiu)</span></label>
-              <select id="category-select" class="select" onchange="updateSubcategories()">
-                <option value="">Alege categoria...</option>
-                <option value="strazi">Străzi și iluminat (termen: 30 de zile lucrătoare)</option>
-                <option value="animale">Animale pe domeniu public (termen: 3 zile lucrătoare)</option>
-                <option value="salubritate">Salubritate (termen: 3 zile lucrătoare)</option>
-                <option value="utilitati">Utilități (apă, canal, gaz, curent) (termen: 5 zile lucrătoare)</option>
-                <option value="trafic">Trafic auto, semne de circulație și parcări (termen: 5 zile lucrătoare)</option>
-                <option value="fumat">Fumat în spații interzise (termen: 5 zile lucrătoare)</option>
-                <option value="transport">Transport în comun (termen: 10 zile lucrătoare)</option>
-                <option value="angajati">Angajați în serviciul public (termen: 10 zile lucrătoare)</option>
-                <option value="vandalism">Vandalism (termen: 15 zile lucrătoare)</option>
-                <option value="parcuri">Parcuri și spații verzi (termen: 15 zile lucrătoare)</option>
-                <option value="biciclisti">Bicicliști (termen: 15 zile lucrătoare)</option>
-                <option value="mediu">Protecția Mediului (termen: 15 zile lucrătoare)</option>
-                <option value="constructii">Construcții (termen: 30 de zile lucrătoare)</option>
-                <option value="diverse">Diverse (termen: 30 de zile lucrătoare)</option>
-              </select>
-            </div>
-
-            <div style="flex: 1;">
-              <label class="label" for="subcategory-select">Subcategorie</label>
-              <select id="subcategory-select" class="select">
-                <option value="">Alege întâi categoria...</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 3. Description Field -->
-          <div class="form-group">
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-              <label class="label" for="desc-input">Descrierea problemei</label>
-              <span id="char-counter" style="font-size: var(--text-xs); color: var(--color-text-muted); font-variant-numeric: var(--font-numeric);">0 / 500</span>
-            </div>
-            <textarea id="desc-input" class="textarea" placeholder="Descrie detaliile observate (ex: adâncime groapă, număr imobil din apropiere, grad de pericol)..." oninput="updateCharCount()"></textarea>
-          </div>
-
-          <!-- 4. Location Address Input / Confirmation -->
-          <div class="form-group">
-            <label class="label" for="address-input">Adresă / Reper stradal</label>
-            <input id="address-input" class="input" type="text" placeholder="Ex: Strada Oslo colț cu Klagenfurt">
-          </div>
-
-          <!-- 5. Anonymous Reporting Toggle (Decision D-006 & Neighbor #2 Requirement) -->
-          <div class="form-group">
-            <label class="checkbox-row" for="anon-checkbox">
-              <input type="checkbox" id="anon-checkbox" class="checkbox-input" onchange="toggleAnon()">
-              <div class="checkbox-text">
-                <span class="checkbox-title">Raportează anonim</span>
-                <span class="checkbox-desc">Numele și emailul tău nu vor apărea pe hartă sau în exporturile publice (afișat ca „Cetățean anonim”). Contul tău este folosit doar de sistem pentru notificări și prevenirea spamului.</span>
-              </div>
-            </label>
-          </div>
-
-          <!-- Submit Button Action -->
-          <button type="submit" id="submit-btn" class="btn btn-primary btn-block">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            Trimite sesizarea civică
-          </button>
-        </form>
-      </div>
-    </section>
-
-    <!-- Right Column: Interactive Map Preview & Boundary Polygon -->
-    <section class="map-col" id="map-container">
-      <div class="card" style="padding: var(--space-4);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3);">
-          <strong style="font-size: var(--text-sm); display: flex; align-items: center; gap: var(--space-2);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
-            Amplasare pin pe hartă
-          </strong>
-          <span class="exif-chip" id="boundary-status-chip">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-            În interiorul ariei
-          </span>
-        </div>
-
-        <!-- Simulated Leaflet Map Canvas with Cartierul Tineretului Polygon -->
-        <div class="map-frame" id="map-frame">
-          <svg class="map-svg-mock" viewBox="0 0 400 380" preserveAspectRatio="none">
-            <!-- Simulated Streets of Cartierul Tineretului -->
-            <path d="M 40,80 L 360,90" stroke="#cbd5e1" stroke-width="8" fill="none" />
-            <path d="M 40,160 L 360,170" stroke="#cbd5e1" stroke-width="10" fill="none" />
-            <path d="M 60,250 L 340,250" stroke="#cbd5e1" stroke-width="8" fill="none" />
-            <path d="M 120,40 L 110,340" stroke="#cbd5e1" stroke-width="8" fill="none" />
-            <path d="M 220,40 L 230,340" stroke="#cbd5e1" stroke-width="8" fill="none" />
-            <path d="M 300,50 L 310,320" stroke="#cbd5e1" stroke-width="6" fill="none" />
-
-            <!-- Street Labels -->
-            <text x="140" y="85" fill="#64748b" font-size="10" font-family="var(--font-sans)">Aleea Monet</text>
-            <text x="140" y="165" fill="#64748b" font-size="10" font-family="var(--font-sans)">Str. Viena</text>
-            <text x="50" y="245" fill="#64748b" font-size="10" font-family="var(--font-sans)">Str. Oslo</text>
-            <text x="115" y="300" fill="#64748b" font-size="10" font-family="var(--font-sans)" transform="rotate(85 115,300)">Str. Klagenfurt</text>
-            <text x="235" y="300" fill="#64748b" font-size="10" font-family="var(--font-sans)" transform="rotate(85 235,300)">Str. Picasso</text>
-
-            <!-- Approved Neighborhood Boundary Polygon (Decision D-003) -->
-            <polygon id="polygon-shape" points="40,40 370,50 360,330 30,320" 
-                     fill="rgba(30, 64, 175, 0.08)" 
-                     stroke="var(--color-primary)" 
-                     stroke-width="2.5" 
-                     stroke-dasharray="6,4" />
-
-            <!-- Existing Neighbor Duplicate Pin (#13) -->
-            <g id="duplicate-marker" transform="translate(195, 235)" style="display: none;">
-              <circle cx="0" cy="0" r="16" fill="rgba(146, 64, 14, 0.25)" />
-              <circle cx="0" cy="0" r="8" fill="var(--color-status-in-lucru)" />
-              <text x="12" y="4" font-size="10" font-weight="700" fill="var(--color-status-in-lucru)" font-family="var(--font-mono)">#13 (4z)</text>
-            </g>
-
-            <!-- 50m Duplicate Detection Radius Circle -->
-            <circle id="duplicate-radius" cx="180" cy="245" r="48" fill="rgba(3, 105, 161, 0.12)" stroke="var(--color-status-noua)" stroke-width="1.5" stroke-dasharray="3,3" style="display: none;" />
-          </svg>
-
-          <!-- Interactive User Placed Pin -->
-          <div class="map-pin" id="draggable-pin" style="top: 245px; left: 180px;">
-            <svg viewBox="0 0 24 32" fill="none">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20c0-6.63-5.37-12-12-12z" fill="var(--color-primary)"/>
-              <circle cx="12" cy="11" r="4.5" fill="#ffffff"/>
-            </svg>
-          </div>
-
-          <!-- Top Map HUD -->
-          <div class="map-hud">
-            <span class="map-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
-              Cartierul Tineretului
-            </span>
-            <button type="button" class="map-tag" style="cursor: pointer;" onclick="locateUser()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 8 8 12 12 16 12 8"/></svg>
-              GPS-ul meu
-            </button>
-          </div>
-        </div>
-
-        <div class="coords-bar">
-          <span id="coords-text">45.81434° N, 24.13326° E</span>
-          <span style="font-size: 11px;">Trage pinul pe hartă</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Success View Card (Hidden by default, shown in state: success) -->
-    <section class="form-col" id="success-container" style="display: none;">
-      <div class="card success-card">
-        <div class="success-icon-wrap">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-
-        <h2 style="font-size: var(--text-2xl); font-weight: 700; color: var(--color-text);">Sesizarea civică #25 a fost înregistrată!</h2>
-        
-        <p style="font-size: var(--text-base); color: var(--color-text-muted); max-width: 540px;">
-          Sesizarea ta pe <strong>Strada Oslo</strong> a fost preluată în sistem. Poza a fost curățată de metadatele EXIF și este acum vizibilă pe harta cartierului.
-        </p>
-
-        <div class="sla-badge">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Termen: 30 de zile lucrătoare (până pe 12 ianuarie 2027)
-        </div>
-
-        <p style="font-size: var(--text-xs); color: var(--color-text-muted); max-width: 480px;">
-          Termenul exclude Paștele, Rusaliile, 1 Decembrie și celelalte sărbători legale din România. Vei primi un email la fiecare schimbare de status.
-        </p>
-
-        <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
-          <button type="button" class="btn btn-primary" onclick="setState('empty')">Adaugă altă sesizare</button>
-          <button type="button" class="btn btn-secondary">Vezi sesizarea pe hartă</button>
-        </div>
-      </div>
-    </section>
-
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
   </main>
 
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
   <script>
-    // Subcategories for Primăria Sibiu official taxonomy
-    const SUBCATEGORIES = {
-      strazi: ["Groapă", "Capac canalizare lipsă / defect", "Trotuar deteriorat", "Iluminat public defect / lipsă", "Stradă inundată", "Copac cu risc pe carosabil", "Altele - Străzi și Iluminat"],
-      animale: ["Câine agresiv", "Animal fără lesă", "Animal mort abandonat"],
-      salubritate: ["Deșeuri abandonate", "Stradă murdară", "Coș de gunoi lipsă/deteriorat", "Pubele neridicate"],
-      utilitati: ["Capac lipsă (apă/canal)", "Defecte țevi / hidranți / gaz"],
-      trafic: ["Parcare neregulamentară", "Semn de circulație lipsă / deteriorat", "Semafor defect", "Vehicul abandonat"],
-      fumat: ["Loc de joacă", "Instituție publică", "Transport public"],
-      transport: ["Stații de autobuz deteriorate", "Autobuz"],
-      angajati: ["Comportament inadecvat"],
-      vandalism: ["Bănci deteriorate", "Locuri de joacă vandalizate", "Stâlpi delimitare distruși"],
-      parcuri: ["Spațiu verde neîngrijit", "Loc de joacă deteriorat", "Alee blocată"],
-      biciclisti: ["Pistă blocată", "Pistă deteriorată", "Semnalizare greșită"],
-      mediu: ["Protecția Mediului"],
-      constructii: ["Construcție ilegală", "Șantier neîngrădit", "Construcție periculoasă", "Construcție dezafectată sau abandonată"],
-      diverse: ["Diverse"]
+    /* ── States and roles ───────────────────────────────────────────────── */
+    const STATES = [['empty', 'Gol'], ['loading', 'Încărcare poză'], ['sending', 'Se trimite'], ['error', 'Eroare'], ['success', 'Succes'],
+      ['long', 'Text lung'], ['gps', 'GPS din poză'], ['outside', 'În afara ariei'], ['duplicate', 'Duplicat găsit'], ['street', 'Stradă scrisă de mână'], ['street-out', 'Stradă în afara ariei'],
+      ['street-none', 'Stradă negăsită'], ['ratelimit', 'Prea multe raportări']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
+    const S = mockState({ state: 'empty', role: 'cetatean', size: 'phone', theme: 'light' }, { roles: ROLES, states: STATES.map(x => x[0]) });
+
+    /* ── Example values (not from Field.md; marked "exemplu" on screen, never in the seed) ── */
+    // Location found in the photo's EXIF (inside the area; nearest street Strada Leonardo da Vinci) and the "browser GPS" location (Strada Klagenfurt)
+    const GPS_PHOTO = { lat: 45.81500, lon: 24.13230 };
+    const GPS_BROWSER = { lat: 45.81480, lon: 24.13300 };
+    // A pin 15 m from #13 (Groapă, Strada Oslo); #12 is 43 m away in the same category: both are duplicates (D-005)
+    const DUP_PIN = { lat: 45.81445, lon: 24.13315 };
+    const OUT_PIN = { lat: 45.81800, lon: 24.12900 }; // north-west of the polygon
+    const LONG = { lat: 45.81350, lon: 24.13400, cat: 'Trafic auto, semne de circulație și parcări', sub: 'Semn de circulație lipsă sau deteriorat',
+      title: 'Indicatorul „Cedează trecerea” de la ieșirea din parcarea blocurilor e îndoit la pământ și nu se mai vede deloc din mașină',
+      desc: 'Indicatorul a fost lovit, probabil de o mașină care a manevrat în parcare, și acum stă îndoit aproape paralel cu solul, ascuns de tufișuri. '
+        + 'Șoferii care ies din parcare nu mai știu că trebuie să cedeze trecerea și am văzut deja două frâne bruște în aceeași săptămână. '
+        + 'Seara, când nu e lumină în zonă, stâlpul îndoit e greu de văzut și pentru pietoni, care se pot lovi de el pe trotuar.',
+      reper: 'La ieșirea din parcarea blocurilor dinspre Strada Michelangelo, pe trotuarul de lângă gardul viu, chiar înainte de trecerea de pietoni' };
+    /** Street from the pin (D-014): the nearest valid street, "dedusă din pin". */
+    const fromPin = p => p && insideArea(p.lat, p.lon) ? { street: nearestStreet(p).name, streetAuto: true } : {};
+    const FILLED = ex => ({ photo: 'done', pin: { lat: ex.lat, lon: ex.lon }, cat: ex.cat, sub: ex.sub, title: ex.title, desc: ex.desc,
+      ...fromPin(ex), reper: ex.reper || '' });
+
+    /** The form for a state. F: photo none | loading | done; gpsAsk: the EXIF suggestion is open; prefilled: shows the "exemplu" tag. */
+    function formFor(state) {
+      const f = formBase(state);
+      if (f.streetText === undefined) f.streetText = f.street; // the text in the Stradă field (D-014)
+      return f;
+    }
+    function formBase(state) {
+      const blank = { photo: 'none', gpsAsk: false, gpsUsed: false, pin: null, cat: '', sub: '', title: '', desc: '', street: '', streetAuto: false, streetByHand: false, streetFocus: '', streetErr: '', sugOpen: false, sugIdx: -1, reper: '', anon: false,
+        pinEx: false, dupDismissed: false, errors: {}, submitted: false, resent: false, confirmLeave: false, prefilled: false };
+      const ex = { ...blank, prefilled: true, pinEx: true };
+      switch (state) {
+        case 'loading': return { ...blank, photo: 'loading' };
+        case 'gps': return { ...ex, photo: 'done', gpsAsk: true };
+        case 'outside': return { ...ex, photo: 'done', pin: { ...OUT_PIN } };
+        case 'duplicate': return { ...ex, photo: 'done', pin: { ...DUP_PIN }, cat: 'Străzi și iluminat', sub: 'Groapă',
+          title: 'Groapă pe carosabil lângă bordură', desc: 'Groapă adâncă pe carosabil, cu pietriș desprins pe margini.', ...fromPin(DUP_PIN) };
+        // The pin is on Strada Oslo (deduced); then the person typed "str picasso": it became Strada Picasso, the map shows it, the pin stays (D-014)
+        case 'street': return { ...ex, photo: 'done', pin: { ...DUP_PIN }, street: 'Strada Picasso', streetByHand: true, streetFocus: 'Strada Picasso' };
+        // Typed over the deduced street: a known street around the area, and a name that is not a street of ours (D-014)
+        case 'street-out': return { ...ex, photo: 'done', pin: { ...DUP_PIN }, street: '', streetText: 'str londra', streetErr: 'outside' };
+        case 'street-none': return { ...ex, photo: 'done', pin: { ...DUP_PIN }, street: '', streetText: 'Strada Florilor', streetErr: 'none' };
+        case 'long': return { ...ex, ...FILLED(LONG), anon: true };
+        case 'sending': case 'error': case 'ratelimit': return { ...ex, ...FILLED(EXAMPLE_NEW) };
+        default: return blank;
+      }
+    }
+    let F = formFor(S.state);
+
+    const phone = () => S.size === 'phone';
+    const isTriage = () => triageRole(S.role); // Operator or Admin (D-012)
+    const blocked = () => S.role === 'neconfirmat';
+    const coord = n => n.toFixed(5).replace('.', ',');
+    const coords = p => `${coord(p.lat)}° N, ${coord(p.lon)}° E`;
+    const EX = '<span class="ex" title="Date de exemplu, nu din Field.md">exemplu</span>';
+    const photoSrc = id => `photos/sesizare_${String(id).padStart(2, '0')}.jpg`;
+    const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const inArea = () => F.pin && insideArea(F.pin.lat, F.pin.lon);
+
+    /** Duplicates (D-005): same main category, under 50 m, last 30 calendar days. Computed on the seed (all from 15 nov; today = 25 nov). */
+    function duplicates() {
+      if (!F.pin || !F.cat || !inArea()) return [];
+      return SEED.filter(x => x.cat === F.cat).map(x => ({ ...x, d: metres(F.pin, x) })).filter(x => x.d < 50).sort((a, b) => a.d - b.d);
+    }
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    const backLink = () => `<a class="btn btn-ghost back" href="${mockHref('DS-001')}" data-act="leave">${ic('i-back')}Înapoi la hartă</a>`;
+    const step = (n, text) => `<legend><span class="step"><span class="step-n" aria-hidden="true">${n}</span>${text}</span></legend>`;
+    const err = (key, text) => F.errors[key] ? `<p class="field-error" id="e-${key}">${ic('i-alert')}${text}</p>` : '';
+    const inv = key => F.errors[key] ? `aria-invalid="true" aria-describedby="e-${key}"` : '';
+
+    function heading() {
+      const sub = S.role === 'vizitator' ? 'Cartierul Tineretului, Sibiu.'
+        : 'Spune-ne ce ai găsit în Cartierul Tineretului. Toate câmpurile sunt obligatorii, în afară de „Raportează anonim”.';
+      return `<div class="top">${backLink()}<h1 class="title">Raportează o problemă</h1><p class="hint">${sub}</p>
+        ${F.prefilled && S.state !== 'success' && !blocked() && S.role !== 'vizitator' ? `<p class="hint">Câmpurile sunt completate cu date de exemplu ${EX}</p>` : ''}
+        ${leaveConfirm()}${banners()}</div>`;
+    }
+
+    /** Leaving a form with data asks first (DESIGN.md: destructive actions ask for confirmation). */
+    function leaveConfirm() {
+      if (!F.confirmLeave) return '';
+      return `<div class="msg msg-note" role="alertdialog" aria-labelledby="lv-h"><div class="msg-title" id="lv-h">${ic('i-alert')}Renunți la sesizare?</div>
+        <p>Ce ai completat până acum se pierde.</p>
+        <div class="btns"><button type="button" class="btn btn-secondary btn-sm" data-act="stay">Continuă raportarea</button>
+          <a class="btn btn-ghost btn-sm" href="${mockHref('DS-001')}">Da, renunț</a></div></div>`;
+    }
+
+    function banners() {
+      const out = [];
+      const missing = Object.keys(F.errors);
+      if (missing.length) out.push(`<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}${missing.length === 1 ? 'Mai ai de completat un câmp' : `Mai ai de completat ${missing.length} câmpuri`}</div>
+        <ul class="err-list">${missing.map(k => `<li><a href="#f-${k}" data-act="focus" data-v="f-${k}">${FIELD_NAMES[k]}</a></li>`).join('')}</ul></div>`);
+      if (S.state === 'error') out.push(`<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Nu am putut trimite sesizarea</div>
+        <p>Ce ai completat a rămas aici. Verifică-ți conexiunea la internet și încearcă din nou.</p>
+        <div class="btns"><button type="button" class="btn btn-secondary btn-sm" data-act="retry">${ic('i-refresh')}Încearcă din nou</button></div></div>`);
+      if (S.state === 'ratelimit') out.push(`<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Ai trimis prea multe sesizări într-un timp scurt</div>
+        <p>Poți trimite cel mult 5 sesizări în 10 minute. Ce ai completat rămâne aici; încearcă din nou peste câteva minute.</p></div>`);
+      return out.join('');
+    }
+    const FIELD_NAMES = { photo: 'Poza', pin: 'Locul pe hartă', cat: 'Categoria', sub: 'Subcategoria', title: 'Titlul', desc: 'Descrierea', street: 'Strada' };
+
+    function photoPanel() {
+      let body;
+      if (F.photo === 'loading') body = `<div class="preview" aria-busy="true"><span class="thumb thumb-ph">${ic('i-image', 'i-lg')}</span>
+          <div class="preview-body"><strong role="status">Se încarcă poza… <span class="num">60%</span> ${EX}</strong>
+            <div class="progress" role="progressbar" aria-label="Încărcarea pozei" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><span style="width: 60%"></span></div>
+            <p class="hint">Căutăm locul în poză, apoi o micșorăm. Datele din poză (EXIF), inclusiv locația, se șterg înainte de publicare.</p>
+            <button type="button" class="btn btn-ghost btn-sm" data-act="photo-remove">${ic('i-x')}Anulează încărcarea</button></div></div>`;
+      else if (F.photo === 'done') body = `<div class="preview"><span class="thumb thumb-ph" role="img" aria-label="Poza ta (exemplu)">${ic('i-image', 'i-lg')}</span>
+          <div class="preview-body"><strong>Poza ta ${EX}</strong>
+            <p class="exif">${ic('i-check-square')}<span>O publicăm micșorată și fără datele din poză (EXIF), inclusiv locația.</span></p>
+            <div class="row"><button type="button" class="btn btn-secondary btn-sm" data-act="photo-add">${ic('i-camera')}Schimbă poza</button>
+              <button type="button" class="btn btn-ghost btn-sm" data-act="photo-remove">${ic('i-x')}Șterge poza</button></div></div></div>`;
+      else body = `<div class="drop" id="f-photo" tabindex="-1" ${inv('photo')}><span class="ico">${ic('i-camera', 'i-lg')}</span>
+          <p class="hint">O poză clară ajută operatorul să înțeleagă problema. Dacă poza are locația, ți-o propunem pe hartă.</p>
+          <div class="photo-btns" style="width: 100%"><button type="button" class="btn btn-primary" data-act="photo-add">${ic('i-camera')}Fă o poză</button>
+            <button type="button" class="btn btn-secondary" data-act="photo-add">${ic('i-image')}Alege din galerie</button></div></div>${err('photo', 'Adaugă o poză cu problema.')}`;
+      return `<fieldset class="panel">${step(1, 'Poza')}${body}</fieldset>`;
+    }
+
+    function gpsAsk() {
+      if (!F.gpsAsk) return '';
+      return `<div class="msg msg-note" role="status"><div class="msg-title">${ic('i-pin')}Am găsit locația din poză, o folosești?</div>
+        <p><span class="coords">${coords(GPS_PHOTO)}</span> ${EX} · ${insideArea(GPS_PHOTO.lat, GPS_PHOTO.lon) ? 'în aria cartierului' : 'în afara ariei cartierului'}</p>
+        <div class="btns"><button type="button" class="btn btn-primary btn-sm" data-act="gps-use">${ic('i-rezolvata')}Folosește locația din poză</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-act="gps-no">Nu, aleg pe hartă</button></div></div>`;
+    }
+
+    function locationPanel() {
+      const p = F.pin, ok = inArea();
+      const chip = !p ? '' : ok ? `<span class="chip chip-ok">${ic('i-rezolvata')}În interiorul ariei</span>` : `<span class="chip chip-bad">${ic('i-x')}În afara ariei</span>`;
+      const where = p ? `<div class="row">${chip}<span class="coords">${coords(p)}</span>${F.pinEx ? EX : ''}</div>` : '';
+      const outside = p && !ok ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Locația selectată este în afara ariei Cartierului Tineretului</div>
+          <p>Primim doar sesizări din cartier. Mută pinul în conturul albastru de pe hartă.</p></div>` : '';
+      const used = F.gpsUsed && ok ? `<p class="hint" role="status">${ic('i-rezolvata')} Am pus pinul unde a fost făcută poza. Îl poți muta dacă nu e exact.</p>` : '';
+      const tip = F.streetFocus ? `Atinge pe ${F.streetFocus} locul exact` : p ? 'Trage pinul sau atinge harta ca să-l muți' : 'Atinge harta în locul problemei';
+      return `<fieldset class="panel" id="f-pin" tabindex="-1">${step(2, 'Locul')}${gpsAsk()}
+        <div class="map" id="f-map" tabindex="-1" role="application" aria-label="Harta: atinge harta ca să pui pinul sesizării, în conturul Cartierului Tineretului">
+          <div id="map-slot"></div><div class="map-hint" aria-hidden="true">${tip}</div>
+          <div class="mapctl"><div class="ctl-stack"><button type="button" data-act="zoom-in" aria-label="Apropie harta">${ic('i-plus')}</button><button type="button" data-act="zoom-out" aria-label="Depărtează harta">${ic('i-minus')}</button></div></div></div>
+        ${where}${outside}${used}${err('pin', 'Pune pinul pe hartă, în conturul cartierului.')}
+        <button type="button" class="btn btn-secondary" data-act="locate">${ic('i-target')}Folosește locația mea</button>
+        ${streetFields()}</fieldset>`;
+    }
+
+    function detailsPanel() {
+      const cat = CATEGORY_TREE.find(c => c.name === F.cat);
+      const catOpts = `<option value="">Alege categoria</option>${CATEGORY_TREE.map(c => `<option ${c.name === F.cat ? 'selected' : ''}>${c.name}</option>`).join('')}`;
+      const subOpts = cat ? `<option value="">Alege subcategoria</option>${cat.subs.map(s => `<option value="${s}" ${s === F.sub ? 'selected' : ''}>${subName(s)}</option>`).join('')}`
+        : '<option value="">Alege întâi categoria</option>';
+      // Vizitator and Cetățean see "Termen"; Operator and Admin see "SLA" (CONTEXT.md)
+      const termen = !cat ? '' : isTriage()
+        ? `<p class="termen">${ic('i-clock')}<span>SLA: ${zile(cat.sla)} pentru ${cat.name}, fără weekenduri și sărbători legale.</span></p>`
+        : `<p class="termen">${ic('i-clock')}<span>Termen: ${zile(cat.sla)} de la trimitere, fără weekenduri și sărbători legale.</span></p>`;
+      return `<fieldset class="panel">${step(3, 'Ce problemă e')}
+        <div class="two"><div class="field"><label for="f-cat">Categorie</label><select class="select" id="f-cat" ${inv('cat')}>${catOpts}</select>${err('cat', 'Alege categoria.')}</div>
+          <div class="field"><label for="f-sub">Subcategorie</label><select class="select" id="f-sub" ${cat ? '' : 'disabled'} ${inv('sub')}>${subOpts}</select>${err('sub', 'Alege subcategoria.')}</div></div>
+        ${termen}${duplicateCard()}
+        <div class="field"><label for="f-title">Titlu</label><input class="input" id="f-title" value="${esc(F.title)}" placeholder="Ex.: Groapă adâncă pe carosabil" ${inv('title')}>
+          ${err('title', 'Scrie un titlu scurt.')}</div>
+        <div class="field"><label for="f-desc">Descriere</label><textarea class="textarea" id="f-desc" placeholder="Ce ai văzut, de când e acolo, de ce e periculos" ${inv('desc')}>${esc(F.desc)}</textarea>
+          ${err('desc', 'Descrie problema.')}</div>
+</fieldset>`;
+    }
+
+    const STREET_MSG = { outside: 'Strada nu e în aria Cartierului Tineretului.', none: 'Nu am găsit strada. Verifică numele sau mută pinul pe hartă.' };
+    /** Stradă (text with suggestions, D-014) and Reper (optional, free text). Pin → street and street → map are kept in step. */
+    function streetFields() {
+      const sugs = F.sugOpen ? streetSuggestions(F.streetText) : [];
+      const auto = F.street && F.streetAuto ? `<p class="hint" id="street-auto">${ic('i-pin')} Dedusă din pin. Dacă nu e strada potrivită, scrie alta.</p>` : '';
+      const msg = STREET_MSG[F.streetErr];
+      const error = msg ? `<p class="field-error" id="e-street">${ic('i-alert')}${msg}</p>` : err('street', 'Scrie strada.');
+      const described = [msg || F.errors.street ? 'e-street' : '', auto ? 'street-auto' : ''].filter(Boolean).join(' ');
+      const list = sugs.length ? `<ul class="sugs" id="street-list" role="listbox" aria-label="Străzi din aria cartierului">${sugs.map((n, k) =>
+        `<li role="option" id="sug-${k}" data-sug="${n}" aria-selected="${k === F.sugIdx}">${ic('i-pin')}${n}</li>`).join('')}</ul>` : '';
+      const focus = F.streetFocus ? `<div class="msg msg-note" role="status"><div class="msg-title">${ic('i-map')}Atinge pe ${F.streetFocus} locul exact</div>
+          <p>Am centrat harta pe stradă și am evidențiat-o. Pinul rămâne unde e până atingi harta.</p>
+          ${phone() ? `<div class="btns"><button type="button" class="btn btn-secondary btn-sm" data-act="focus" data-v="f-map">${ic('i-map')}Mergi la hartă</button></div>` : ''}</div>` : '';
+      const none = !F.street && F.pin && !inArea() ? '<p class="hint">Mută pinul în aria cartierului; strada se completează singură.</p>' : '';
+      return `<div class="field"><label for="f-street">Stradă</label>
+          <input class="input" id="f-street" value="${esc(F.streetText)}" placeholder="Ex.: Strada Oslo" autocomplete="off" spellcheck="false"
+            role="combobox" aria-autocomplete="list" aria-expanded="${sugs.length > 0}" aria-controls="street-list"
+            ${sugs.length && F.sugIdx >= 0 ? `aria-activedescendant="sug-${F.sugIdx}"` : ''} ${msg || F.errors.street ? 'aria-invalid="true"' : ''} ${described ? `aria-describedby="${described}"` : ''}>
+          ${list}${auto}${none}${error}</div>${focus}
+        <div class="field"><label for="f-reper">Reper <span class="muted">(opțional)</span></label>
+          <input class="input" id="f-reper" value="${esc(F.reper)}" placeholder="Ex.: în fața nr. 12, intersecția cu Strada Lisabona" autocomplete="off"></div>`;
+    }
+
+    /** Duplicate suggestion (D-005, brief: "există deja, votează-o"). Cetățean: vote it; Operator / Admin: see it (they do not vote, D-012). */
+    function duplicateCard() {
+      const dups = duplicates();
+      if (!dups.length || F.dupDismissed) return '';
+      const first = dups[0];
+      const head = isTriage()
+        ? `<div class="msg-title">${ic('i-fuzionata')}Există deja o sesizare asemănătoare</div>
+           <p>Aceeași categorie, la ${Math.round(first.d)} m, din ultimele 30 de zile. Verific-o înainte să trimiți una nouă.</p>`
+        : `<div class="msg-title">${ic('i-votes')}Există deja, votează-o</div>
+           <p>Cineva a raportat aceeași categorie la ${Math.round(first.d)} m, în ultimele 30 de zile. Dacă e aceeași problemă, votul tău o ajută mai mult decât o sesizare nouă.</p>`;
+      const items = dups.map(x => `<li class="dup"><span class="thumb"><img src="${photoSrc(x.id)}" alt="" width="56" height="56"></span>
+          <div class="dup-body"><div class="row"><span class="card-id">#${x.id}</span>${statusBadge(x.st)}${EX}</div>
+            <span class="dup-title">${x.title}</span><span class="meta">${ic('i-pin')}<span class="num">la ${Math.round(x.d)} m · ${subName(x.sub)} · ${x.street}</span></span></div>
+          ${isTriage()
+            ? `<a class="btn btn-secondary btn-sm" href="${mockHref('DS-002', { id: x.id })}">Vezi sesizarea existentă (#${x.id}) ${ic('i-chevron')}</a>`
+            : `<a class="btn btn-primary btn-sm" href="${mockHref('DS-002', { id: x.id })}">${ic('i-votes')}Votează-o (#${x.id})</a>`}</li>`).join('');
+      return `<div class="msg msg-note" role="status">${head}<ul class="dups">${items}</ul>
+        <button type="button" class="btn btn-ghost btn-sm" data-act="dup-dismiss">E altă problemă, ${isTriage() ? 'continuă' : 'trimite oricum'}</button></div>`;
+    }
+
+    function anonPanel() {
+      return `<div class="panel"><label class="check"><input type="checkbox" id="f-anon" ${F.anon ? 'checked' : ''}>
+        <span><strong>Raportează anonim</strong><span class="hint">Pe sesizare apare „Raportată anonim”, iar în liste și exporturi „Cetățean anonim”. Nimeni nu-ți vede numele în aplicație; contul rămâne legat de sesizare doar în baza de date.</span></span></label></div>`;
+    }
+
+    function submitPanel() {
+      const why = isTriage()
+        ? `${ic('i-triage')} Raportezi ca ${S.role === 'admin' ? 'admin' : 'operator'}: sesizarea nu contează ca vot și nu o urmărești prin email. O găsești în <a href="${mockHref('DS-004')}">coada de triaj</a>.`
+        : `${ic('i-bell')} Raportarea contează ca votul tău și urmărești automat sesizarea: primești un email când i se schimbă statusul.`;
+      let label = `${ic('i-send')}Trimite sesizarea`, disabled = false, note = '';
+      if (S.state === 'sending') { label = `${ic('i-hourglass')}Se trimite sesizarea…`; disabled = true; note = `<p class="loading-note" role="status">${ic('i-hourglass')}Trimitem sesizarea și poza. Nu închide pagina.</p>`; }
+      else if (F.photo === 'loading') { disabled = true; note = '<p class="hint">Așteaptă să se încarce poza.</p>'; }
+      else if (F.pin && !inArea()) { disabled = true; note = '<p class="hint">Mută pinul în aria cartierului ca să poți trimite.</p>'; }
+      else if (S.state === 'ratelimit') { disabled = true; note = '<p class="hint">Poți trimite din nou peste câteva minute.</p>'; }
+      return `<div class="submit"><p class="hint">${why}</p>${note}
+        <div class="btns"><button type="button" class="btn btn-primary ${phone() ? 'btn-block' : ''}" data-act="submit" ${disabled ? 'disabled' : ''} ${S.state === 'sending' ? 'aria-busy="true"' : ''}>${label}</button>
+          <a class="btn btn-secondary ${phone() ? 'btn-block' : ''}" href="${mockHref('DS-001')}" data-act="leave">Anulează</a></div></div>
+        <div class="hp" aria-hidden="true"><label>Nu completa acest câmp<input name="website" tabindex="-1" autocomplete="off"></label></div>`;
+    }
+
+    /* ── Role views without a form ───────────────────────────────────────── */
+    function visitorView() {
+      return `<div class="done">${heading()}<div class="msg msg-note"><div class="msg-title">${ic('i-login')}Intră în cont ca să raportezi</div>
+        <p>Ca să trimiți o sesizare ai nevoie de un cont cu emailul confirmat. Așa oprim spamul și numărăm un singur vot de persoană. După ce intri, poți raporta și anonim.</p>
+        <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să raportezi</a>
+          <a class="btn btn-ghost" href="${mockHref('DS-001')}">Înapoi la hartă</a></div></div></div>`;
+    }
+    function verifyBanner() {
+      return F.resent
+        ? `<div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Ți-am trimis din nou emailul</div><p>Deschide linkul din email, apoi revino aici.</p></div>`
+        : `<div class="msg msg-note"><div class="msg-title">${ic('i-mail')}Verifică-ți emailul ca să poți raporta</div>
+          <p>Ți-am trimis un link de confirmare când ți-ai făcut contul. Până îl deschizi, nu poți raporta, vota, comenta sau urmări sesizări.</p>
+          <div class="btns"><button type="button" class="btn btn-secondary btn-sm" data-act="resend">${ic('i-refresh')}Retrimite emailul</button></div></div>`;
+    }
+
+    /* ── Success: the example sesizare #25 (shared.js), opened in DS-002 ──── */
+    function successView() {
+      const i = EXAMPLE_NEW, own = isTriage();
+      const p = { id: i.id, stare: 'autor', ...(F.anon ? { anonim: 1 } : {}) };
+      return `<div class="done"><div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Mulțumim! Sesizarea ta a ajuns la operator.</div>
+          <p>Operatorul o verifică și îi schimbă statusul. ${own ? '' : 'Te anunțăm pe email.'}</p></div>
+        <h1 class="title">Sesizarea #${i.id} a fost trimisă</h1>
+        <div class="panel"><div class="summary"><span class="thumb thumb-ph" role="img" aria-label="Poza ta (exemplu)">${ic('i-image', 'i-lg')}</span>
+          <div class="summary-body"><div class="row"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}${EX}</div>
+            <span class="summary-title">${i.title}</span>
+            <span class="meta">${ic('i-tag')}<span>${i.cat} · ${subName(i.sub)}</span></span>
+            <span class="meta">${ic('i-pin')}<span>${i.street}${i.reper ? ` · ${i.reper}` : ''}</span></span>
+            ${own ? slaOperatorBadge(i) : slaBadge(i)}</div></div></div>
+        <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-002', p)}">Vezi sesizarea ${ic('i-chevron')}</a>
+          <button type="button" class="btn btn-secondary" data-act="again">${ic('i-plus')}Raportează altă problemă</button>
+          <a class="btn btn-ghost" href="${mockHref('DS-001')}">Înapoi la hartă</a></div></div>`;
+    }
+
+    function content() {
+      if (S.role === 'vizitator') return visitorView();
+      if (S.state === 'success' && !blocked()) return successView();
+      const lock = blocked();
+      const form = phone()
+        ? `${photoPanel()}${locationPanel()}${detailsPanel()}${anonPanel()}${submitPanel()}`
+        : `<div class="col">${photoPanel()}${detailsPanel()}${anonPanel()}${submitPanel()}</div><div class="col side">${locationPanel()}</div>`;
+      return `<div class="wrap">${heading()}${lock ? verifyBanner() : ''}
+        <form class="${phone() ? 'col' : ''}" novalidate style="${phone() ? '' : 'display: contents'}" onsubmit="return false">
+          ${lock ? `<fieldset disabled style="border: 0; display: contents">${form}</fieldset>` : form}</form></div>`;
+    }
+
+    /* ── Map (Leaflet, kept alive across renders; light in both themes) ──── */
+    let map, area, pin, dupLayer, mapEl, fitKey = '';
+    function mountMap() {
+      const slot = document.getElementById('map-slot');
+      if (!slot) { if (mapEl) mapEl.remove(); return; }
+      if (!map) {
+        mapEl = document.createElement('div');
+        mapEl.className = 'leaflet-host';
+        mapEl.dataset.theme = 'light';
+        slot.appendChild(mapEl);
+        map = L.map(mapEl, { zoomControl: false, scrollWheelZoom: false, zoomSnap: 0.5, zoomAnimation: !reduceMotion, fadeAnimation: !reduceMotion });
+        map.attributionControl.setPrefix(false);
+        osmTiles().addTo(map);
+        area = areaLayer().addTo(map);
+        dupLayer = L.layerGroup().addTo(map);
+        map.on('click', e => { if (blocked()) return; movePin({ lat: e.latlng.lat, lon: e.latlng.lng }); F.gpsUsed = false; F.pinEx = false; render(); });
+      } else slot.appendChild(mapEl);
+      map.invalidateSize();
+      if (blocked()) { map.dragging.disable(); } else map.dragging.enable();
+      if (pin) { pin.remove(); pin = null; }
+      dupLayer.clearLayers();
+      if (F.streetFocus) streetLayer(F.streetFocus).addTo(dupLayer); // street → map (D-014)
+      // Existing sesizări that are duplicates: their pins, with status icon and color; the name in the accessible label (Q-013)
+      duplicates().forEach(x => L.marker([x.lat, x.lon], { keyboard: false, title: `#${x.id} · ${STATUS_ALL[x.st].name}`, icon: L.divIcon({ className: 'pin-icon', iconSize: [44, 44],
+        html: `<span class="pin st-${x.st}" role="img" aria-label="Sesizarea #${x.id}, ${STATUS_ALL[x.st].name}">${ic(STATUS_ALL[x.st].icon)}</span>` }) }).addTo(dupLayer));
+      if (F.pin) {
+        pin = L.marker([F.pin.lat, F.pin.lon], { draggable: !blocked(), title: 'Locul sesizării tale', icon: L.divIcon({ className: 'pin-icon', iconSize: [44, 44],
+          html: `<span class="pin pin-new" role="img" aria-label="Locul sesizării tale">${ic('i-pin')}</span>` }) }).addTo(map);
+        pin.on('dragend', () => { const ll = pin.getLatLng(); movePin({ lat: ll.lat, lon: ll.lng }); F.gpsUsed = false; F.pinEx = false; render(); });
+      }
+      const key = S.size + S.state + (F.pin && !insideArea(F.pin.lat, F.pin.lon) ? 'out' : '') + F.streetFocus;
+      if (fitKey !== key) {
+        fitKey = key;
+        if (F.streetFocus) return map.fitBounds(streetLayer(F.streetFocus).getBounds(), { padding: [24, 24], maxZoom: 18, animate: false });
+        const b = area.getBounds();
+        if (F.pin && !inArea()) b.extend([F.pin.lat, F.pin.lon]);
+        map.fitBounds(b, { padding: [16, 16], animate: false });
+      }
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      empty: 'Formularul gol: poza, locul (cu strada și reperul), categoria, titlul, descrierea. Pune pinul: strada se completează singură, „Dedusă din pin”. Apasă „Trimite sesizarea” fără să completezi: fiecare câmp gol primește un mesaj, iar sus apare lista lor, cu linkuri. Atinge harta ca să pui pinul (în afara conturului apare eroarea ariei), alege o categorie: dacă pinul e la sub 50 m de o sesizare din seed din aceeași categorie, apare „Există deja, votează-o”.',
+      loading: 'Poza se încarcă (60%, exemplu): bara de progres, „Anulează încărcarea” și butonul de trimitere blocat până se termină. Pe server, GPS-ul se citește din EXIF înainte de redimensionare și de ștergerea EXIF (D-011).',
+      sending: 'Sesizarea s-a trimis și așteptăm serverul: butonul devine „Se trimite sesizarea…” (aria-busy), cu mesajul „Nu închide pagina”. Fără animație: DESIGN.md nu are tokeni de durată.',
+      error: 'Trimiterea a eșuat (rețea sau server): mesajul spune ce s-a întâmplat și ce să faci, iar ce ai completat rămâne în formular. „Încearcă din nou” duce la Succes.',
+      success: 'După trimitere: „Mulțumim! Sesizarea ta a ajuns la operator.”, cu emailul doar pentru cetățean („Te anunțăm pe email.”), cardul sesizării #25 (exemplu, din shared.js), fără altă listă dedesubt, și „Vezi sesizarea” spre DS-002 (cu „Sesizarea ta”). Formularul nu se vede.',
+      long: 'Titlu, descriere și reper lungi, categoria cu numele cel mai lung, „Raportează anonim” bifat. Textele se rup pe rânduri, fără scroll orizontal.',
+      gps: 'Poza are locația în EXIF: „Am găsit locația din poză, o folosești?”. „Folosește locația din poză” pune pinul acolo (îl poți muta), „Nu, aleg pe hartă” închide întrebarea. Locația din poză e doar o sugestie; poza se publică fără ea (D-011).',
+      outside: 'Pinul e în afara poligonului din cartier.geojson (D-009, fără buffer): eroarea „Locația selectată este în afara ariei Cartierului Tineretului”, cipul „În afara ariei” și butonul de trimitere blocat. Mută pinul în contur ca să dispară.',
+      duplicate: 'Pin la 15 m de #13 (Groapă, Strada Oslo), categoria Străzi și iluminat: din seed ies #13 (15 m) și #12 (43 m), aceeași categorie, sub 50 m, din ultimele 30 de zile (D-005). Pinii lor apar pe hartă. Cetățeanul: „Votează-o”; operatorul și adminul: „Vezi sesizarea existentă (#N)”. Toți pot trimite totuși („E altă problemă…”).',
+      street: 'Pinul e pe Strada Oslo (dedusă din pin), apoi ai scris „str picasso”: la ieșirea din câmp devine „Strada Picasso”, harta se centrează pe ea și o evidențiază, cu „Atinge pe Strada Picasso locul exact”; pinul nu sare. Atinge harta pe Picasso: strada rămâne (la cel mult 10 m de pin). Atinge mai departe de ea: strada devine cea mai apropiată, „Dedusă din pin”. Scrie în câmp („o”, „oslo”, „botticelli”): sub câmp apar sugestiile; săgețile, Enter și Escape merg și ele.',
+      'street-out': 'Ai scris „str londra”: Strada Londra e o stradă cunoscută din jurul ariei, dar nu e în ea (una dintre cele 6 din strazi.geojson cu in_area: false). Mesajul apare la ieșirea din câmp, nu în timp ce scrii; trimiterea e blocată până scrii o stradă din arie sau muți pinul.',
+      'street-none': 'Ai scris „Strada Florilor”: nu e nici în arie, nici printre cele 6 din jur. „Nu am găsit strada. Verifică numele sau mută pinul pe hartă.” Mutarea pinului completează strada singură.',
+      ratelimit: 'Prea multe raportări: D-006 permite cel mult 5 sesizări în 10 minute pe cont sau IP. Mesajul spune limita și ce să faci; ce ai completat rămâne, butonul e blocat.',
     };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Ce diferă pe roluri</h3>
+        <ul><li><strong>Vizitator:</strong> nu vede formularul; „Intră în cont ca să raportezi” duce la DS-007 (încă nedesenat, deci la index).</li>
+          <li><strong>Cetățean:</strong> formularul complet. Raportarea contează ca votul lui (Q-016) și urmărește automat sesizarea. La duplicat: „Există deja, votează-o” → DS-002 al sesizării existente. Vede „Termen”, nu „SLA”.</li>
+          <li><strong>Cont neconfirmat</strong> (D-007): formularul se vede, dar e blocat, cu „Verifică-ți emailul ca să poți raporta” și „Retrimite emailul”.</li>
+          <li><strong>Operator și admin</strong> (D-012): același formular; raportarea nu contează ca vot și nu urmăresc sesizarea (o găsesc în DS-004). La duplicat: „Vezi sesizarea existentă (#N)”. Văd „SLA” în loc de „Termen”.</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Strada cea mai apropiată se calculează local (distanța de la punct la segmentele străzii, <code>nearestStreet()</code> în <code>shared.js</code>), fără geocodare. Pe cele 22 de sesizări din seed dă strada din Field.md la toate.</li>
+          <li>Aria: exact poligonul din <code>cartier.geojson</code> (copia din <code>seed.js</code>), fără buffer, verificat cu <code>insideArea()</code> din <code>shared.js</code>.</li>
+          <li>Categoriile și subcategoriile sunt cele 14 ale Primăriei (D-004), din <code>CATEGORY_TREE</code> în <code>shared.js</code>; „Altele - …” apare ca „Altele”.</li>
+          <li>Pe telefon: un singur rând de câmpuri, text de 16 px, toate țintele de cel puțin 44 × 44 px, „Fă o poză” deschide camera. „Folosește locația mea” = GPS-ul din browser (brief).</li>
+          <li>Câmp ascuns anti-spam (honeypot, D-006), în afara ecranului și a cititorului de ecran.</li>
+          <li>„Anulează” și „Înapoi la hartă” cer confirmare dacă ai completat ceva.</li></ul>
+        <h3>Decizii luate acum (26 nov 2026)</h3>
+        <ul><li><strong>D-014</strong> (înlocuiește D-013) Pinul e sursa locației. „Stradă” e un câmp text cu sugestii: cele 16 străzi din arie (<code>strazi.geojson</code>, din OSM). Potrivirea ignoră majusculele, diacriticele și prefixele („Str.”, „Strada”, „Aleea”); „Botticelli” e acceptat ca „Strada Boticelli”. Pinul completează strada cu cea mai apropiată („Dedusă din pin”); o stradă scrisă de mână rămâne dacă pinul e la cel mult 10 m de ea și centrează harta, fără să mute pinul. „Reper” e opțional. Titlul e obligatoriu (Q-020).</li>
+          <li>Sesizarea nou creată e un exemplu (#25) definit în <code>shared.js</code>, nu în seed; DS-002 o arată cu ?id=25.</li></ul>
+        <h3>Încă deschis</h3>
+        <ul><li><strong>Q-022</strong> Limitele de lungime (titlu, descriere, reper) și ce poze se acceptă (formate, mărime, câte). Mock-ul nu arată nicio limită până la răspuns.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv (<code>--mock-</code>), iconițele Leaflet (44 px = <code>--size-touch</code>), bordurile de 1 px și lățimea barei de progres (60%, exemplu).</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Sesizările existente (#13, #12 …) vin din <code>seed.js</code> (Field.md); statusul lor e exemplu. Pozele, coordonatele propuse, textele completate și sesizarea #25 sunt exemple, marcate „exemplu”, și nu intră niciodată în seed.</p>`;
+    }
 
-    function updateSubcategories() {
-      const cat = document.getElementById("category-select").value;
-      const sub = document.getElementById("subcategory-select");
-      sub.innerHTML = '<option value="">Alege subcategoria...</option>';
-      if (SUBCATEGORIES[cat]) {
-        SUBCATEGORIES[cat].forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = s;
-          opt.textContent = s;
-          sub.appendChild(opt);
-        });
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      rendering = true;
+      try { draw(); } finally { rendering = false; }
+    }
+    function draw() {
+      // Errors only after a first "Trimite", and only on the fields still empty (never over a filled field)
+      F.errors = F.submitted ? validate() : {};
+      syncBar(S);
+      syncUrl(S);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      if (mapEl) mapEl.remove(); // detach before the frame is rebuilt, so the map keeps its state
+      frame.innerHTML = `<div class="app">${appbar(S, { brandH1: false })}<div class="page">${content()}</div></div>`;
+      document.getElementById('notes').innerHTML = notes();
+      mountMap();
+    }
+
+    function clearErr(k) { delete F.errors[k]; }
+    function validate() {
+      const e = {};
+      if (F.photo !== 'done') e.photo = 1;
+      if (!F.pin) e.pin = 1;
+      if (!F.cat) e.cat = 1;
+      if (!F.sub) e.sub = 1;
+      if (!F.title.trim()) e.title = 1;
+      if (!F.desc.trim()) e.desc = 1;
+      if (!F.street && (!F.streetText.trim() || F.streetErr)) e.street = 1; // typed text not yet checked is not an error
+      return e;
+    }
+    const hasData = () => F.photo !== 'none' || F.pin || F.cat || F.title || F.desc || F.streetText || F.reper;
+    /** The pin moved (tap, drag, photo GPS, browser GPS): the street follows it (D-014), and the street highlight ends. */
+    function movePin(p) {
+      F.pin = p; F.streetFocus = '';
+      if (!insideArea(p.lat, p.lon)) return;
+      const r = streetForPin(p, F.street, F.streetByHand);
+      F.street = r.name; F.streetText = r.name; F.streetAuto = r.auto; F.streetByHand = !r.auto; F.streetErr = ''; F.sugOpen = false;
+    }
+    /** The person leaves the Stradă field (or picks a suggestion): check the text (D-014). */
+    function commitStreet() {
+      F.sugOpen = false; F.sugIdx = -1;
+      if (F.street && F.streetText === F.street) return; // nothing typed since the last check
+      const r = resolveStreet(F.streetText);
+      F.street = ''; F.streetErr = ''; F.streetFocus = ''; F.streetAuto = false;
+      if (r.status === 'ok') { F.street = r.name; F.streetText = r.name; F.streetAuto = false; F.streetByHand = true; F.streetFocus = r.name; }
+      else if (r.status === 'outside' || r.status === 'none') F.streetErr = r.status;
+    }
+    /** Re-render while the person types, keeping the focus and the caret in the field. */
+    function renderKeep(el) {
+      const id = el.id, at = el.selectionStart;
+      render();
+      const n = document.getElementById(id);
+      if (n) { n.focus(); if (at !== null && n.setSelectionRange) n.setSelectionRange(at, at); }
+    }
+
+    document.addEventListener('input', e => {
+      const map_ = { 'f-title': 'title', 'f-desc': 'desc', 'f-reper': 'reper' };
+      if (e.target.id === 'f-street') {
+        // Typing: suggestions only; the check (and its message) waits until the person leaves the field (D-014)
+        F.streetText = e.target.value; F.street = ''; F.streetAuto = false; F.streetErr = ''; F.streetFocus = '';
+        F.sugOpen = true; F.sugIdx = -1; F.prefilled = false;
+        return renderKeep(e.target);
       }
-    }
-
-    function updateCharCount() {
-      const val = document.getElementById("desc-input").value;
-      document.getElementById("char-counter").textContent = val.length + " / 500";
-    }
-
-    function setTheme(theme) {
-      document.body.setAttribute("data-theme", theme);
-      document.getElementById("btn-theme-light").classList.toggle("active", theme === "light");
-      document.getElementById("btn-theme-dark").classList.toggle("active", theme === "dark");
-    }
-
-    function dismissDuplicate() {
-      document.getElementById("duplicate-warning").style.display = "none";
-      document.getElementById("duplicate-marker").style.display = "none";
-      document.getElementById("duplicate-radius").style.display = "none";
-    }
-
-    function locateUser() {
-      const pin = document.getElementById("draggable-pin");
-      pin.style.top = "160px";
-      pin.style.left = "210px";
-      document.getElementById("coords-text").textContent = "45.81651° N, 24.13238° E (Str. Viena)";
-    }
-
-    function clearPhoto() {
-      document.getElementById("upload-preview").style.display = "none";
-      document.getElementById("upload-empty").style.display = "block";
-    }
-
-    function setState(state) {
-      // Pill state button highlighting
-      const buttons = document.querySelectorAll('.pill-selector button');
-      buttons.forEach(b => {
-        if (b.textContent.includes(state) || 
-           (state === 'empty' && b.textContent.includes('Implicit')) ||
-           (state === 'duplicate' && b.textContent.includes('Duplicat')) ||
-           (state === 'out-of-bounds' && b.textContent.includes('Eroare')) ||
-           (state === 'loading' && b.textContent.includes('EXIF')) ||
-           (state === 'success' && b.textContent.includes('Succes')) ||
-           (state === 'long-text' && b.textContent.includes('Text lung'))) {
-          b.classList.add('active');
-        } else if (!b.textContent.includes('Light') && !b.textContent.includes('Dark')) {
-          b.classList.remove('active');
-        }
-      });
-
-      // Show/Hide Containers
-      const formCol = document.getElementById("form-container");
-      const mapCol = document.getElementById("map-container");
-      const successCol = document.getElementById("success-container");
-
-      if (state === "success") {
-        formCol.style.display = "none";
-        mapCol.style.display = "none";
-        successCol.style.display = "flex";
+      const k = map_[e.target.id];
+      if (!k) return;
+      F[k] = e.target.value; F.prefilled = false;
+      // After a first "Trimite": a field shows its error only while it is empty. Re-render only when that flips, keeping the caret.
+      if (F.submitted && k !== 'reper' && !!F.errors[k] !== !F[k].trim()) {
+        const at = e.target.selectionStart;
+        render();
+        const el = document.getElementById(e.target.id);
+        el.focus(); el.setSelectionRange(at, at);
+      }
+    });
+    document.addEventListener('change', e => {
+      if (e.target.id === 'f-cat') {
+        F.cat = e.target.value; F.dupDismissed = false; clearErr('cat');
+        const c = CATEGORY_TREE.find(x => x.name === F.cat);
+        F.sub = c && c.subs.length === 1 ? c.subs[0] : ''; // one subcategory: chosen for you
+        return render();
+      }
+      if (e.target.id === 'f-sub') { F.sub = e.target.value; clearErr('sub'); return render(); }
+      if (e.target.id === 'f-anon') F.anon = e.target.checked;
+    });
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        const k = ctl.parentElement.dataset.ctl;
+        S[k] = ctl.dataset.v;
+        if (k === 'state') F = formFor(S.state);
+        if (k === 'role') { F.resent = false; F.errors = {}; }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (!act) { if (e.target.closest('#frame a[href^="#"]')) e.preventDefault(); return; }
+      const a = act.dataset.act;
+      if (a === 'leave') {
+        if (!hasData() || S.state === 'success' || F.confirmLeave) return; // nothing to lose: follow the link
+        e.preventDefault(); F.confirmLeave = true; render();
+        return document.querySelector('[role="alertdialog"] button')?.focus();
+      }
+      e.preventDefault();
+      if (a === 'stay') F.confirmLeave = false;
+      if (a === 'zoom-in' || a === 'zoom-out') { if (map) a === 'zoom-in' ? map.zoomIn() : map.zoomOut(); return; }
+      if (a === 'focus') return document.getElementById(act.dataset.v)?.focus();
+      if (a === 'photo-add') { F.photo = 'done'; F.gpsAsk = true; clearErr('photo'); }
+      if (a === 'photo-remove') { F.photo = 'none'; F.gpsAsk = false; }
+      if (a === 'gps-use') { movePin({ ...GPS_PHOTO }); F.gpsAsk = false; F.gpsUsed = true; F.pinEx = true; clearErr('pin'); fitKey = ''; }
+      if (a === 'gps-no') F.gpsAsk = false;
+      if (a === 'locate') { movePin({ ...GPS_BROWSER }); F.gpsUsed = false; F.pinEx = true; clearErr('pin'); fitKey = ''; }
+      if (a === 'dup-dismiss') F.dupDismissed = true;
+      if (a === 'resend') F.resent = true;
+      if (a === 'retry') { S.state = 'success'; }
+      if (a === 'again') { S.state = 'empty'; F = formFor('empty'); }
+      if (a === 'submit') {
+        if (F.streetText.trim() && !F.street && !F.streetErr) commitStreet();
+        F.submitted = true;
+        render();
+        if (!Object.keys(F.errors).length) { S.state = 'success'; render(); }
+        if (Object.keys(F.errors).length) document.querySelector('.msg-error[role="alert"]')?.scrollIntoView({ block: 'nearest' });
         return;
-      } else {
-        formCol.style.display = "flex";
-        mapCol.style.display = "flex";
-        successCol.style.display = "none";
       }
+      render();
+    });
 
-      // Reset base elements
-      const uploadEmpty = document.getElementById("upload-empty");
-      const uploadLoading = document.getElementById("upload-loading");
-      const uploadPreview = document.getElementById("upload-preview");
-      const duplicateWarning = document.getElementById("duplicate-warning");
-      const duplicateMarker = document.getElementById("duplicate-marker");
-      const duplicateRadius = document.getElementById("duplicate-radius");
-      const outOfBoundsAlert = document.getElementById("out-of-bounds-alert");
-      const boundaryStatusChip = document.getElementById("boundary-status-chip");
-      const submitBtn = document.getElementById("submit-btn");
-      const pin = document.getElementById("draggable-pin");
-      const polygonShape = document.getElementById("polygon-shape");
-      const coordsText = document.getElementById("coords-text");
+    /* Stradă combobox (D-014): keys, suggestions and leaving the field */
+    let rendering = false;
+    document.addEventListener('keydown', e => {
+      if (e.target.id !== 'f-street') return;
+      const sugs = F.sugOpen ? streetSuggestions(F.streetText) : [];
+      if (e.key === 'ArrowDown') { e.preventDefault(); F.sugOpen = true; F.sugIdx = Math.min(F.sugIdx + 1, streetSuggestions(F.streetText).length - 1); }
+      else if (e.key === 'ArrowUp' && sugs.length) { e.preventDefault(); F.sugIdx = Math.max(F.sugIdx - 1, 0); }
+      else if (e.key === 'Enter') { e.preventDefault(); if (sugs.length && F.sugIdx >= 0) F.streetText = sugs[F.sugIdx]; commitStreet(); }
+      else if (e.key === 'Escape' && F.sugOpen) { F.sugOpen = false; F.sugIdx = -1; }
+      else return;
+      renderKeep(e.target);
+    });
+    // A suggestion is chosen with the pointer: keep the focus in the field (no blur before the click)
+    document.addEventListener('mousedown', e => { if (e.target.closest('[data-sug]')) e.preventDefault(); });
+    document.addEventListener('click', e => {
+      const sug = e.target.closest('[data-sug]');
+      if (!sug) return;
+      F.streetText = sug.dataset.sug; commitStreet();
+      renderKeep(document.getElementById('f-street'));
+    });
+    document.addEventListener('focusout', e => {
+      if (rendering || e.target.id !== 'f-street') return;
+      const next = e.relatedTarget && e.relatedTarget.id;
+      commitStreet();
+      render();
+      if (next) document.getElementById(next)?.focus();
+    });
 
-      // Default resets
-      uploadLoading.style.display = "none";
-      uploadPreview.style.display = "none";
-      uploadEmpty.style.display = "block";
-      duplicateWarning.style.display = "none";
-      duplicateMarker.style.display = "none";
-      duplicateRadius.style.display = "none";
-      outOfBoundsAlert.style.display = "none";
-      submitBtn.disabled = false;
-      polygonShape.setAttribute("stroke", "var(--color-primary)");
-      polygonShape.setAttribute("fill", "rgba(30, 64, 175, 0.08)");
-      boundaryStatusChip.style.background = "var(--color-success-bg)";
-      boundaryStatusChip.style.color = "var(--color-success)";
-      boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> În interiorul ariei';
-
-      if (state === "empty") {
-        document.getElementById("report-form").reset();
-        pin.style.top = "200px";
-        pin.style.left = "200px";
-        coordsText.textContent = "45.81523° N, 24.13476° E";
-        updateCharCount();
-      } 
-      else if (state === "duplicate") {
-        uploadEmpty.style.display = "none";
-        uploadPreview.style.display = "block";
-        document.getElementById("preview-image").src = "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?w=600&auto=format&fit=crop&q=60";
-        document.getElementById("category-select").value = "strazi";
-        updateSubcategories();
-        document.getElementById("subcategory-select").value = "Groapă";
-        document.getElementById("desc-input").value = "Groapă apărută în asfalt lângă trotuar pe carosabil.";
-        document.getElementById("address-input").value = "Strada Oslo";
-        updateCharCount();
-        duplicateWarning.style.display = "flex";
-        duplicateMarker.style.display = "block";
-        duplicateRadius.style.display = "block";
-        pin.style.top = "245px";
-        pin.style.left = "180px";
-        coordsText.textContent = "45.81434° N, 24.13326° E (Str. Oslo)";
-      } 
-      else if (state === "out-of-bounds") {
-        outOfBoundsAlert.style.display = "flex";
-        submitBtn.disabled = true;
-        pin.style.top = "15px";
-        pin.style.left = "20px";
-        coordsText.textContent = "45.82010° N, 24.12800° E (În afara ariei)";
-        polygonShape.setAttribute("stroke", "var(--color-danger)");
-        polygonShape.setAttribute("fill", "rgba(185, 28, 28, 0.08)");
-        boundaryStatusChip.style.background = "var(--color-danger-bg)";
-        boundaryStatusChip.style.color = "var(--color-danger)";
-        boundaryStatusChip.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> În afara ariei';
-      } 
-      else if (state === "loading") {
-        uploadEmpty.style.display = "none";
-        uploadLoading.style.display = "block";
-      } 
-      else if (state === "long-text") {
-        uploadEmpty.style.display = "none";
-        uploadPreview.style.display = "block";
-        document.getElementById("preview-image").src = "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=600&auto=format&fit=crop&q=60";
-        document.getElementById("category-select").value = "trafic";
-        updateSubcategories();
-        document.getElementById("subcategory-select").value = "Parcare neregulamentară";
-        document.getElementById("desc-input").value = "Autoutilitară albă parcată permanent pe întreaga lățime a trotuarului pietonal de pe Strada Viena, chiar lângă intersecția cu Aleea Monet. Pietonii, persoanele vârstnice și părinții cu cărucioare de copii sunt forțați să coboare direct pe partea carosabilă cu vizibilitate foarte redusă. Situația persistă zilnic în intervalul 10:00 - 18:00.";
-        document.getElementById("address-input").value = "Strada Viena nr. 14, intersecție cu Aleea Monet";
-        document.getElementById("anon-checkbox").checked = true;
-        updateCharCount();
-        pin.style.top = "120px";
-        pin.style.left = "240px";
-        coordsText.textContent = "45.81651° N, 24.13238° E (Str. Viena)";
-      }
-    }
-
-    // Default initialization
-    updateSubcategories();
+    mockBar({ id: 'DS-003', states: STATES, roles: ROLES });
+    render();
   </script>
 </body>
 </html>
