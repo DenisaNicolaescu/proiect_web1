@@ -182,7 +182,7 @@
 
     // Default view = the whole neighbourhood. Desktop opens with one unclustered pin selected; the phone opens with none (tap a pin).
     const STATES = [['success', 'Succes'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung']];
-    const ROLES = ['vizitator', 'cetatean', 'operator'];
+    const ROLES = ['vizitator', 'cetatean', 'operator', 'admin'];
     // rol / tema / marime / stare come from the URL (shared.js), so they stay the same from one mock to the next
     const S = mockState({ state: 'success', role: 'vizitator', size: 'phone', theme: 'light', view: 'map', sheet: false, legend: null, selected: null },
       { roles: ROLES, states: STATES.map(x => x[0]) });
@@ -473,6 +473,7 @@
         <ul><li><strong>Vizitator:</strong> „Intră în cont ca să raportezi” (duce la DS-007); fără „Contul meu”.</li>
           <li><strong>Cetățean:</strong> „Raportează o problemă” (DS-003), „Sesizările mele” (DS-009), „Contul meu”.</li>
           <li><strong>Operator:</strong> tot ce are cetățeanul, plus „Triere” (DS-004).</li>
+          <li><strong>Admin:</strong> tot ce are operatorul, plus „Administrare” (DS-006); pe telefon, iconiță lângă „Triere”.</li>
           <li>Harta, lista, filtrele și exportul sunt la fel pentru toate rolurile.</li>
           <li>Pe telefon, „Statistici”, „Sesizările mele” și contul sunt în meniu; „Triere” rămâne în bară pentru operator (doar iconiță sub 340 px).</li></ul>
         <h3>Reguli aplicate</h3>
@@ -480,7 +481,7 @@
           <li>D-009: aria cartierului e exact poligonul din <code>docs/design/cartier.geojson</code>, fără buffer. #06 (0,1 m) și #24 (7,0 m) sunt în afara lui și nu apar pe hartă.</li>
           <li>D-004: termenul (SLA) în zile lucrătoare. Cetățeanul vede „termen”, niciodată „SLA” (CONTEXT.md); „Termen depășit” e singurul roșu, mereu cu iconiță și text.</li>
           <li>D-005: sesizările fuzionate nu apar pe hartă și nu sunt în filtrul de status.</li>
-          <li>D-006 / D-008: raportarea cere cont; operatorul vede tot ce vede cetățeanul.</li>
+          <li>D-006 / D-012: raportarea cere cont; operatorul vede tot ce vede cetățeanul.</li>
           <li>Harta rămâne light în dark mode: pin-urile, clusterele și poligonul folosesc valorile light.</li>
           <li>Pe telefon: harta și lista pe rând, cu comutator; filtrele într-o foaie de jos.</li>
           <li>Filtrul de status: implicit niciun status ales, deci se văd toate; un status ales e colorat și are bifă.</li>

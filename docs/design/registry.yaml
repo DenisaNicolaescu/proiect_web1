@@ -1,7 +1,7 @@
 # docs/design/registry.yaml — every screen and shared component, by DS- ID.
 # Plans, commits, mocks and board files use the ID (tickets don't). kind: foundation | component | screen
 # status: planned (approved in the screen list, no mock yet) | draft (mock drawn) | approved (confirmed on the board) | implemented | deprecated (never delete an entry)
-# roles: who sees the screen. Roles are hierarchical (D-008): a role also sees the screens of the roles below it.
+# roles: who sees the screen. Roles are hierarchical (D-012): a role also sees the screens of the roles below it.
 #   vizitator (unauthenticated) < cetatean < operator < admin
 
 designs:
@@ -27,7 +27,7 @@ designs:
       vizitator — read-only, "Intră în cont ca să votezi și să comentezi" instead of actions;
       cetatean — "Mă afectează și pe mine" vote ("Ai votat", "Retrage votul"; no vote button for the author, Q-016), text-only comments (Q-004), follow ("Urmărești");
       unconfirmed account (D-007) — actions blocked, "Verifică-ți emailul ca să poți vota" with resend;
-      operator — adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
+      operator (and admin) — no vote button and no "Urmărește", only the number of people affected; their own report is not a vote; they track sesizări from DS-004 (D-012); adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
       fuzionata — banner linking to the primary sesizare.
     brief: Detaliu per sesizare; vot "mă afectează și pe mine", comentarii, urmărire; indicator de depășire; fuziune
 
@@ -66,7 +66,7 @@ designs:
     status: draft
     route: /report
     roles: [cetatean]
-    description: Photo upload with EXIF GPS suggestion, map pin with strict polygon validation (D-003), category / subcategory, description, "Raportează anonim", live duplicate card "există deja, votează-o" (D-005).
+    description: Photo upload with EXIF GPS suggestion, map pin with strict polygon validation (D-003), category / subcategory, description, "Raportează anonim", live duplicate card "există deja, votează-o" (D-005). Operator / admin variant (D-012, to draw when DS-003 moves onto the shared mock files): the duplicate card reads "Vezi sesizarea existentă (#N)" instead of "Votează sesizarea existentă".
     brief: Raportare (categorie, descriere, poză, locație, opțional anonim); detecție de duplicate la raportare
 
   - id: DS-009
@@ -75,7 +75,7 @@ designs:
     status: planned
     route: /me/reports
     roles: [cetatean]
-    description: Two tabs — "Raportate de mine" and "Urmărite" — each sesizare with its status and SLA.
+    description: Two tabs — "Raportate de mine" and "Urmărite" — each sesizare with its status and SLA. Operator and admin see only "Raportate de mine": they do not follow (D-012).
     brief: Urmărire (notificare la schimbare de status); "Raportate de mine" is not explicitly in the brief
 
   - id: DS-010
@@ -93,7 +93,7 @@ designs:
     status: planned
     route: email
     roles: [cetatean]
-    description: One email that groups several status changes of followed sesizări (up to 10 changes in 5 minutes), each with sesizare, old → new status and a link to DS-002; unsubscribe link to DS-010.
+    description: One email that groups several status changes of followed sesizări (up to 10 changes in 5 minutes), each with sesizare, old → new status and a link to DS-002; unsubscribe link to DS-010. Sent only to Cetățean accounts: Operators and Admins do not follow (D-012).
     brief: Notificări prin email la schimbări de status, din job, cu grupare
 
   # ── Operator ────────────────────────────────────────────────────────────────
@@ -142,5 +142,5 @@ designs:
     status: planned
     route: /admin/users
     roles: [admin]
-    description: Search users and set each account's single role — cetatean, operator or admin (D-008).
+    description: Search users and set each account's single role — cetatean, operator or admin (D-012).
     brief: Roluri — admin (utilizatori)

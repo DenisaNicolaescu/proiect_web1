@@ -44,10 +44,10 @@ _Avoid_: guest, utilizator anonim
 **Cetățean** (noun) — An authenticated end user from the neighborhood who can report issues, cast one vote per issue, comment, and follow status notifications.
 _Avoid_: public user, regular user
 
-**Operator** (noun) — An authenticated privileged user responsible for reviewing, triaging, transitioning workflow statuses, uploading resolution proof, and merging/unmerging duplicates. Can also do everything a Cetățean does (D-008).
+**Operator** (noun) — An authenticated privileged user responsible for reviewing, triaging, transitioning workflow statuses, uploading resolution proof, and merging/unmerging duplicates. Can also report and comment like a Cetățean, but does not vote or follow: sees only the number of people affected and tracks sesizări from the triage queue (D-012).
 _Avoid_: agent primărie, moderator, trior
 
-**Admin** (noun) — An authenticated system administrator responsible for managing user roles, configuring categories, and setting SLAs in working days. Can also do everything an Operator does (D-008).
+**Admin** (noun) — An authenticated system administrator responsible for managing user roles, configuring categories, and setting SLAs in working days. Can also do everything an Operator does, and, like an Operator, does not vote or follow (D-012).
 _Avoid_: webmaster, superuser, root
 
 **Aria cartierului** (noun) — The closed polygon in `docs/design/cartier.geojson`, drawn by the project owner around Cartierul Tineretului, with no buffer (D-009), outside of which pins and GPS reports are strictly rejected.
