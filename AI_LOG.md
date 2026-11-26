@@ -92,3 +92,44 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
 
 - **Continuare (26 noiembrie 2026) — rolul Admin în mock-uri și urmărirea (D-012, completată):**  
   Am cerut rolul „Admin” în bara de control comună (DS-001, DS-002, `index.html`), cu linkul „Administrare” în antet (spre DS-006, încă nedesenat). Pe DS-002 adminul vede la fel ca operatorul și nu votează. Am aprobat completarea lui D-012: operatorul și adminul nici nu urmăresc sesizări, le urmăresc din coada de triaj (DS-004); urmăririle făcute ca cetățean se păstrează, dar nu trimit emailuri cât timp contul e operator sau admin; în DS-009 tabul „Urmărite” e ascuns pentru ei; fără excepție pentru sesizările raportate de ei. Am actualizat `CONTEXT.md`, `README.md`, `registry.yaml` (DS-002, DS-009, DS-014) și DS-002. Verificat cu `python3 docs/agents/tools/ledger-lint.py`. Am verificat DS-002 în browser și l-am reconfirmat (`approved`); modificările au fost salvate pe branch-ul `chore/d-012-roles`, unite în `main` și trimise pe GitHub.
+
+## Sesiunea 5 — 26 noiembrie 2026
+
+- **Data:** 2026-11-26
+- **Ce am cerut (What I asked):**  
+  Punctul de plecare: DS-001 și DS-002 erau `approved`, iar DS-002 fusese reconfirmat după D-012 (operatorul și adminul nu votează și nu urmăresc, vezi Sesiunea 4). Am cerut să aduc la zi mock-ul DS-003 (raportarea), desenat înainte de fișierele comune și de mai multe decizii. Statusul rămâne `draft` și se folosesc doar tokenii din `DESIGN.md`. Concret: mutarea pe `shared.css` / `shared.js` / `seed.js` și pe regula de legare, cu bara de control comună și toate rolurile (vizitator, cetățean, cont neconfirmat, operator, admin). Am cerut și verificarea față de deciziile actuale: aria exactă din `cartier.geojson` (D-009), duplicatele calculate pe seed (D-005), GPS-ul din EXIF propus ca locație și ștergerea EXIF-ului înainte de publicare (D-011), contul neconfirmat (D-007), raportarea anonimă (Q-018), limita de raportări (D-006), „Termen” în loc de „SLA” pentru cetățean. Pe lângă acestea: variantele pe roluri, toate stările (inclusiv cele speciale), light / dark, telefon / desktop cu ținte de minimum 44 px, linkurile spre DS-001, DS-002 și DS-007 și datele de exemplu marcate „exemplu”.
+
+- **Ce am primit (What I received):**  
+  Un DS-003 rescris pe fișierele comune, cu stările gol, încărcare poză, se trimite, eroare, succes, text lung, GPS din poză, în afara ariei, duplicat găsit, stradă din listă și prea multe raportări. Asistentul a listat ce nu se potrivea în vechiul mock:
+  - tokeni copiați și valori brute (px, hex, rgba), poligon SVG desenat de mână care cita D-003, înlocuită;
+  - un duplicat inventat („18 m, acum 4 zile”), fără variantă de operator și cu butoane care nu duceau nicăieri;
+  - GPS-ul din poză folosit automat, fără întrebare, și poze de pe Unsplash;
+  - lipseau contul neconfirmat, vizitatorul și limita de raportări;
+  - subcategoriile nu erau cele ale Primăriei;
+  - ținte de 28 px și text de 14 px;
+  - un contor „0 / 500” și o dată-limită neaprobate;
+  - lipsea câmpul de titlu.
+  
+  Asistentul a mai semnalat că, în DS-002, cetățeanul autor nu urmărea automat sesizarea lui și că în `DESIGN.md` lipsea rolul `admin` din regula URL. A propus apoi ca strada să fie dedusă din pin și a extras din OpenStreetMap străzile cu o porțiune în poligon. Testul pe cele 22 de sesizări din seed a arătat că strada cea mai apropiată de pin e la toate strada din Field.md, iar la intersecții cele două străzi sunt la 3–6 m.
+
+- **Ce am făcut cu răspunsul (What I did with the response):**  
+  Am decis următoarele:
+  - **Q-020:** sesizarea are un titlu obligatoriu, scris de cel care raportează (DS-002 rămâne cum e).
+  - **Q-021:** la început, „Stradă sau reper” ca text liber obligatoriu. Am schimbat apoi decizia, pentru că pinul și strada nu erau sincronizate.
+  - **D-013 (aprobată):** pinul e sursa locației. Strada se alege dintr-o listă cu cele 16 străzi din arie și se completează din pin, cu cea mai apropiată stradă („Dedusă din pin”), calculată local, fără geocodare. O stradă aleasă de mână rămâne dacă pinul e la cel mult 10 m de ea; pragul vine din testul intersecțiilor. Alegerea unei străzi centrează și evidențiază strada pe hartă, fără să mute pinul. „Reper” e un câmp separat, opțional. Liniile străzilor sunt salvate o singură dată în `docs/design/strazi.geojson`, cu atribuirea „© OpenStreetMap contributors, ODbL”. Am păstrat Strada Roma (doar 41 m în arie) și numele din OSM „Strada Boticelli”. Seed-ul păstrează strada din Field.md, inclusiv cele două intersecții (#9 și #12).
+  - **Sesizarea nou creată:** un exemplu (#25) definit în `shared.js`, nu în seed. DS-002 o arată după „Vezi sesizarea”, cu reperul pe rândul „Adresă”. DS-002 s-a schimbat puțin (#25, reperul, urmărirea automată pentru cetățeanul autor), așa că trebuie să-l reconfirm.
+  - **Formularul:** erorile apar doar după „Trimite” și doar la câmpurile goale, nu peste un câmp completat.
+  - **Succesul:** cardul sesizării, fără altă listă dedesubt; informația despre email rămâne doar în banner.
+  - **Q-022 (deschisă):** limitele de lungime ale câmpurilor și formatele, mărimea și numărul pozelor; mock-ul nu arată nicio limită până la răspuns.
+
+  Am actualizat `CONTEXT.md` (termenul „Reper”), `DESIGN.md` (regula URL, sursele hărții, exemplul #25), `registry.yaml` (DS-003) și ledger-ul (D-013, Q-020–Q-022). Asistentul a verificat sintaxa și randarea tuturor stărilor și rolurilor cu Node și a rulat `python3 docs/agents/tools/ledger-lint.py`. Capturile de ecran nu au rulat: browserul headless a fost blocat de permisiuni. Verific DS-003 și DS-002 în browser înainte de commit.
+
+- **Continuare (26 noiembrie 2026) — câmpul „Stradă” cu sugestii (D-014, înlocuiește D-013):**  
+  Lista derulantă cu 16 străzi era greu de folosit pe telefon, așa că am cerut un PROPOSAL pentru un câmp text cu sugestii. Am aprobat D-014:
+  - „Stradă” e un câmp text. Cât scriu, sub câmp apar străzile din arie care se potrivesc; pot alege o sugestie sau pot scrie tot numele.
+  - Potrivirea ignoră majusculele, diacriticele și prefixele („str oslo” → „Strada Oslo”), iar „Botticelli” e acceptat ca „Strada Boticelli”.
+  - Străzile valide sunt exact cele 16 din arie.
+  - Cele 6 străzi cunoscute din jurul ariei (Londra, Țiglari, Deventer, Bratislava, Lacul lui Binder, Madrid) primesc „Strada nu e în aria Cartierului Tineretului.”; un nume necunoscut primește „Nu am găsit strada. Verifică numele sau mută pinul pe hartă.”. Mesajele apar la ieșirea din câmp sau la „Trimite”, nu în timp ce scriu.
+  - Restul D-013 rămâne: „Dedusă din pin”, pragul de 10 m, centrarea hărții fără să sară pinul și „Reper” opțional.
+  
+  D-013 rămâne în ledger ca înlocuită de D-014. În DS-003 am adăugat stările „Stradă în afara ariei” și „Stradă negăsită”; starea „Stradă din listă” a devenit „Stradă scrisă de mână”. Cele 6 străzi din jur și numele „Botticelli” sunt în `docs/design/strazi.geojson`. Am cerut și ca starea Succes să arate doar cardul sesizării, fără lista de dedesubt, cu informația despre email doar în banner. Asistentul a testat cu Node normalizarea, regula de 10 m și mesajele; `python3 docs/agents/tools/ledger-lint.py` trece. Am verificat în browser: DS-003 e confirmat (`approved`), iar DS-002 e reconfirmat după modificările din această sesiune (#25, reperul, urmărirea automată pentru cetățeanul autor). Modificările au fost salvate pe branch-ul `chore/ds-003-shared`, unite în `main` și trimise pe GitHub.

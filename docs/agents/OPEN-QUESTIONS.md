@@ -27,6 +27,11 @@
 - Q-013 · How does a map pin carry its status name, as DESIGN.md requires? · _answered_
 - Q-015 · In what order is the list on DS-001? · _answered_
 
+### [Reporting](questions/reporting.md)
+- Q-020 · Does a sesizare have a title, and who writes it? · _answered_
+- Q-021 · Where does the street of a new sesizare come from? · _answered_
+- Q-022 · What are the length limits of the text fields, and which photos does the upload accept? · _investigating_
+
 ### [Sesizare detail](questions/sesizare-detail.md)
 - Q-004 · Should citizen comments support image attachments or remain text-only? · _answered_
 - Q-016 · Can a vote be withdrawn, and can the author vote on their own sesizare? · _answered_

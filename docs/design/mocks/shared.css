@@ -229,6 +229,8 @@ a { color: var(--color-primary); }
 .leaflet-host { position: absolute; inset: 0; z-index: 0; color: var(--color-text); font-family: var(--font-sans); }
 .leaflet-host .leaflet-control-attribution { font-size: var(--text-xs); line-height: var(--lh-xs); }
 .area { stroke: var(--color-primary); stroke-width: 3; stroke-dasharray: 8 6; fill: var(--color-primary); fill-opacity: 0.06; }
+/* A street chosen on DS-003 (D-013): the line, highlighted on the map */
+.street-hl { stroke: var(--color-primary); stroke-width: 8; stroke-opacity: 0.55; stroke-linecap: round; fill: none; }
 .pin-icon, .cluster-icon { display: grid; place-items: center; background: none; border: 0; border-radius: var(--radius-full); }
 .pin { width: var(--space-8); height: var(--space-8); border-radius: var(--radius-full); display: grid; place-items: center;
   background: var(--sc); color: var(--color-on-primary); border: calc(var(--space-1) / 2) solid var(--color-surface); box-shadow: var(--shadow-md); position: relative; }
