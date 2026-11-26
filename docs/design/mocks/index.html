@@ -34,14 +34,14 @@
 
   <script src="shared.js"></script>
   <script>
-    const S = mockState({ role: 'vizitator', size: 'phone', theme: 'light' }, { roles: ['vizitator', 'cetatean', 'neconfirmat', 'operator'] });
+    const S = mockState({ role: 'vizitator', size: 'phone', theme: 'light' }, { roles: ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'] });
     const STATUS_LABEL = { planned: 'planned', draft: 'draft', approved: 'approved', implemented: 'implemented', deprecated: 'deprecated' };
 
     function bar() {
       const seg = (ctl, items) => `<div class="seg" data-ctl="${ctl}">${items.map(([v, l]) => `<button data-v="${v}">${l}</button>`).join('')}</div>`;
       document.getElementById('mock-bar').innerHTML = `
         <div class="mock-group"><strong>Toate ecranele</strong></div>
-        <div class="mock-group"><span>Rol</span>${seg('role', ['vizitator', 'cetatean', 'neconfirmat', 'operator'].map(r => [r, ROLE_LABELS[r]]))}</div>
+        <div class="mock-group"><span>Rol</span>${seg('role', ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'].map(r => [r, ROLE_LABELS[r]]))}</div>
         <div class="mock-group"><span>Mărime</span>${seg('size', [['phone', 'Telefon'], ['desktop', 'Desktop']])}</div>
         <div class="mock-group"><span>Temă</span>${seg('theme', [['light', 'Light'], ['dark', 'Dark']])}</div>`;
     }
@@ -63,7 +63,7 @@
         return `<section aria-labelledby="g-${g}"><h2 id="g-${g}">${label}</h2><ul class="rows">${rows}</ul></section>`;
       }).join('');
       document.getElementById('index').innerHTML = `<div><h1>Toate ecranele</h1>
-          <p class="muted">Ecranele din <code>docs/design/registry.yaml</code>, pe roluri. Rolurile sunt ierarhice (D-008): fiecare rol vede și ecranele rolurilor de deasupra lui în listă.</p></div>
+          <p class="muted">Ecranele din <code>docs/design/registry.yaml</code>, pe roluri. Rolurile sunt ierarhice (D-012): fiecare rol vede și ecranele rolurilor de deasupra lui în listă.</p></div>
         ${notice}${groups}`;
     }
 

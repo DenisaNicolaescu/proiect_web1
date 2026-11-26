@@ -58,7 +58,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 - **Autentificare obligatorie:** Toate acțiunile cu impact (raportare, vot, comentarii, abonare notificări) necesită cont autentificat (`user_id`).
 - **Raportare opțional anonimă:** La raportare, cetățeanul poate bifa *"Raportează anonim"*. Numele și emailul său sunt ascunse complet de pe hartă, detaliul sesizării și exporturile publice (afișat ca *"Cetățean anonim"*), protejând intimitatea vecinilor (solicitare Neighbor #2 V.D.), în timp ce sistemul păstrează identificatorul intern pentru responsabilitate și anti-spam.
 - **Confirmarea emailului:** Obligatorie la înregistrare. Până la confirmare, contul se poate autentifica, dar nu poate raporta, vota, comenta sau urmări. O adresă de email are un singur cont ([D-007](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md)).
-- **Roluri ierarhice:** Cetățean < Operator < Admin; fiecare rol poate face tot ce face rolul de sub el. Vizitatorul (nelogat) doar vizualizează și nu este un rol de cont ([D-008](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md)).
+- **Roluri ierarhice:** Cetățean < Operator < Admin; fiecare rol poate face tot ce face rolul de sub el, cu o excepție: operatorul și adminul nu votează și nu urmăresc sesizări, ca triajul să nu influențeze prioritatea (văd doar numărul de persoane afectate și urmăresc sesizările din coada de triaj). Vizitatorul (nelogat) doar vizualizează și nu este un rol de cont ([D-012](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md)).
 - **Un vot per utilizator:** Garantat prin constrângere unică pe `(issue_id, user_id)`.
 - **Rate limiting anti-spam:**
   - Raportare: maximum 5 sesizări / 10 minute per utilizator / IP.
@@ -86,7 +86,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 
 ## 4. Ecrane (Views)
 
-Lista completă, cu ID-uri DS-, este în [docs/design/registry.yaml](file:///home/deny/proiect_web1/docs/design/registry.yaml). Fiecare rol vede și ecranele rolurilor de sub el (D-008).
+Lista completă, cu ID-uri DS-, este în [docs/design/registry.yaml](file:///home/deny/proiect_web1/docs/design/registry.yaml). Fiecare rol vede și ecranele rolurilor de sub el (D-012).
 
 - **Public (Vizitator):** DS-001 Hartă și listă (filtre, clustere, export CSV / GeoJSON) · DS-002 Detaliu sesizare (cu variante pe roluri) · DS-005 Statistici publice.
 - **Autentificare (Vizitator):** DS-007 Autentificare și înregistrare (cu confirmarea emailului) · DS-008 Resetare parolă.

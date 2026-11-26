@@ -13,10 +13,10 @@
 - D-005 · Spatial duplicate detection and reversible merge architecture
 - D-006 · Mandatory authentication with public anonymity and anti-spam rate limiting
 - D-007 · Email confirmation is mandatory at registration
-- D-008 · Account roles are hierarchical
 - D-009 · Neighbourhood area is the owner-drawn polygon, without buffer
 - D-010 · The .heic originals stay out of the public repo
 - D-011 · The seed uses the same image pipeline as an upload
+- D-012 · Account roles are hierarchical, and only a Cetățean votes and follows
 
 ---
 
@@ -79,16 +79,6 @@
 - **Evidence:** Q-008 answer; user approval of the D-007 proposal (2026-11-25).
 - **Source:** interview · confidence high
 
-## D-008 · Account roles are hierarchical
-- **Status:** approved
-- **Date:** 2026-11-25
-- **Confirmed:** 2026-11-25
-- **Rule:** Account roles are hierarchical: Cetățean < Operator < Admin. Each role can do everything the role below it can. An Operator can do everything a Cetățean does, plus change status, merge and unmerge sesizări. An Admin can do everything an Operator does, plus manage categories, SLAs, users and roles. An account has exactly one role. The Vizitator (unauthenticated) is not an account role.
-- **Why:** One permission level per account is simple to check on the server, and an Admin can triage when no Operator is available.
-- **Rejected:** Separate, non-overlapping roles.
-- **Evidence:** Q-009 answer; user approval of the D-008 proposal (2026-11-25).
-- **Source:** interview · confidence high
-
 ## D-009 · Neighbourhood area is the owner-drawn polygon, without buffer
 - **Status:** approved
 - **Date:** 2026-11-26
@@ -119,3 +109,12 @@
 - **Evidence:** User approval of the D-011 proposal with option (b) (2026-11-26); [brief.md](file:///home/deny/proiect_web1/docs/brief.md); Q-002; Q-019.
 - **Source:** interview · confidence high
 
+## D-012 · Account roles are hierarchical, and only a Cetățean votes and follows
+- **Status:** approved
+- **Date:** 2026-11-26
+- **Confirmed:** 2026-11-26
+- **Rule:** Account roles go Cetățean < Operator < Admin, and each role can do everything the role below it can, with one exception: Operators and Admins do not vote ("Mă afectează și pe mine") and do not follow sesizări; they track sesizări from the triage queue (DS-004). An Operator reports and comments like a Cetățean, and also changes status, merges and unmerges sesizări. An Admin can do everything an Operator does, plus manage categories, SLAs, users and roles. Where a Cetățean sees the vote button, an Operator or Admin sees only the number of people affected, and no "Urmărește"; the server refuses a vote or a follow from an Operator or Admin. A sesizare reported by an Operator or Admin does not count as its author's vote (Q-016 applies to a Cetățean author only). Votes an account cast as a Cetățean do not count while the account is Operator or Admin; they are not deleted and count again if the role goes back to Cetățean (votes are counted as COUNT(DISTINCT user_id) over Cetățean accounts, D-005). In the same way, follows an account made as a Cetățean stay but send no email while the account is Operator or Admin, and work again if the role goes back to Cetățean. A sesizare an Operator or Admin reports is not followed automatically, with no exception for their own reports. On DS-009 the "Urmărite" tab is hidden for Operators and Admins. An Operator or Admin who lives in the neighbourhood votes and follows with a separate Cetățean account under another email address (D-007: one account per email). An account has exactly one role. The Vizitator (unauthenticated) is not an account role. Supersedes D-008.
+- **Why:** Whoever triages must not affect a sesizare's priority by voting; the triage queue is where Operators and Admins track sesizări, so a follow and its emails would repeat it. One permission level per account stays simple to check on the server, and an Admin can still triage when no Operator is available.
+- **Rejected:** Operators and Admins voting or following like a Cetățean (D-008); deleting the votes or follows of an account promoted to Operator or Admin; Operators following only the sesizări they reported; separate, non-overlapping roles.
+- **Evidence:** User approval of the D-012 proposal and of points 1–4 (2026-11-26); user approval of the follow amendment and its points 1–3 (2026-11-26); Q-009; Q-016.
+- **Source:** interview · confidence high

@@ -122,6 +122,7 @@ document.body.insertAdjacentHTML('afterbegin', `<svg width="0" height="0" style=
   <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
   <symbol id="i-area" viewBox="0 0 24 24"><polygon points="3 7 12 3 21 8 20 18 9 21 3 15" stroke-dasharray="3 2"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
 </svg>`);
 
@@ -158,7 +159,7 @@ const slaOperatorBadge = i => !i.sla ? '' : i.sla.over
 const votes = n => n === 0 ? 'Niciun vot încă' : plural(n, 'vot', 'voturi');
 
 /* ── Mock control bar ────────────────────────────────────────────────────── */
-const ROLE_LABELS = { vizitator: 'Vizitator', cetatean: 'Cetățean', neconfirmat: 'Cont neconfirmat', operator: 'Operator' };
+const ROLE_LABELS = { vizitator: 'Vizitator', cetatean: 'Cetățean', neconfirmat: 'Cont neconfirmat', operator: 'Operator', admin: 'Admin' };
 /**
  * Renders the control bar into <header id="mock-bar">.
  * cfg: { id: 'DS-002', states: [['success','Succes'], …], roles: ['vizitator', …] }
@@ -186,25 +187,30 @@ function syncBar(S) {
 
 /* ── App header (the same in every screen of the app) ───────────────────── */
 const signedInRole = r => r !== 'vizitator';
+// D-012: an Admin can do everything an Operator does (triage included); neither votes
+const triageRole = r => r === 'operator' || r === 'admin';
 /**
  * S: { role, size }. current: the DS- ID of the nav item to mark. brandH1: the brand is the page's h1
  * (true on the phone map; a screen with its own h1 passes false).
  */
 function appbar(S, { current = '', brandH1 = S.size === 'phone' } = {}) {
-  const phone = S.size === 'phone', signedIn = signedInRole(S.role), operator = S.role === 'operator';
+  const phone = S.size === 'phone', signedIn = signedInRole(S.role), operator = triageRole(S.role), admin = S.role === 'admin';
   const name = brandH1 ? '<h1 class="brand-name">Harta sesizărilor</h1>' : '<div class="brand-name">Harta sesizărilor</div>';
   const brand = `<div class="brand">${phone ? '' : `<span class="brand-mark">${ic('i-map', 'i-lg')}</span>`}
     <div class="brand-text">${name}<div class="brand-sub">Cartierul Tineretului, Sibiu</div></div></div>`;
   const cur = id => id === current ? ' aria-current="page"' : '';
   if (phone) {
-    // Phone: one menu (Statistici, Sesizările mele, Contul meu / Intră în cont); the operator also gets Triere in the bar
+    // Phone: one menu (Statistici, Sesizările mele, Contul meu / Intră în cont); the operator also gets Triere in the bar,
+    // the admin also Administrare (icon only, to fit next to Triere)
     const triage = operator ? `<a class="btn btn-ghost btn-sm triage" href="${mockHref('DS-004')}" aria-label="Triere">${ic('i-triage')}<span class="triage-label">Triere</span></a>` : '';
-    return `<header class="appbar">${brand}<div class="actions">${triage}
+    const adm = admin ? `<a class="btn btn-ghost btn-icon" href="${mockHref('DS-006')}" aria-label="Administrare">${ic('i-settings')}</a>` : '';
+    return `<header class="appbar">${brand}<div class="actions">${triage}${adm}
       <button class="btn btn-secondary btn-icon" aria-label="Meniu${signedIn ? ' și contul meu' : ''}">${ic('i-menu')}</button></div></header>`;
   }
   const nav = [`<a href="${mockHref('DS-001')}"${cur('DS-001')}>${ic('i-map')}Hartă</a>`, `<a href="${mockHref('DS-005')}"${cur('DS-005')}>${ic('i-chart')}Statistici</a>`];
   if (signedIn) nav.push(`<a href="${mockHref('DS-009')}"${cur('DS-009')}>${ic('i-bookmark')}Sesizările mele</a>`);
   if (operator) nav.push(`<a href="${mockHref('DS-004')}"${cur('DS-004')}>${ic('i-triage')}Triere</a>`);
+  if (admin) nav.push(`<a href="${mockHref('DS-006')}"${cur('DS-006')}>${ic('i-settings')}Administrare</a>`);
   const right = signedIn
     ? `<a class="btn btn-primary" href="${mockHref('DS-003')}">${ic('i-plus')}Raportează o problemă</a><button class="avatar" aria-label="Contul meu">${ic('i-user')}</button>`
     : `<a class="btn btn-primary" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să raportezi</a>`;

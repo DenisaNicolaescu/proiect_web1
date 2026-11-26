@@ -18,6 +18,7 @@
 - **Proposed answer:** A vote can be withdrawn ("Ai votat" → "Retrage votul"); the D-006 rate limit (30 votes in 10 minutes) also counts withdrawals. Reporting a sesizare counts as its author's vote, so the author has no vote button on their own sesizare and the count includes them; after a merge, COUNT(DISTINCT user_id) (D-005) still counts the author once.
 - **Answer:** The proposed answer, accepted by the owner: a vote can be withdrawn ("Retrage votul"), and withdrawals count toward the D-006 vote rate limit. Reporting counts as the author's vote: the author has no vote button on their own sesizare and is included in the count.
 - **Date:** 2026-11-26
+- **Note (2026-11-26):** Applies to a Cetățean author only: Operators and Admins do not vote, and their reports do not count as a vote (D-012).
 
 ## Q-017 · Which actions stay on a rezolvată, respinsă or fuzionată sesizare?
 - **Status:** answered
