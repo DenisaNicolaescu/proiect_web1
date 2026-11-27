@@ -18,6 +18,7 @@
 - D-011 · The seed uses the same image pipeline as an upload
 - D-012 · Account roles are hierarchical, and only a Cetățean votes and follows
 - D-014 · The street is a text field with suggestions, checked against the area's streets
+- D-015 · Status workflow steps, reopening, and emails at a merge
 
 ---
 
@@ -129,3 +130,14 @@
 - **Rejected:** The drop-down list of D-013; free text without a check (the Q-021 answer); reverse geocoding through an external service; a wider extract of Sibiu streets for the "not in the area" message; the pin jumping to a typed street.
 - **Evidence:** User approval of the D-014 proposal and of points 1–3 (2026-11-26); D-013; Q-020; Q-021; `docs/design/strazi.geojson`; the nearest-street test on `mocks/seed.js` (0 of 22 different).
 - **Source:** interview · confidence high
+
+## D-015 · Status workflow steps, reopening, and emails at a merge
+- **Status:** approved
+- **Date:** 2026-11-27
+- **Confirmed:** 2026-11-27
+- **Rule:** Only an Operator or Admin changes a status, one allowed step at a time: nouă → confirmată or respinsă; confirmată → în lucru or respinsă; în lucru → rezolvată or respinsă; rezolvată or respinsă → confirmată (reopening). A reason is required to reject and to reopen, and is shown in the sesizare's timeline; a photo is required to resolve (resized and stripped of EXIF, D-011). A fuzionată sesizare has no steps of its own. At a reopening, the SLA starts again from the date of the reopening. The average resolution time in the public statistics (DS-005) runs from the report to the last resolution. Every status change emails the Cetățeni who follow the sesizare, grouped (one email for up to 10 changes in 5 minutes, DS-014). A merge and an unmerge count as a status change of the secondary sesizare: its followers get "#N a fost unită cu #M" / "#N nu mai e unită cu #M" in the same grouped email; the followers of the primary sesizare get nothing, as its status does not change.
+- **Why:** The brief gives only the forward chain; DS-002 already shows nouă → respinsă; a neighbour can say a problem is back, and an operator can close a sesizare by mistake. Restarting the SLA keeps the queue honest after a reopening, and measuring to the last resolution keeps the statistics honest.
+- **Rejected:** Respinsă only from în lucru; final closed statuses without reopening; no email at a merge; emailing the primary's followers at a merge; keeping the original SLA after a reopening.
+- **Evidence:** Q-023 and Q-024 answers (2026-11-27); user approval of the D-015 proposal with its two additions (2026-11-27); [brief.md](file:///home/deny/proiect_web1/docs/brief.md); `docs/design/mocks/DS-011.html`, `DS-012.html`.
+- **Source:** interview · confidence high
+

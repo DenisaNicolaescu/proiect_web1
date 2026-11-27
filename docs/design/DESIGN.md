@@ -227,6 +227,7 @@ value is given in "Use".
 | `--color-success-bg` | `#d1fae5` | `#052e2b` | Success message and chip background |
 | `--color-danger` | `#b91c1c` | `#fca5a5` | Red, the only one: "Termen depășit" badge and error messages (≥ 5.30:1 on danger-bg, ≥ 5.91:1 on bg/surface/elevated) |
 | `--color-danger-bg` | `#fee2e2` | `#450a0a` | "Termen depășit" badge and error message background (`--color-text` on it ≥ 14.61:1) |
+| `--color-overlay` | `#0f172a99` | `#000000b3` | Dimmed, inert screen behind a dialog (`--color-text` / black at 60% / 70%). The dialog edge against the dimmed screen: light, `--color-surface` ≥ 4.69:1; dark, the dialog's 1 px `--color-border-input` border ≥ 5.65:1 (checked 2026-11-27) |
 
 **Map pins** (light-theme values in both themes, on OSM tiles ≈ `#f2efe9`): pin color
 vs map ≥ 4.38:1, white icon on pin ≥ 5.02:1, for all six statuses and danger.
