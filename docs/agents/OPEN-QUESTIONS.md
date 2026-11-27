@@ -43,3 +43,8 @@
 - Q-005 · Which map tile provider should be used for Leaflet to ensure quota-free evaluation? · _answered_
 - Q-006 · How do we take screenshots of the app for the design check?
 
+### [Triage and workflow](questions/triage-and-workflow.md)
+- Q-023 · Which status changes are allowed from each status? · _answered_
+- Q-024 · Do followers get an email when a sesizare is merged or unmerged? · _answered_
+- Q-025 · What does the triage queue show by default, and how are ties ordered? · _answered_
+

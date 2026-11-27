@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-004 · Coada de triaj (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, badges, messages: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-004 only. Tokens and shared parts: shared.css */
+    .page { flex: 1; min-height: 0; overflow-y: auto; }
+    .wrap { display: grid; gap: var(--space-4); padding: var(--space-4); align-content: start; }
+    .frame[data-size="desktop"] .wrap { padding: var(--space-6); gap: var(--space-6); }
+    h1.title { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .head { display: grid; gap: var(--space-1); }
+    .summary { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); align-items: center; font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .summary strong { font-variant-numeric: var(--font-numeric); }
+
+    /* Filters */
+    .filters { display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); border: 1px solid var(--color-border); }
+    .frame[data-size="desktop"] .filters { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); align-items: end; }
+    .frame[data-size="desktop"] .f-status { grid-column: 1 / -1; }
+    .field { display: grid; gap: var(--space-1); min-width: 0; }
+    .field label, .f-status legend { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; color: var(--color-text-muted); }
+    .input, .select { width: 100%; min-height: var(--size-touch); padding: 0 var(--space-3); border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-input); background: var(--color-surface); color: var(--color-text); }
+    .search { position: relative; }
+    .search .i { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
+    .search .input { padding-left: calc(var(--space-8) + var(--space-2)); }
+    .f-status { border: 0; display: grid; gap: var(--space-1); min-width: 0; }
+    .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .chip { min-height: var(--size-touch); display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-3);
+      border-radius: var(--radius-full); border: 1px solid var(--color-border-input); background: var(--color-surface); color: var(--color-text);
+      font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
+    .chip[aria-pressed="true"] { border-color: var(--sc); background: var(--sbg); color: var(--sc); font-weight: 600; box-shadow: inset 0 0 0 1px var(--sc); }
+    .chip .check { display: none; }
+    .chip[aria-pressed="true"] .check { display: inline; }
+    .filters-toggle { justify-self: start; }
+    .f-foot { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+    .frame[data-size="desktop"] .f-foot { grid-column: 1 / -1; }
+
+    /* Rows: the title link covers the whole row (opens DS-002); the duplicate links and the action sit above it */
+    .rows { list-style: none; display: grid; gap: var(--space-3); }
+    .row { position: relative; display: grid; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); background: var(--color-surface);
+      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); min-width: 0; }
+    .row:hover { box-shadow: var(--shadow-md); border-color: var(--color-border-input); }
+    .row.is-late { border-left: var(--space-1) solid var(--color-danger); }
+    .row-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+    .row-main { display: grid; gap: var(--space-1); min-width: 0; justify-items: start; }
+    .idrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+    .row-title { font-size: var(--text-base); line-height: var(--lh-base); font-weight: 600; color: var(--color-text); text-decoration: none; overflow-wrap: anywhere; }
+    .row-title::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-lg); }
+    .row-title:hover { text-decoration: underline; }
+    .row-title:focus-visible { outline: none; }
+    .row-title:focus-visible::after { outline: calc(var(--space-1) / 2) solid var(--color-focus); outline-offset: calc(var(--space-1) / 2); }
+    .row-facts { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+    .row-sla { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); align-items: center; }
+    .people { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text); }
+    .people strong { font-variant-numeric: var(--font-numeric); }
+    .above { position: relative; z-index: 1; }
+    .dupline { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .dup-tag { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: 600; color: var(--color-text); }
+    .dup-link { min-height: var(--size-touch); display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2);
+      border: 1px solid var(--color-border-input); border-radius: var(--radius-md); background: var(--color-surface); text-decoration: none; font-weight: 500; }
+    .dup-link:hover { background: var(--color-primary-subtle); }
+    .row .btn-change { width: 100%; }
+
+    /* Desktop: one line per sesizare, in columns */
+    .frame[data-size="desktop"] .table-head, .frame[data-size="desktop"] .row {
+      grid-template-columns: minmax(0, 1fr) calc(var(--space-8) * 5) calc(var(--space-8) * 5) calc(var(--space-8) * 6) calc(var(--space-8) * 3) calc(var(--space-8) * 5); align-items: center; gap: var(--space-4); }
+    .table-head { display: none; }
+    .frame[data-size="desktop"] .table-head { display: grid; padding: 0 var(--space-3); font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-text-muted); }
+    .frame[data-size="desktop"] .row .btn-change { width: auto; justify-self: end; }
+    .cell-label { font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; color: var(--color-text-muted); }
+    .frame[data-size="desktop"] .cell-label { display: none; }
+    .cell { display: grid; gap: var(--space-1); min-width: 0; justify-items: start; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .frame[data-size="phone"] .cells { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-3); }
+    .frame[data-size="desktop"] .cells { display: contents; }
+    .frame[data-size="desktop"] .phone-only { display: none; }
+    .frame[data-size="phone"] .desk-only { display: none; }
+    .count-num { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; font-variant-numeric: var(--font-numeric); }
+    .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       The sesizări come from seed.js (Field.md). Statuses, SLA and votes are example values (today = 25 nov 2026). */
+    const STATES = [['success', 'Coadă'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
+    const OPEN = ['noua', 'confirmata', 'in-lucru'];
+    const S = mockState({ state: 'success', role: 'operator', size: 'phone', theme: 'light', statuses: [...OPEN], cat: '', street: '', q: '', filtersOpen: false },
+      { roles: ROLES, states: STATES.map(x => x[0]) });
+    const LONG = { id: 17, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat, fără protecție, cu pericol de împiedicare și electrocutare', votes: 1248 };
+
+    const phone = () => S.size === 'phone';
+    const isTriage = () => triageRole(S.role);
+    const norm = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
+    function base() {
+      if (S.state === 'empty') return [];
+      return SEED.map(i => S.state === 'long' && i.id === LONG.id ? { ...i, ...LONG } : i);
+    }
+    /** SLA order: depășit first (most days over first), then the fewest working days left; then more people affected, then the older id.
+        Closed sesizări (rezolvată, respinsă: no SLA) come last, newest first. Order and tie-break: Q-025. */
+    function slaRank(i) { return !i.sla ? [2, -i.id] : i.sla.over ? [0, -i.sla.over] : [1, i.sla.left]; }
+    function sorted(list) {
+      return [...list].sort((a, b) => {
+        const ra = slaRank(a), rb = slaRank(b);
+        return ra[0] - rb[0] || ra[1] - rb[1] || (a.sla && b.sla ? (b.votes - a.votes) || (a.id - b.id) : 0);
+      });
+    }
+    function matches(i) {
+      if (!S.statuses.includes(i.st)) return false;
+      if (S.cat && i.cat !== S.cat) return false;
+      if (S.street && !i.street.split(' / ').includes(S.street)) return false; // #9 and #12 are on two streets (Field.md)
+      const q = S.q.trim();
+      if (!q) return true;
+      const idq = q.replace(/^#/, '');
+      if (/^\d+$/.test(idq)) return i.id === Number(idq);
+      return norm(i.title).includes(norm(q));
+    }
+    const all = () => base();
+    const visible = () => sorted(all().filter(matches));
+    const filtersActive = () => S.cat || S.street || S.q.trim() || S.statuses.join() !== OPEN.join();
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    function head() {
+      const open = all().filter(i => OPEN.includes(i.st)), late = open.filter(i => i.sla && i.sla.over);
+      return `<div class="head"><h1 class="title">Coada de triaj</h1>
+        <p class="hint">Ordonate după SLA: întâi cele cu SLA depășit, apoi cele cu cele mai puține zile lucrătoare rămase.</p>
+        ${open.length ? `<p class="summary" role="status"><span><strong>${fmt(open.length)}</strong> ${open.length === 1 ? 'sesizare deschisă' : `${de(open.length)}sesizări deschise`}</span>
+          ${late.length ? `<span class="badge badge-danger">${ic('i-alert')}${late.length === 1 ? '1 cu SLA depășit' : `${fmt(late.length)} ${de(late.length)}cu SLA depășit`}</span>` : ''}</p>` : ''}</div>`;
+    }
+
+    function filters() {
+      const n = [S.cat, S.street].filter(Boolean).length + (S.statuses.join() !== OPEN.join() ? 1 : 0);
+      const search = `<div class="field"><label for="q">Caută după titlu sau #id</label>
+        <div class="search">${ic('i-search')}<input class="input" id="q" type="search" value="${S.q.replace(/"/g, '&quot;')}" placeholder="de ex. groapă sau #14" autocomplete="off"></div></div>`;
+      if (phone() && !S.filtersOpen) return `<section class="filters" aria-label="Căutare și filtre">${search}
+        <button class="btn btn-secondary filters-toggle" data-act="filters" aria-expanded="false" aria-controls="f-more">${ic('i-filter')}Filtre${n ? ` <span class="num">(${n})</span>` : ''}</button></section>`;
+      const chips = Object.entries(STATUS).map(([k, v]) => `<button class="chip st-${k}" data-act="st" data-v="${k}" aria-pressed="${S.statuses.includes(k)}">
+          ${ic(v.icon)}${v.name}<span class="check">${ic('i-rezolvata')}</span></button>`).join('');
+      const cats = CATEGORY_TREE.map(c => `<option ${S.cat === c.name ? 'selected' : ''}>${c.name}</option>`).join('');
+      const streets = STREET_NAMES.map(s => `<option ${S.street === s ? 'selected' : ''}>${s}</option>`).join('');
+      return `<section class="filters" aria-label="Căutare și filtre" id="f-more">
+        <fieldset class="f-status"><legend>Status</legend><div class="chips">${chips}</div></fieldset>
+        ${search}
+        <div class="field"><label for="f-cat">Categorie</label><select class="select" id="f-cat" data-f="cat"><option value="">Toate categoriile</option>${cats}</select></div>
+        <div class="field"><label for="f-street">Stradă</label><select class="select" id="f-street" data-f="street"><option value="">Toate străzile</option>${streets}</select></div>
+        <div class="f-foot">${filtersActive() ? `<button class="btn btn-ghost btn-sm" data-act="clear">${ic('i-x')}Șterge filtrele</button>` : '<span class="hint">Implicit: sesizările deschise (nouă, confirmată, în lucru).</span>'}
+          ${phone() ? `<button class="btn btn-secondary btn-sm" data-act="filters" aria-expanded="true" aria-controls="f-more">Ascunde filtrele</button>` : ''}</div></section>`;
+    }
+
+    function row(i) {
+      const dups = OPEN.includes(i.st) ? possibleDuplicates(i) : [];
+      const late = i.sla && i.sla.over;
+      const sla = i.sla ? slaOperatorBadge(i) : `<span class="muted">—</span><span class="sr-only">Fără SLA: sesizare închisă</span>`;
+      const dupLine = dups.length ? `<div class="dupline above"><span class="dup-tag">${ic('i-fuzionata')}${dups.length === 1 ? 'Posibil duplicat' : 'Posibile duplicate'}:</span>
+          ${dups.map(d => `<a class="dup-link" href="${mockHref('DS-012', { id: i.id, cu: d.id, din: 'DS-004' })}" aria-label="Posibil duplicat: #${d.id}, la ${Math.round(d.d)} m. Deschide unirea">
+            <span class="mono">#${d.id}</span><span class="num muted">${Math.round(d.d)} m</span></a>`).join('')}</div>` : '';
+      return `<li class="row${late ? ' is-late' : ''}">
+        <div class="row-top">
+          <span class="thumb"><img src="${thumbSrc(i.id)}" alt="" width="64" height="64" loading="lazy"></span>
+          <div class="row-main"><div class="idrow"><span class="card-id">#${i.id}</span><span class="phone-only">${statusBadge(i.st)}</span></div>
+            <a class="row-title" href="${mockHref('DS-002', { id: i.id })}">${i.title}</a>${dupLine}</div></div>
+        <div class="cells">
+          <div class="cell"><span class="cell-label">Categorie</span><span>${i.cat}</span><span class="muted">${subName(i.sub)}</span></div>
+          <div class="cell"><span class="cell-label">Stradă</span><span>${i.street}</span></div>
+          <div class="cell desk-only"><span class="cell-label">Status și SLA</span>${statusBadge(i.st)}${sla}</div>
+          <div class="cell phone-only" style="grid-column: 1 / -1"><span class="cell-label">SLA</span>${sla}</div>
+          <div class="cell"><span class="cell-label">Persoane afectate</span><span class="people">${ic('i-votes')}<strong class="count-num">${fmt(i.votes)}</strong><span class="sr-only">${persoane(i.votes)}</span></span></div>
+        </div>
+        <a class="btn btn-secondary btn-sm btn-change above" href="${mockHref('DS-011', { id: i.id, din: 'DS-004' })}" aria-label="Schimbă statusul sesizării #${i.id}">${ic('i-refresh')}Schimbă statusul</a>
+      </li>`;
+    }
+
+    function list() {
+      const rows = visible();
+      if (!all().length) return `<div class="msg msg-empty"><span class="ico">${ic('i-triage', 'i-lg')}</span><div class="msg-title">Nicio sesizare de triat</div>
+        <p class="muted">Aici apar sesizările noi, confirmate și în lucru, ordonate după SLA. Când un cetățean raportează o problemă, o vezi aici.</p>
+        <div class="btns"><a class="btn btn-secondary" href="${mockHref('DS-001')}">${ic('i-map')}Vezi harta</a></div></div>`;
+      if (!rows.length) return `<div class="msg msg-empty" role="status"><span class="ico">${ic('i-search', 'i-lg')}</span><div class="msg-title">Nicio sesizare nu se potrivește</div>
+        <p class="muted">Schimbă căutarea sau filtrele. Sesizările fuzionate nu apar în coadă: le găsești la sesizarea principală.</p>
+        <div class="btns"><button class="btn btn-secondary" data-act="clear">${ic('i-x')}Șterge filtrele</button></div></div>`;
+      return `<p class="hint" role="status">${rows.length === 1 ? '1 sesizare' : `${fmt(rows.length)} ${de(rows.length)}sesizări`} în listă</p>
+        <div class="table-head" aria-hidden="true"><span>Sesizare</span><span>Categorie</span><span>Stradă</span><span>Status și SLA</span><span>Persoane afectate</span><span></span></div>
+        <ol class="rows" aria-label="Sesizări, ordonate după SLA">${rows.map(row).join('')}</ol>`;
+    }
+
+    function loadingView() {
+      const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="width:${w}; height:${h}"></span>`;
+      const card = `<div class="sk-card"><span class="thumb"></span><div class="sk-lines">${sk('25%')}${sk('90%')}${sk('60%')}${sk('40%')}</div></div>`;
+      return `<div class="head"><h1 class="title">Coada de triaj</h1><div class="loading-note" role="status">${ic('i-hourglass')}Se încarcă sesizările…</div></div>
+        <div class="sk-block" style="height: calc(var(--space-8) * 3)"></div><div aria-busy="true" style="display: grid; gap: var(--space-3)">${card.repeat(5)}</div>`;
+    }
+    function errorView() {
+      return `<div class="head"><h1 class="title">Coada de triaj</h1></div><div class="msg msg-error" role="alert">
+        <div class="msg-title">${ic('i-alert')}Nu am putut încărca coada de triaj</div>
+        <p>Verifică-ți conexiunea la internet și încearcă din nou. Dacă problema continuă, revino peste câteva minute.</p>
+        <button class="btn btn-secondary">${ic('i-refresh')}Încearcă din nou</button></div>`;
+    }
+
+    function content() {
+      if (!isTriage()) return noAccessView();
+      if (S.state === 'loading') return `<div class="wrap">${loadingView()}</div>`;
+      if (S.state === 'error') return `<div class="wrap">${errorView()}</div>`;
+      return `<div class="wrap">${head()}${all().length ? filters() : ''}<section aria-label="Lista sesizărilor">${list()}</section></div>`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      success: 'Sesizările deschise din seed (nouă, confirmată, în lucru), ordonate după SLA. Încearcă filtrele (status, categorie, stradă) și căutarea după titlu sau #id („#14”, „14”, „groapa”: fără diacritice). Bifează „Rezolvată” sau „Respinsă” ca să le vezi și pe cele închise (la sfârșit, fără SLA).',
+      empty: 'Nicio sesizare: mesajul spune ce va apărea aici și duce la hartă. Când filtrele nu găsesc nimic (din starea Coadă), apare „Nicio sesizare nu se potrivește”, cu „Șterge filtrele”.',
+      loading: 'Scheleturi cu forma rândurilor; titlul paginii e deja afișat. Fără animație: DESIGN.md nu are tokeni de durată.',
+      error: 'Coada nu s-a încărcat: ce s-a întâmplat și ce să faci, cu „Încearcă din nou”.',
+      long: 'Titlul lui #17 e lung (același exemplu ca în DS-002) și are 1.248 de persoane afectate: titlul se rupe pe rânduri, fără scroll orizontal, iar rândul își păstrează coloanele.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Ce diferă pe roluri</h3>
+        <ul><li><strong>Operator și admin</strong> (D-012): văd coada. Adminul are în plus „Administrare” în antet (spre DS-006). Nu votează și nu urmăresc: văd doar numărul de persoane afectate.</li>
+          <li><strong>Vizitator, cetățean, cont neconfirmat:</strong> „Nu ai acces la această pagină”, cu link spre hartă. „Triere” nu apare în antetul lor.</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Ordinea: SLA depășit (cele mai multe zile peste întâi), apoi cele mai puține zile lucrătoare rămase; la egalitate, mai multe persoane afectate, apoi #id mai mic. Închisele (fără SLA) la final. Implicit doar cele deschise. <strong>Q-025</strong> (confirmat 27 nov 2026).</li>
+          <li>„SLA”, nu „Termen”: operatorul și adminul văd SLA-ul (CONTEXT.md). Roșu doar pe „SLA depășit” (badge cu iconiță și text) și pe marginea rândului depășit, niciodată singur.</li>
+          <li>„Posibil duplicat”: aceeași categorie, sub 50 m, ultimele 30 de zile (D-005), calculat din seed, doar pe sesizările deschise. Fiecare #id deschide DS-012 cu perechea; ex. #14 ↔ #17 (12 m) și #15 (38 m), #22 ↔ #23 (33 m), #21 ↔ #20 (21 m), #13 ↔ #1 (46 m).</li>
+          <li>Tot rândul deschide DS-002 (titlul e linkul, întins peste card), cu rolul păstrat. „Schimbă statusul” deschide DS-011, care se întoarce aici (<code>din=DS-004</code>).</li>
+          <li>Filtrul de stradă: cele 16 străzi din arie (D-014); #9 și #12 apar la ambele străzi din Field.md.</li>
+          <li>Pe telefon: carduri late, cu ținte de 44 px; filtrele se deschid cu „Filtre”, căutarea e mereu vizibilă.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv (doar în mock) și bordurile de 1 px. Lățimile coloanelor pe desktop sunt multipli de <code>--space-8</code>.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: sesizările din Field.md (titlu, categorie, subcategorie, stradă, poză). Statusurile, SLA-ul și voturile sunt exemple din <code>seed.js</code> (azi = 25 nov 2026); nu intră în seed-ul aplicației.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render(keepFocus) {
+      syncBar(S);
+      syncUrl(S);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = `<div class="app">${appbar(S, { current: 'DS-004', brandH1: false })}<div class="page">${content()}</div></div>`;
+      document.getElementById('notes').innerHTML = notes();
+      if (keepFocus) { const el = document.getElementById(keepFocus); if (el) { el.focus(); if (el.setSelectionRange) el.setSelectionRange(el.value.length, el.value.length); } }
+    }
+
+    document.addEventListener('input', e => { if (e.target.id === 'q') { S.q = e.target.value; render('q'); } });
+    document.addEventListener('change', e => { const f = e.target.dataset.f; if (f) { S[f] = e.target.value; render(e.target.id); } });
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) { S[ctl.parentElement.dataset.ctl] = ctl.dataset.v; return render(); }
+      const act = e.target.closest('[data-act]');
+      if (act) {
+        const a = act.dataset.act;
+        if (a === 'st') { const v = act.dataset.v; S.statuses = S.statuses.includes(v) ? S.statuses.filter(x => x !== v) : [...S.statuses, v]; }
+        if (a === 'clear') { S.statuses = [...OPEN]; S.cat = ''; S.street = ''; S.q = ''; }
+        if (a === 'filters') S.filtersOpen = !S.filtersOpen;
+        return render();
+      }
+      if (e.target.closest('#frame a[href^="#"]')) e.preventDefault();
+    });
+
+    mockBar({ id: 'DS-004', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

@@ -24,9 +24,9 @@ const SCREENS = [
   { id: 'DS-009', ro: 'Sesizările mele', name: 'My Sesizări', group: 'cetatean', status: 'planned' },
   { id: 'DS-010', ro: 'Profil și notificări', name: 'Profile & Notifications', group: 'cetatean', status: 'planned' },
   { id: 'DS-014', ro: 'Email grupat de notificare', name: 'Grouped Notification Email', group: 'cetatean', status: 'planned' },
-  { id: 'DS-004', ro: 'Coada de triaj', name: 'Triage Queue', group: 'operator', status: 'planned' },
-  { id: 'DS-011', ro: 'Schimbă statusul (dialog)', name: 'Status Change Dialog', group: 'operator', status: 'planned' },
-  { id: 'DS-012', ro: 'Unește și anulează unirea (dialog)', name: 'Merge & Unmerge Dialog', group: 'operator', status: 'planned' },
+  { id: 'DS-004', ro: 'Coada de triaj', name: 'Triage Queue', group: 'operator', status: 'approved', file: 'DS-004.html' },
+  { id: 'DS-011', ro: 'Schimbă statusul (dialog)', name: 'Status Change Dialog', group: 'operator', status: 'approved', file: 'DS-011.html' },
+  { id: 'DS-012', ro: 'Unește și anulează unirea (dialog)', name: 'Merge & Unmerge Dialog', group: 'operator', status: 'approved', file: 'DS-012.html' },
   { id: 'DS-006', ro: 'Categorii și SLA', name: 'Categories & SLA', group: 'admin', status: 'planned' },
   { id: 'DS-013', ro: 'Utilizatori și roluri', name: 'Users & Roles', group: 'admin', status: 'planned' },
 ];
@@ -319,3 +319,55 @@ function metres(a, b) {
   const x = (b.lon - a.lon) * r * Math.cos((a.lat + b.lat) / 2 * r), y = (b.lat - a.lat) * r;
   return R * Math.hypot(x, y);
 }
+
+/* ── Operator screens (DS-004, DS-011, DS-012) ──────────────────────────────────────────────────── */
+// Names here must not clash with a mock's own top-level names (DS-002 has EX, MERGE, photoSrc, duplicates)
+const thumbSrc = id => `photos/sesizare_${String(id).padStart(2, '0')}.jpg`;
+// Example data (not from Field.md) carries a visible tag (DESIGN.md → Example data in mocks)
+const exTag = () => '<span class="ex" title="Date de exemplu, nu din Field.md">exemplu</span>';
+const persoane = n => n === 1 ? '1 persoană afectată' : `${fmt(n)} ${de(n)}persoane afectate`;
+
+/** Possible duplicates of a sesizare (D-005): same main category, under 50 m, last 30 days (all seed sesizări are from
+    15 nov 2026, today in the mocks is 25 nov), nearest first. The same rule as DS-002's own duplicates(). */
+const DUP_METRES = 50;
+function possibleDuplicates(i, list = SEED) {
+  return list.filter(x => x.id !== i.id && x.cat === i.cat && x.st !== 'fuzionata')
+    .map(x => ({ ...x, d: metres(i, x) })).filter(x => x.d < DUP_METRES).sort((a, b) => a.d - b.d);
+}
+
+/** Status workflow (brief, Q-023): forward one step, respinsă from any open status, and reopening a closed one
+    (rezolvată or respinsă → confirmată, with a reason). */
+const NEXT_STATUS = { 'noua': ['confirmata', 'respinsa'], 'confirmata': ['in-lucru', 'respinsa'], 'in-lucru': ['rezolvata', 'respinsa'],
+  'rezolvata': ['confirmata'], 'respinsa': ['confirmata'], 'fuzionata': [] };
+const isClosed = st => st === 'rezolvata' || st === 'respinsa';
+
+/* Example merge (the same pair as DS-002's MERGE): #15 into #14, same category and subcategory, Strada Picasso, 38 m.
+   Every number is example data except the rule: votes are COUNT(DISTINCT user_id) over Cetățean accounts (D-005, D-012).
+   The common vote and follower is the seed account that reported both sesizări (its report is its vote, Q-016). */
+const EXAMPLE_MERGE = { secondary: 15, primary: 14, when: '18 nov 2026, ora 12:30' };
+// Example counts per sesizare: comments as DS-002 draws them, followers as an example; 1 common voter and follower (the seed author)
+const exampleComments = i => 1 + (['confirmata', 'in-lucru', 'rezolvata'].includes(i.st) ? 1 : 0) + (['in-lucru', 'rezolvata'].includes(i.st) ? 1 : 0) + (i.st === 'rezolvata' ? 1 : 0);
+const EXAMPLE_FOLLOWERS = { 14: 3, 15: 2 };
+const exampleFollowers = i => EXAMPLE_FOLLOWERS[i.id] || Math.max(1, Math.round(i.votes / 2));
+const EXAMPLE_COMMON = 1;
+
+/** "Nu ai acces la această pagină": what a vizitator, a cetățean or an unconfirmed account sees on an operator screen (D-012). */
+function noAccessView() {
+  return `<div class="noaccess"><div class="msg msg-empty" role="alert"><span class="ico">${ic('i-lock', 'i-lg')}</span>
+    <h1 class="msg-title">Nu ai acces la această pagină</h1>
+    <p class="muted">Pagina e doar pentru operatori și admini.</p>
+    <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-001')}">${ic('i-map')}Mergi la hartă</a></div></div></div>`;
+}
+
+/** The screen a dialog was opened from, drawn behind it, dimmed and inert: DS-004 (the queue) or DS-002 (a sesizare). */
+function dialogBackdrop(S, origin, i) {
+  const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="width:${w}; height:${h}"></span>`;
+  const rows = [1, 2, 3, 4].map(() => `<div class="sk-card"><span class="thumb"></span><div class="sk-lines">${sk('30%')}${sk('85%')}${sk('55%')}</div></div>`).join('');
+  const body = origin === 'DS-004'
+    ? `<div class="ghost"><div class="ghost-h">Coada de triaj</div>${rows}</div>`
+    : `<div class="ghost"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}<div class="ghost-h">${i.title}</div>${sk('100%', 'calc(var(--space-8) * 4)')}${sk('70%')}${sk('90%')}</div>`;
+  return `<div class="behind" aria-hidden="true" inert>${appbar(S, { current: origin === 'DS-004' ? 'DS-004' : '', brandH1: false })}${body}</div><div class="scrim"></div>`;
+}
+
+/** Where a dialog goes back to (DESIGN.md → Linking mocks): the screen it was opened from, with the sesizare's id for DS-002. */
+const dialogOrigin = () => URLP.get('din') === 'DS-004' ? 'DS-004' : 'DS-002';

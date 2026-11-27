@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-012 · Unește și anulează unirea (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, badges, messages, dialogs: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-012 only. Tokens and shared parts: shared.css */
+    .page { flex: 1; min-height: 0; overflow-y: auto; }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    h2.sec { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; }
+    .idrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+    .checks { list-style: none; display: grid; gap: var(--space-2); font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .checks li { display: flex; gap: var(--space-2); align-items: flex-start; }
+    .checks .i { color: var(--color-success); margin-top: calc(var(--space-1) / 2); }
+    .pick { grid-template-columns: var(--space-6) auto minmax(0, 1fr); }
+    .pick .thumb { width: calc(var(--space-8) + var(--space-4)); height: calc(var(--space-8) + var(--space-4)); }
+    .pick-title { font-weight: 600; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .role-tag { display: inline-flex; align-items: center; gap: var(--space-1); padding: 0 var(--space-2); border-radius: var(--radius-sm);
+      font-size: var(--text-xs); line-height: var(--lh-xs); font-weight: 600; border: 1px solid var(--color-primary); color: var(--color-primary); background: var(--color-surface); }
+    .effects { list-style: none; display: grid; gap: var(--space-3); }
+    .effect { display: grid; grid-template-columns: var(--size-touch) minmax(0, 1fr); gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border); background: var(--color-surface); }
+    .effect-ico { width: var(--size-touch); height: var(--size-touch); border-radius: var(--radius-full); display: grid; place-items: center;
+      background: var(--color-surface-elevated); color: var(--color-text-muted); }
+    .effect-body { display: grid; gap: var(--space-1); min-width: 0; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .effect-body strong.h { font-size: var(--text-base); line-height: var(--lh-base); }
+    .calc { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
+      background: var(--color-surface-elevated); font-variant-numeric: var(--font-numeric); }
+    .calc .total { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 700; }
+    .preview-empty { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-4); border-radius: var(--radius-lg);
+      border: 1px dashed var(--color-border-input); font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .merged { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-4); border-radius: var(--radius-lg);
+      background: var(--color-status-fuzionata-bg); border: 1px solid var(--color-status-fuzionata); font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .merged > .i { color: var(--color-status-fuzionata); }
+    .result { display: grid; gap: var(--space-3); }
+    .result .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       The pair comes from the URL: ?id= (the sesizare it was opened from) and ?cu= (the possible duplicate), both from seed.js.
+       ?mod=anulare opens the unmerge of a primary (from its timeline on DS-002). ?din=DS-004 | DS-002: where it goes back to.
+       Statuses, votes, comments, followers and the merge date are example values (shared.js → EXAMPLE_MERGE). */
+    const STATES = [['alege', 'Alege principala'], ['preview', 'Previzualizare'], ['merging', 'Se unește'], ['merged', 'Unire reușită'],
+      ['unmerge', 'Anulare'], ['unmerging', 'Se anulează'], ['unmerged', 'Anulare reușită'], ['conflict', 'Eroare: deja unită'],
+      ['empty', 'Gol'], ['loading', 'Încărcare'], ['long', 'Text lung']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
+    const UNMERGE_STATES = ['unmerge', 'unmerging', 'unmerged'];
+    const S = mockState({ state: URLP.get('mod') === 'anulare' ? 'unmerge' : 'alege', role: 'operator', size: 'phone', theme: 'light' },
+      { roles: ROLES, states: STATES.map(x => x[0]) });
+    const ORIGIN = dialogOrigin();
+    const LONG = { id: 17, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat, fără protecție, cu pericol de împiedicare și electrocutare', votes: 1248 };
+    const URL_ID = Number(URLP.get('id')) || EXAMPLE_MERGE.primary, URL_CU = Number(URLP.get('cu')) || EXAMPLE_MERGE.secondary;
+
+    /* Each state starts on the pair that shows it */
+    function fitState() {
+      S.id = URL_ID; S.cu = URL_CU; S.primary = 0;
+      if (UNMERGE_STATES.includes(S.state) || S.state === 'conflict') { S.id = EXAMPLE_MERGE.primary; S.cu = EXAMPLE_MERGE.secondary; }
+      if (S.state === 'long') { S.id = 14; S.cu = 17; }
+      if (S.state === 'empty') { S.id = 19; S.cu = 0; }                    // #19 has no possible duplicate in the seed
+      if (!pairOk()) { S.id = EXAMPLE_MERGE.primary; S.cu = EXAMPLE_MERGE.secondary; }
+      if (['preview', 'merging', 'merged', 'long'].includes(S.state)) S.primary = S.id === EXAMPLE_MERGE.secondary && S.cu === EXAMPLE_MERGE.primary ? S.cu : S.id;
+      if (S.state === 'conflict') S.primary = EXAMPLE_MERGE.primary;
+    }
+    const get = id => { const i = SEED.find(x => x.id === id); return i && S.state === 'long' && id === LONG.id ? { ...i, ...LONG } : i; };
+    /** D-005: same main category, under 50 m, last 30 days (all seed sesizări are from 15 nov 2026; today = 25 nov). */
+    function pairOk() {
+      if (S.state === 'empty') return true;
+      const a = SEED.find(x => x.id === S.id), b = SEED.find(x => x.id === S.cu);
+      return !!(a && b && a.id !== b.id && possibleDuplicates(a).some(x => x.id === b.id));
+    }
+    fitState();
+
+    const pair = () => [get(S.id), get(S.cu)];
+    const roles = () => { const [a, b] = pair(); return S.primary === a.id ? [a, b] : [b, a]; };  // [primary, secondary]
+    const busy = () => S.state === 'merging' || S.state === 'unmerging';
+    const backHref = () => ORIGIN === 'DS-004' ? mockHref('DS-004')
+      : UNMERGE_STATES.includes(S.state) ? mockHref('DS-002', { id: EXAMPLE_MERGE.primary, stare: 'fuzionata' }) : mockHref('DS-002', { id: URL_ID });
+    const backLabel = () => ORIGIN === 'DS-004' ? 'Înapoi la coada de triaj' : 'Înapoi la sesizare';
+    const EX = exTag();
+
+    /* ── Counts: unique people as COUNT(DISTINCT user_id) (D-005); the common one is the seed account that reported both (Q-016) ── */
+    function counts(p, s) {
+      return { votes: p.votes + s.votes - EXAMPLE_COMMON, comments: exampleComments(p) + exampleComments(s),
+        followers: exampleFollowers(p) + exampleFollowers(s) - EXAMPLE_COMMON };
+    }
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    function rule(a, b) {
+      const d = Math.round(metres(a, b));
+      return `<section aria-labelledby="rule-h" class="form"><h2 class="sec" id="rule-h">De ce sunt posibile duplicate</h2>
+        <ul class="checks"><li>${ic('i-rezolvata')}<span>Aceeași categorie: <strong>${a.cat}</strong></span></li>
+          <li>${ic('i-rezolvata')}<span>La <strong class="num">${d} m</strong> una de alta (sub 50 m)</span></li>
+          <li>${ic('i-rezolvata')}<span>Raportate pe ${SEED_DATE} (în ultimele 30 de zile)</span></li></ul></section>`;
+    }
+
+    function pickCard(i, other) {
+      const chosen = S.primary === i.id;
+      return `<label class="choice pick"><input type="radio" name="primary" value="${i.id}" ${chosen ? 'checked' : ''} ${busy() || S.state === 'conflict' ? 'disabled' : ''}>
+        <span class="thumb"><img src="${thumbSrc(i.id)}" alt="" width="56" height="56"></span>
+        <span class="choice-body"><span class="idrow"><span class="card-id">#${i.id}</span>${statusBadge(i.st)}${S.primary ? `<span class="role-tag">${chosen ? 'Principală' : `Se unește cu #${other.id}`}</span>` : ''}</span>
+          <span class="pick-title">${i.title}</span>
+          <span class="meta">${ic('i-pin')}<span>${i.street}</span></span>
+          <span class="meta">${ic('i-votes')}<span class="num">${persoane(i.votes)} ${EX}</span></span>
+          ${i.sla ? slaOperatorBadge(i) : ''}</span></label>`;
+    }
+
+    function chooser(a, b) {
+      return `<fieldset class="choices"><legend>Alege sesizarea principală</legend>
+        <p class="hint">Principala rămâne pe hartă, cu statusul și SLA-ul ei. Cealaltă devine „Fuzionată” și trimite la principală.</p>
+        ${pickCard(a, b)}${pickCard(b, a)}</fieldset>`;
+    }
+
+    const effect = (icon, title, body) => `<li class="effect"><span class="effect-ico">${ic(icon)}</span><div class="effect-body"><strong class="h">${title}</strong>${body}</div></li>`;
+
+    function mergePreview() {
+      if (!S.primary) return `<div class="preview-empty">${ic('i-layers')}<span>Alege sesizarea principală ca să vezi ce se întâmplă cu voturile, comentariile, urmăritorii și istoricul, înainte să confirmi.</span></div>`;
+      const [p, s] = roles(), c = counts(p, s), cs = exampleComments(s), fp = exampleFollowers(p), fs = exampleFollowers(s);
+      return `<section aria-labelledby="eff-h" class="form" aria-live="polite"><h2 class="sec" id="eff-h">Ce se întâmplă după unire ${EX}</h2><ul class="effects">
+        ${effect('i-votes', 'Persoane afectate', `<div class="calc"><span>${fmt(p.votes)} + ${fmt(s.votes)} voturi, ${EXAMPLE_COMMON} comun</span><span>→</span><span class="total">${persoane(c.votes)}</span></div>
+          <span class="hint">Același cont a votat pe amândouă (${SEED_AUTHOR}, care le-a raportat pe amândouă; raportarea contează ca vot): se numără o singură dată. Niciun vot nu se șterge, deci unirea se poate anula.</span>`)}
+        ${effect('i-comment', 'Comentarii', `<span>${cs === 1 ? 'Comentariul' : `Cele ${fmt(cs)} comentarii`} de la #${s.id} ${cs === 1 ? 'apare' : 'apar'} la #${p.id}, marcate „din #${s.id}”. #${p.id} va avea <strong class="num">${fmt(c.comments)}</strong> comentarii.</span>
+          <span class="hint">Poza lui #${s.id} apare și ea la #${p.id}, marcată „din #${s.id}”.</span>`)}
+        ${effect('i-bell', 'Urmăritori', `<div class="calc"><span>${fmt(fp)} + ${fmt(fs)} urmăritori, ${EXAMPLE_COMMON} comun</span><span>→</span><span class="total">${fmt(c.followers)} la #${p.id}</span></div>
+          <span class="hint">${ic('i-mail')} Cei ${fmt(fs)} urmăritori ai lui #${s.id} primesc un email: „#${s.id} a fost unită cu #${p.id}” (în emailul grupat, DS-014). Urmăritorii lui #${p.id} nu primesc nimic: statusul ei nu se schimbă.</span>`)}
+        ${effect('i-clock', 'Istoric', `<span>#${s.id} trece din „${STATUS_ALL[s.st].name}” în „Fuzionată” și nu mai apare pe hartă; cronologia ei rămâne. #${p.id} rămâne „${STATUS_ALL[p.st].name}”, cu SLA-ul ei, și primește în cronologie „Sesizarea #${s.id} a fost unită cu aceasta”.</span>
+          <span class="hint">Poți anula unirea oricând, din cronologia lui #${p.id}.</span>`)}
+        </ul></section>`;
+    }
+
+    function unmergeBody() {
+      const p = get(EXAMPLE_MERGE.primary), s = get(EXAMPLE_MERGE.secondary), c = counts(p, s);
+      return `<div class="merged" role="note">${ic('i-fuzionata', 'i-lg')}<div><strong>#${s.id} e unită cu #${p.id}</strong>
+          <span class="hint">din ${EXAMPLE_MERGE.when}, de Operator ${EX}</span></div></div>
+        <section aria-labelledby="back-h" class="form"><h2 class="sec" id="back-h">Ce se întoarce la #${s.id}, exact cum era ${EX}</h2><ul class="effects">
+        ${effect('i-refresh', 'Status', `<span class="idrow">${statusBadge('fuzionata')}<span>→</span>${statusBadge(s.st)}${s.sla ? slaOperatorBadge(s) : ''}</span>
+          <span class="hint">Statusul de dinainte de unire. #${s.id} apare din nou pe hartă și în coada de triaj.</span>`)}
+        ${effect('i-votes', 'Voturi', `<div class="calc"><span>${persoane(c.votes)} la #${p.id}</span><span>→</span><span class="total">#${p.id}: ${fmt(p.votes)} · #${s.id}: ${fmt(s.votes)}</span></div>
+          <span class="hint">Fiecare vot rămâne la sesizarea pe care a fost dat; contul comun se numără din nou la amândouă.</span>`)}
+        ${effect('i-comment', 'Comentarii', `<span>${exampleComments(s) === 1 ? 'Comentariul marcat' : 'Comentariile marcate'} „din #${s.id}” se întorc la #${s.id}. #${p.id} rămâne cu ${fmt(exampleComments(p))}.</span>`)}
+        ${effect('i-bell', 'Urmăritori', `<span>Cei ${fmt(exampleFollowers(s))} urmăritori ai lui #${s.id} se întorc la ea și primesc un email: „#${s.id} nu mai e unită cu #${p.id}”. #${p.id} rămâne cu ${fmt(exampleFollowers(p))}.</span>`)}
+        ${effect('i-clock', 'Istoric', `<span>Cronologia ambelor păstrează unirea și adaugă „Unire anulată”, cu data și operatorul.</span>
+          <span class="hint">Ce s-a adăugat la #${p.id} după unire (voturi, comentarii) rămâne la #${p.id}.</span>`)}
+        </ul></section>`;
+    }
+
+    function conflictMsg() {
+      return `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}#15 a fost deja unită cu altă sesizare</div>
+        <p>Între timp, alt operator a unit #15 cu #17 ${EX}, așa că n-am unit-o cu #14. La #14 nu s-a schimbat nimic. Verifică unirea de la #17 sau anuleaz-o de acolo, dacă e greșită.</p>
+        <div class="idrow"><a class="btn btn-secondary btn-sm" href="${mockHref('DS-002', { id: 17 })}">Vezi #17 ${ic('i-chevron')}</a>
+          <button class="btn btn-ghost btn-sm" data-act="reload">${ic('i-refresh')}Reîncarcă perechea</button></div></div>`;
+    }
+
+    function successMerge() {
+      const [p, s] = roles(), c = counts(p, s);
+      return `<div class="result"><div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}#${s.id} a fost unită cu #${p.id}</div>
+        <p>#${p.id} are acum ${persoane(c.votes)}, ${fmt(c.comments)} comentarii și ${fmt(c.followers)} urmăritori ${EX}. Urmăritorii lui #${s.id} primesc emailul grupat.</p></div>
+        <div class="merged" role="note">${ic('i-fuzionata', 'i-lg')}<div><strong>Pe #${s.id} apare acum: „Această sesizare a fost unită cu #${p.id}”</strong>
+          <span class="hint">ca în DS-002, starea Fuzionată.</span></div></div>
+        <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-002', { id: p.id, stare: 'fuzionata' })}">Vezi #${p.id} ${ic('i-chevron')}</a>
+          <a class="btn btn-secondary" href="${mockHref('DS-002', { id: s.id, stare: 'fuzionata' })}">Vezi #${s.id} (fuzionată)</a>
+          ${ORIGIN === 'DS-004' ? `<a class="btn btn-ghost" href="${mockHref('DS-004')}">${ic('i-back')}Înapoi la coada de triaj</a>` : ''}</div></div>`;
+    }
+
+    function successUnmerge() {
+      const p = get(EXAMPLE_MERGE.primary), s = get(EXAMPLE_MERGE.secondary);
+      return `<div class="result"><div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Unirea a fost anulată</div>
+        <p>#${s.id} e din nou „${STATUS_ALL[s.st].name}”, cu ${persoane(s.votes)}, ${exampleComments(s) === 1 ? '1 comentariu' : `${fmt(exampleComments(s))} comentarii`} și ${fmt(exampleFollowers(s))} urmăritori ${EX}. #${p.id} are din nou ${persoane(p.votes)}.</p></div>
+        <div class="btns"><a class="btn btn-primary" href="${ORIGIN === 'DS-004' ? mockHref('DS-004') : mockHref('DS-002', { id: p.id, stare: 'anulata' })}">${ic('i-back')}${ORIGIN === 'DS-004' ? 'Înapoi la coada de triaj' : `Înapoi la #${p.id}`}</a>
+          <a class="btn btn-secondary" href="${mockHref('DS-002', { id: s.id, stare: 'anulata' })}">Vezi #${s.id}</a></div></div>`;
+    }
+
+    function body() {
+      if (S.state === 'empty') {
+        const i = get(S.id);
+        return `<div class="msg msg-empty"><span class="ico">${ic('i-fuzionata', 'i-lg')}</span><div class="msg-title">#${i.id} nu are posibile duplicate</div>
+          <p class="muted">Nicio sesizare din aceeași categorie (${i.cat}) la mai puțin de 50 m, din ultimele 30 de zile. Când apare una, o vezi la „Posibile duplicate” pe sesizare și în coada de triaj.</p>
+          <div class="btns"><a class="btn btn-secondary" href="${backHref()}">${ic('i-back')}${backLabel()}</a></div></div>`;
+      }
+      if (S.state === 'merged') return successMerge();
+      if (S.state === 'unmerged') return successUnmerge();
+      if (UNMERGE_STATES.includes(S.state)) return unmergeBody();
+      const [a, b] = pair();
+      return `${S.state === 'conflict' ? conflictMsg() : ''}${rule(a, b)}${chooser(a, b)}${mergePreview()}`;
+    }
+
+    function foot() {
+      if (['merged', 'unmerged', 'empty'].includes(S.state)) return '';
+      const cancel = `<a class="btn btn-secondary" href="${backHref()}" ${busy() ? 'aria-disabled="true" tabindex="-1"' : ''}>${UNMERGE_STATES.includes(S.state) ? 'Păstrează unirea' : 'Renunță'}</a>`;
+      if (UNMERGE_STATES.includes(S.state)) return `<div class="dialog-foot">${cancel}${S.state === 'unmerging'
+        ? `<button class="btn btn-primary" disabled aria-busy="true">${ic('i-hourglass')}Se anulează unirea…</button>`
+        : `<button class="btn btn-primary" data-act="unmerge">${ic('i-undo')}Anulează unirea</button>`}</div>`;
+      if (S.state === 'conflict') return `<div class="dialog-foot">${cancel}<button class="btn btn-primary" disabled>${ic('i-fuzionata')}Unește</button></div>`;
+      const [p, s] = S.primary ? roles() : [];
+      const go = S.state === 'merging' ? `<button class="btn btn-primary" disabled aria-busy="true">${ic('i-hourglass')}Se unește…</button>`
+        : `<button class="btn btn-primary" data-act="merge" ${S.primary ? '' : 'disabled aria-describedby="pick-h"'}>${ic('i-fuzionata')}${S.primary ? `Unește #${s.id} cu #${p.id}` : 'Unește'}</button>`;
+      return `<div class="dialog-foot">${S.primary ? '' : `<span class="hint sr-only" id="pick-h">Alege întâi sesizarea principală.</span>`}${cancel}${go}</div>`;
+    }
+
+    function dialog() {
+      const unm = UNMERGE_STATES.includes(S.state);
+      const title = unm ? 'Anulează unirea' : 'Unește sesizările';
+      const sub = S.state === 'empty' ? `<span class="mono">#${S.id}</span>` : unm ? `<span class="mono">#${EXAMPLE_MERGE.secondary}</span> unită cu <span class="mono">#${EXAMPLE_MERGE.primary}</span>`
+        : `<span class="mono">#${S.id}</span> și <span class="mono">#${S.cu}</span>, posibile duplicate`;
+      const close = `<a class="btn btn-ghost btn-icon" href="${backHref()}" aria-label="Închide și ${backLabel().toLowerCase()}">${ic('i-x')}</a>`;
+      if (S.state === 'loading') {
+        const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="width:${w}; height:${h}"></span>`;
+        return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t" aria-busy="true">
+          <div class="dialog-head"><div><h1 class="dialog-title" id="dlg-t">${title}</h1>${sk('50%')}</div>${close}</div>
+          <div class="dialog-body"><div class="loading-note" role="status">${ic('i-hourglass')}Se încarcă sesizările…</div>
+            ${sk('40%')}<div class="sk-block" style="height: calc(var(--space-8) * 3)"></div><div class="sk-block" style="height: calc(var(--space-8) * 3)"></div></div></div>`;
+      }
+      return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+        <div class="dialog-head"><div><h1 class="dialog-title" id="dlg-t">${title}</h1><p class="dialog-sub">${sub}</p></div>${close}</div>
+        <div class="dialog-body" ${busy() ? 'aria-busy="true"' : ''}>${body()}</div>${foot()}</div>`;
+    }
+
+    function content() {
+      if (!triageRole(S.role)) return `<div class="app">${appbar(S, { brandH1: false })}<div class="page">${noAccessView()}</div></div>`;
+      const behind = ORIGIN === 'DS-004' ? null : get(UNMERGE_STATES.includes(S.state) ? EXAMPLE_MERGE.primary : S.state === 'empty' ? S.id : URL_ID) || get(S.id);
+      return `${dialogBackdrop(S, ORIGIN, behind)}${dialog()}`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      alege: 'Deschis din „Posibile duplicate” (DS-002) sau din „Posibil duplicat” din coadă (DS-004). Regula D-005 e verificată și afișată. Nicio sesizare nu e aleasă dinainte: alege principala ca să vezi efectul (starea Previzualizare).',
+      preview: 'Perechea reală #15 → #14 (aceeași ca exemplul din DS-002). Înainte de confirmare se vede calculul: 4 + 2 voturi, 1 comun → 5 persoane afectate (ca în DS-002, starea Fuzionată), comentariile mutate, urmăritorii (cu emailul către urmăritorii lui #15) și istoricul. Alege #15 ca principală ca să vezi efectul invers.',
+      merging: 'Se unește: alegerile sunt blocate, butonul spune „Se unește…”.',
+      merged: 'Unire reușită: mesajul spune noile numere; #15 are acum bannerul spre #14 (DS-002, starea Fuzionată). Butoanele duc la #14, la #15 sau înapoi la coadă, dacă de acolo ai venit.',
+      unmerge: 'Deschis din cronologia lui #14 („Anulează unirea”, DS-002). Arată ce se întoarce exact cum era: statusul, voturile, comentariile, urmăritorii, istoricul. „Anulează unirea” confirmă; „Păstrează unirea” închide fără nicio schimbare.',
+      unmerging: 'Se anulează: butonul spune „Se anulează unirea…”.',
+      unmerged: 'Anulare reușită: #15 e din nou „Nouă”, cu 2 voturi; #14 are din nou 4.',
+      conflict: 'Eroare: între timp, alt operator a unit #15 cu #17 (exemplu; #17 e și ea la 47 m de #15). Nimic nu s-a schimbat la #14; butonul „Unește” e blocat.',
+      empty: '#19 nu are posibile duplicate în seed: mesajul spune de ce și duce înapoi.',
+      loading: 'Dialogul se deschide imediat, cu scheleturi, cât se încarcă perechea.',
+      long: 'Perechea #14 și #17 (la 12 m), cu titlul lung al lui #17 și 1.248 de voturi: 4 + 1.248 voturi, 1 comun → 1.251 de persoane afectate. Textele se rup pe rânduri.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Doar perechile care respectă D-005: aceeași categorie, sub 50 m, ultimele 30 de zile. Pragurile sunt fixe (configurația serverului).</li>
+          <li>Voturile unice: COUNT(DISTINCT user_id) pe conturile de cetățean (D-005, D-012). Votul comun e contul seed care a raportat ambele sesizări (raportarea e votul autorului, Q-016); numerele sunt exemple.</li>
+          <li>Unirea nu șterge nimic, deci anularea întoarce exact voturile, comentariile, urmăritorii și statusul de dinainte (D-005).</li>
+          <li>Email (D-015): la unire și la anulare, doar urmăritorii sesizării secundare, în același email grupat ca la orice schimbare de status.</li>
+          <li>Butoanele de unire și anulare nu sunt roșii: nu sunt erori (DESIGN.md). Dialogul însuși e confirmarea.</li>
+          <li>„Renunță”, „Păstrează unirea” și „×” duc înapoi unde erai: DS-002 (aceeași sesizare) sau coada (<code>din=DS-004</code>).</li>
+          <li>Rolurile fără triaj (vizitator, cetățean, cont neconfirmat) văd „Nu ai acces la această pagină”.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Fundalul estompat folosește tokenul <code>--color-overlay</code>; marginea dialogului e <code>--color-border-input</code> (vizibilă și în dark). Ramele de dispozitiv și bordurile de 1 px.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: titlurile, categoriile, străzile, pozele și GPS-ul (deci distanța) din Field.md. Statusurile, voturile, comentariile, urmăritorii, data unirii și conflictul cu #17 sunt exemple (azi = 25 nov 2026); nu intră în seed.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      const extra = { id: URL_ID, cu: URL_CU };
+      if (UNMERGE_STATES.includes(S.state)) extra.mod = 'anulare';
+      if (ORIGIN === 'DS-004') extra.din = 'DS-004';
+      syncUrl(S, extra);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = content();
+      document.getElementById('notes').innerHTML = notes();
+    }
+
+    let timer;
+    document.addEventListener('change', e => {
+      if (e.target.name === 'primary') { S.primary = Number(e.target.value); if (S.state === 'alege') S.state = 'preview'; render(); }
+    });
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        const k = ctl.parentElement.dataset.ctl;
+        S[k] = ctl.dataset.v;
+        if (k === 'state') { clearTimeout(timer); fitState(); }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (!act) { if (e.target.closest('a[aria-disabled="true"]')) e.preventDefault(); return; }
+      const a = act.dataset.act;
+      if (a === 'merge') { S.state = 'merging'; timer = setTimeout(() => { S.state = 'merged'; render(); }, 1200); }
+      if (a === 'unmerge') { S.state = 'unmerging'; timer = setTimeout(() => { S.state = 'unmerged'; render(); }, 1200); }
+      if (a === 'reload') { S.state = 'alege'; fitState(); }
+      render();
+    });
+
+    mockBar({ id: 'DS-012', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

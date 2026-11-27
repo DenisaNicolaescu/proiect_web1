@@ -29,6 +29,7 @@ designs:
       unconfirmed account (D-007) — actions blocked, "Verifică-ți emailul ca să poți vota" with resend;
       operator (and admin) — no vote button and no "Urmărește", only the number of people affected; their own report is not a vote; they track sesizări from DS-004 (D-012); adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
       fuzionata — banner linking to the primary sesizare.
+      On a primary sesizare, the photo of a merged one appears in the gallery as "Din #N" (D-005); after an unmerge, both timelines keep the merge and add "Unire anulată".
     brief: Detaliu per sesizare; vot "mă afectează și pe mine", comentarii, urmărire; indicator de depășire; fuziune
 
   - id: DS-005
@@ -37,7 +38,7 @@ designs:
     status: planned
     route: /statistics
     roles: [vizitator]
-    description: Statistics computed from the data, never hard-coded — average resolution time in working days per category, % resolved, sesizări over SLA, totals. No export here (export lives on DS-001).
+    description: Statistics computed from the data, never hard-coded — average resolution time in working days per category (from the report to the last resolution, D-015), % resolved, sesizări over SLA, totals. No export here (export lives on DS-001).
     brief: Pagină publică de statistici (timp mediu de rezolvare, procent rezolvate, pe categorie)
 
   # ── Authentication: vizitator ───────────────────────────────────────────────
@@ -86,7 +87,8 @@ designs:
     status: planned
     route: /me/reports
     roles: [cetatean]
-    description: Two tabs — "Raportate de mine" and "Urmărite" — each sesizare with its status and SLA. Operator and admin see only "Raportate de mine": they do not follow (D-012).
+    description: >-
+      Two tabs — "Raportate de mine" and "Urmărite" — each sesizare with its status and SLA. Operator and admin see only "Raportate de mine": they do not follow (D-012).
     brief: Urmărire (notificare la schimbare de status); "Raportate de mine" is not explicitly in the brief
 
   - id: DS-010
@@ -104,37 +106,52 @@ designs:
     status: planned
     route: email
     roles: [cetatean]
-    description: One email that groups several status changes of followed sesizări (up to 10 changes in 5 minutes), each with sesizare, old → new status and a link to DS-002; unsubscribe link to DS-010. Sent only to Cetățean accounts: Operators and Admins do not follow (D-012).
+    description: >-
+      One email that groups several status changes of followed sesizări (up to 10 changes in 5 minutes), each with sesizare, old → new status and a link to DS-002 (a merge or unmerge of a followed secondary sesizare counts as a change, Q-024); unsubscribe link to DS-010. Sent only to Cetățean accounts: Operators and Admins do not follow (D-012).
     brief: Notificări prin email la schimbări de status, din job, cu grupare
 
   # ── Operator ────────────────────────────────────────────────────────────────
   - id: DS-004
     name: Triage Queue
     kind: screen
-    status: planned
+    status: approved
     route: /operator/triage
     roles: [operator]
-    description: Queue of sesizări ordered by SLA (remaining / depășit), with filters; opens DS-002. Status change and merge happen in DS-011 and DS-012.
+    description: >-
+      Queue of sesizări ordered by SLA: SLA depășit first (most working days over), then the fewest working days left; ties: more people affected, then the lower #id (Q-025).
+      Filters by status (default the open ones: nouă, confirmată, în lucru), category and street (the 16 streets, D-014); search by title or #id.
+      Each row: thumbnail, #id, title, category, street, status, SLA ("SLA depășit cu N zile lucrătoare" / "SLA: mai sunt N zile lucrătoare"), people affected,
+      and "Posibil duplicat" (same category, under 50 m, last 30 days, D-005) linking to DS-012 with the pair. The row opens DS-002; "Schimbă statusul" opens DS-011;
+      both dialogs come back here. On Mobile, a list of wide cards; filters behind "Filtre". Vizitator, cetățean and unconfirmed account see "Nu ai acces la această pagină" (D-012).
     brief: Un operator poate tria o săptămână de sesizări doar din aplicație; termene (SLA) cu indicator de depășire
 
   - id: DS-011
     name: Status Change Dialog
     kind: screen
-    status: planned
+    status: approved
     route: dialog (from DS-004 and DS-002)
     roles: [operator]
-    description: Moves a sesizare nouă → confirmată → în lucru → rezolvată / respinsă; reason required to reject, photo required to resolve; validation and error states.
+    description: >-
+      Moves a sesizare one step (D-015): nouă → confirmată or respinsă; confirmată → în lucru or respinsă; în lucru → rezolvată or respinsă;
+      rezolvată or respinsă → confirmată (reopen; the SLA starts again from that date). Only the steps allowed from the current status are offered. Reason required to reject and to reopen;
+      photo required to resolve (resized, published without EXIF, D-011). Shows that the followers get the grouped email (DS-014).
+      States: choose a step, no reason, no photo, photo uploading, saving, success, reopen, no followers, loading, save error, long text.
+      Goes back to the screen it was opened from (?din=DS-004, or DS-002 of the sesizare).
     brief: Workflow de status, cu motiv la respingere și poză la rezolvare; doar operatorii schimbă statusul
 
   - id: DS-012
     name: Merge & Unmerge Dialog
     kind: screen
-    status: planned
-    route: dialog (from DS-002)
+    status: approved
+    route: dialog (from DS-002 and DS-004)
     roles: [operator]
     description: >-
-      Merge — opened from the "Posibile duplicate" section of the operator panel on DS-002; pick the primary sesizare, preview the effect (unique votes as COUNT(DISTINCT user_id), comments, followers), confirm.
-      Unmerge — opened from the merge history of the primary sesizare on DS-002; preview what returns to the secondary sesizare (votes, comments, followers, previous status), confirm (D-005).
+      Merge — opened from "Posibile duplicate" on DS-002 or "Posibil duplicat" on DS-004, for a pair that meets D-005 (same category, under 50 m, last 30 days; the check is shown);
+      the operator picks the primary sesizare and sees the effect before confirming: unique votes as COUNT(DISTINCT user_id) with the sum shown ("4 + 2 voturi, 1 comun → 5 persoane afectate"),
+      comments and photos moved with "din #N", followers, history; the secondary becomes fuzionată with the banner on DS-002.
+      Unmerge — opened from the merge history of the primary sesizare on DS-002; shows what returns exactly as it was (status, votes, comments, followers, history) and asks to confirm (D-005).
+      The followers of the secondary sesizare get the grouped email at a merge and at an unmerge (D-015).
+      States: choose, preview, merging, merged, unmerge, unmerging, unmerged, already merged (error), no duplicates, loading, long text. Example pair: #15 → #14.
     brief: Operatorul poate uni două sesizări păstrând voturile și comentariile; fuziunea e reversibilă
 
   # ── Admin ───────────────────────────────────────────────────────────────────

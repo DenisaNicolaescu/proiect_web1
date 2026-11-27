@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-011 · Schimbă statusul (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, badges, messages, dialogs: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-011 only. Tokens and shared parts: shared.css */
+    .page { flex: 1; min-height: 0; overflow-y: auto; }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .now { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .form { display: grid; gap: var(--space-2); }
+    .form label, .form .label { font-weight: 600; }
+    .textarea { width: 100%; min-height: calc(var(--space-8) * 3); padding: var(--space-3); border-radius: var(--radius-md); resize: vertical;
+      border: 1px solid var(--color-border-input); background: var(--color-surface); color: var(--color-text); font: inherit; }
+    .textarea[aria-invalid="true"], .drop[aria-invalid="true"] { border-color: var(--color-danger); box-shadow: inset 0 0 0 1px var(--color-danger); }
+    .drop { display: grid; gap: var(--space-2); justify-items: center; text-align: center; padding: var(--space-4); border-radius: var(--radius-lg);
+      border: 1px dashed var(--color-border-input); background: var(--color-surface-elevated); }
+    .drop .i-xl { color: var(--color-text-muted); }
+    .picked { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-3); align-items: center; padding: var(--space-3);
+      border-radius: var(--radius-lg); border: 1px solid var(--color-border); }
+    .picked .acts { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .thumb-res { background: linear-gradient(to bottom, var(--color-status-rezolvata-bg) 55%, var(--color-border) 55%); }
+    .progress { width: 100%; height: var(--space-2); border-radius: var(--radius-full); background: var(--color-border); overflow: hidden; }
+    .progress span { display: block; height: 100%; background: var(--color-primary); }
+    .privacy { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .privacy .i { color: var(--color-success); margin-top: calc(var(--space-1) / 2); }
+    .result { display: grid; gap: var(--space-3); }
+    .result .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       The sesizare comes from seed.js (Field.md), by ?id=. Its status, SLA and votes, the number of followers,
+       the reasons and the photo name are example values. ?din=DS-004 | DS-002: where the dialog goes back to. */
+    const STATES = [['form', 'Alege pasul'], ['motiv', 'Eroare: fără motiv'], ['poza', 'Eroare: fără poză'], ['upload', 'Se încarcă poza'],
+      ['saving', 'Se salvează'], ['success', 'Succes'], ['redeschide', 'Redeschidere'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
+    const S = mockState({ state: 'form', role: 'operator', size: 'phone', theme: 'light' }, { roles: ROLES, states: STATES.map(x => x[0]) });
+    S.id = Number(URLP.get('id')) || 14;
+    if (!SEED.find(x => x.id === S.id)) S.id = 14;
+    const ORIGIN = dialogOrigin();
+    const LONG = { id: 17, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat, fără protecție, cu pericol de împiedicare și electrocutare',
+      reason: 'Cablul aparține unui proprietar privat și nu e pe domeniul public administrat de Primărie. Am transmis situația către Poliția Locală, care poate verifica și sancționa; dacă cablul e în continuare întins peste trotuar după intervenția lor, trimite o sesizare nouă cu o poză recentă.' };
+
+    /* Each state starts on a sesizare whose status allows it, and with the step the state shows */
+    function fitState() {
+      const i = SEED.find(x => x.id === S.id);
+      S.next = ''; S.reason = ''; S.photo = ''; S.err = '';
+      if (S.state === 'long') S.id = LONG.id;
+      if (['poza', 'upload'].includes(S.state) && i.st !== 'in-lucru') S.id = 13;          // rezolvată needs "în lucru" (#13, Strada Oslo)
+      if (S.state === 'redeschide' && !isClosed(i.st)) S.id = 20;                           // #20 is rezolvată in the seed
+      if (['motiv', 'saving', 'success', 'error', 'empty', 'form'].includes(S.state) && isClosed(i.st)) S.id = 14;
+      const cur = SEED.find(x => x.id === S.id);
+      if (S.state === 'motiv') { S.next = 'respinsa'; S.err = 'reason'; }
+      if (S.state === 'poza') { S.next = 'rezolvata'; S.err = 'photo'; }
+      if (S.state === 'upload') { S.next = 'rezolvata'; S.photo = 'uploading'; }
+      if (S.state === 'redeschide') S.next = 'confirmata';
+      if (['saving', 'success', 'error', 'empty'].includes(S.state)) S.next = NEXT_STATUS[cur.st][0];
+      if (S.state === 'long') { S.next = 'respinsa'; S.reason = LONG.reason; }
+    }
+    fitState();
+
+    function current() {
+      const i = { ...SEED.find(x => x.id === S.id) };
+      if (S.state === 'long') i.title = LONG.title;
+      return i;
+    }
+    const followers = i => S.state === 'empty' ? 0 : S.state === 'long' ? 1248 : exampleFollowers(i);
+    const reopening = i => isClosed(i.st);
+    const needsReason = i => S.next === 'respinsa' || reopening(i);
+    const backHref = i => ORIGIN === 'DS-004' ? mockHref('DS-004') : mockHref('DS-002', { id: i.id });
+    const backLabel = () => ORIGIN === 'DS-004' ? 'Înapoi la coada de triaj' : 'Înapoi la sesizare';
+
+    /* Step texts (D-015: forward, respinsă from any open status, reopen a closed one with a reason) */
+    const STEP_HINT = {
+      'confirmata': i => reopening(i) ? `Problema a reapărut sau sesizarea a fost închisă din greșeală. Revine în coada de triaj, iar SLA-ul pornește din nou de la data redeschiderii.` : 'Ai verificat că problema există și e în cartier.',
+      'in-lucru': () => 'Echipa de intervenție a preluat lucrarea.',
+      'rezolvata': () => 'Problema e rezolvată. Adaugă o poză de la fața locului.',
+      'respinsa': () => 'Sesizarea nu poate fi rezolvată sau nu e o problemă reală. Scrie motivul.',
+    };
+    const stepName = (i, st) => reopening(i) ? `Redeschide: ${STATUS_ALL[st].name}` : STATUS_ALL[st].name;
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    function steps(i) {
+      const opts = NEXT_STATUS[i.st];
+      const err = S.err === 'step' ? `<p class="field-error" id="step-err">${ic('i-alert')}Alege noul status.</p>` : '';
+      return `<fieldset class="choices" ${S.err === 'step' ? 'aria-describedby="step-err"' : ''}><legend>${reopening(i) ? 'Redeschide sesizarea' : 'Pasul următor'}</legend>
+        ${opts.map(st => `<label class="choice"><input type="radio" name="next" value="${st}" ${S.next === st ? 'checked' : ''} ${busy() ? 'disabled' : ''}>
+          <span class="choice-body">${statusBadge(st)}<span class="hint">${STEP_HINT[st](i)}</span></span></label>`).join('')}
+        ${err}</fieldset>`;
+    }
+
+    function reasonField(i) {
+      if (!S.next || !needsReason(i)) return '';
+      const label = reopening(i) ? 'Motivul redeschiderii' : 'Motivul respingerii';
+      const bad = S.err === 'reason';
+      return `<div class="form"><label for="reason">${label} (obligatoriu)</label>
+        <textarea class="textarea" id="reason" placeholder="${reopening(i) ? 'De ex. problema a reapărut la aceeași adresă' : 'De ex. nu am găsit problema la adresa indicată'}"
+          ${bad ? 'aria-invalid="true" aria-describedby="reason-err"' : 'aria-describedby="reason-h"'} ${busy() ? 'disabled' : ''}>${S.reason}</textarea>
+        ${bad ? `<p class="field-error" id="reason-err">${ic('i-alert')}Scrie motivul ${reopening(i) ? 'redeschiderii' : 'respingerii'}: apare în cronologia sesizării, ca vecinii să știe de ce.</p>`
+          : `<p class="hint" id="reason-h">Motivul apare public în cronologia sesizării.${S.state === 'long' ? ` ${exTag()}` : ''}</p>`}</div>`;
+    }
+
+    function photoField() {
+      if (S.next !== 'rezolvata') return '';
+      const bad = S.err === 'photo';
+      const privacy = `<p class="privacy">${ic('i-lock')}<span>Poza se micșorează și se publică fără datele din poză (EXIF, inclusiv locația GPS).</span></p>`;
+      let box;
+      if (S.photo === 'uploading') box = `<div class="picked" aria-busy="true"><span class="thumb thumb-res">${ic('i-camera')}</span>
+          <div class="form"><span>poza-rezolvare.jpg ${exTag()}</span><div class="progress" role="progressbar" aria-label="Se încarcă poza" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"><span style="width: 60%"></span></div>
+          <span class="hint" role="status">Se încarcă poza… 60%</span></div>
+          <div class="acts"><button class="btn btn-ghost btn-sm" data-act="photo-cancel">${ic('i-x')}Anulează încărcarea</button></div></div>`;
+      else if (S.photo === 'done') box = `<div class="picked"><span class="thumb thumb-res">${ic('i-camera')}</span>
+          <div class="form"><span>poza-rezolvare.jpg ${exTag()}</span><span class="hint" role="status">${ic('i-rezolvata')} Poza e încărcată.</span></div>
+          <div class="acts"><button class="btn btn-secondary btn-sm" data-act="photo">${ic('i-refresh')}Schimbă poza</button><button class="btn btn-ghost btn-sm" data-act="photo-cancel">${ic('i-x')}Șterge poza</button></div></div>`;
+      else box = `<div class="drop" ${bad ? 'aria-invalid="true" aria-describedby="photo-err"' : ''}>${ic('i-camera', 'i-xl')}
+          <span>Poza arată locul după rezolvare.</span>
+          <button class="btn btn-secondary" data-act="photo" ${busy() ? 'disabled' : ''}>${ic('i-camera')}Fă o poză sau alege una</button></div>
+          ${bad ? `<p class="field-error" id="photo-err">${ic('i-alert')}Adaugă poza de la rezolvare: fără ea nu poți marca sesizarea ca rezolvată.</p>` : ''}`;
+      return `<div class="form"><span class="label" id="photo-l">Poza de la rezolvare (obligatorie)</span>${box}${privacy}</div>`;
+    }
+
+    function emailNote(i) {
+      if (!S.next) return '';
+      const n = followers(i);
+      if (!n) return `<div class="msg msg-note"><div class="msg-title">${ic('i-mail')}Nu se trimite niciun email</div>
+        <p>Nimeni nu urmărește încă #${i.id}. ${exTag()}</p></div>`;
+      return `<div class="msg msg-note"><div class="msg-title">${ic('i-mail')}Urmăritorii primesc un email</div>
+        <p><strong class="num">${fmt(n)}</strong> ${n === 1 ? 'cetățean urmărește' : `${de(n)}cetățeni urmăresc`} #${i.id} ${exTag()} și află că e acum „${STATUS_ALL[S.next].name}”.</p>
+        <p>Emailurile sunt grupate: dacă se schimbă mai multe statusuri în 5 minute, fiecare urmăritor primește un singur email cu toate (până la 10 schimbări, <a href="${mockHref('DS-014')}">DS-014</a>).</p></div>`;
+    }
+
+    const busy = () => S.state === 'saving';
+
+    function body(i) {
+      if (S.state === 'success') {
+        const n = followers(i);
+        return `<div class="result"><div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Statusul sesizării #${i.id} e acum „${STATUS_ALL[S.next].name}”</div>
+          <p>${n ? `Cei ${fmt(n)} ${de(n)}urmăritori ${exTag()} primesc emailul grupat.` : 'Nimeni nu urmărește sesizarea, așa că nu s-a trimis niciun email.'} Pasul apare în cronologia sesizării.</p></div>
+          <div class="btns"><a class="btn btn-primary" href="${backHref(i)}">${ic('i-back')}${backLabel()}</a>
+          ${ORIGIN === 'DS-004' ? `<a class="btn btn-secondary" href="${mockHref('DS-002', { id: i.id })}">Vezi sesizarea #${i.id}</a>` : ''}</div></div>`;
+      }
+      const error = S.state === 'error' ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Nu am putut salva statusul</div>
+        <p>Statusul a rămas „${STATUS_ALL[i.st].name}” și nu s-a trimis niciun email. Verifică-ți conexiunea la internet și încearcă din nou; alegerile tale au rămas.</p></div>` : '';
+      return `${error}${steps(i)}${reasonField(i)}${photoField()}${emailNote(i)}`;
+    }
+
+    function foot(i) {
+      if (S.state === 'success') return '';
+      const label = !S.next ? 'Schimbă statusul' : reopening(i) ? 'Redeschide sesizarea' : `Schimbă în „${STATUS_ALL[S.next].name}”`;
+      const save = busy()
+        ? `<button class="btn btn-primary" disabled aria-busy="true">${ic('i-hourglass')}Se salvează…</button>`
+        : S.photo === 'uploading'
+        ? `<button class="btn btn-primary" disabled>${ic('i-hourglass')}Așteaptă încărcarea pozei</button>`
+        : `<button class="btn btn-primary" data-act="save">${ic(S.state === 'error' ? 'i-refresh' : 'i-rezolvata')}${S.state === 'error' ? 'Încearcă din nou' : label}</button>`;
+      return `<div class="dialog-foot"><a class="btn btn-secondary" href="${backHref(i)}" ${busy() ? 'aria-disabled="true" tabindex="-1"' : ''}>Renunță</a>${save}</div>`;
+    }
+
+    function dialog() {
+      const i = current();
+      const head = `<div class="dialog-head"><div><h1 class="dialog-title" id="dlg-t">Schimbă statusul</h1>
+          <p class="dialog-sub"><span class="mono">#${i.id}</span> · ${i.title}</p>
+          <div class="now"><span class="muted">Acum:</span>${statusBadge(i.st)}${i.sla ? slaOperatorBadge(i) : ''}</div></div>
+        <a class="btn btn-ghost btn-icon" href="${backHref(i)}" aria-label="Închide și ${backLabel().toLowerCase()}">${ic('i-x')}</a></div>`;
+      if (S.state === 'loading') {
+        const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="width:${w}; height:${h}"></span>`;
+        return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t" aria-busy="true">
+          <div class="dialog-head"><div><h1 class="dialog-title" id="dlg-t">Schimbă statusul</h1>${sk('70%')}</div>
+            <a class="btn btn-ghost btn-icon" href="${backHref(i)}" aria-label="Închide">${ic('i-x')}</a></div>
+          <div class="dialog-body"><div class="loading-note" role="status">${ic('i-hourglass')}Se încarcă sesizarea…</div>
+            ${sk('30%')}<div class="sk-block" style="height: calc(var(--space-8) * 2)"></div><div class="sk-block" style="height: calc(var(--space-8) * 2)"></div></div></div>`;
+      }
+      return `<div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-t">${head}<div class="dialog-body" ${busy() ? 'aria-busy="true"' : ''}>${body(i)}</div>${foot(i)}</div>`;
+    }
+
+    function content() {
+      if (!triageRole(S.role)) return `<div class="app">${appbar(S, { brandH1: false })}<div class="page">${noAccessView()}</div></div>`;
+      return `${dialogBackdrop(S, ORIGIN, current())}${dialog()}`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      form: 'Dialogul deschis peste ecranul de unde a venit (DS-002 sau, cu <code>din=DS-004</code>, coada). Se văd doar pașii permiși de la statusul curent. Alege un pas: la „Respinsă” apare motivul, la „Rezolvată” poza; apoi apasă butonul de jos (fără alegere: „Alege noul status”).',
+      motiv: '„Respinsă” fără motiv, după apăsarea butonului: câmpul e marcat, mesajul spune ce lipsește și de ce. Restul alegerilor rămân.',
+      poza: '„Rezolvată” fără poză (de la „În lucru”, #13): zona pozei e marcată și mesajul spune ce lipsește. Formatele și mărimea acceptate nu sunt afișate până la răspunsul la Q-022.',
+      upload: 'Poza se încarcă: bară de progres (exemplu 60%), „Anulează încărcarea”; butonul de salvare așteaptă încărcarea.',
+      saving: 'Se salvează: alegerile sunt blocate, butonul spune „Se salvează…”. „Renunță” nu mai e activ.',
+      success: 'Salvat: mesajul spune noul status și cine primește email; butonul duce înapoi unde erai (coada sau sesizarea).',
+      redeschide: 'O sesizare închisă (#20, rezolvată) se poate redeschide: înapoi la „Confirmată”, cu motiv obligatoriu (D-015). Revine în coadă, iar SLA-ul pornește din nou de la data redeschiderii.',
+      empty: 'Nimeni nu urmărește sesizarea: nu se trimite niciun email, și dialogul spune asta.',
+      loading: 'Dialogul se deschide imediat, cu scheleturi, cât se încarcă sesizarea.',
+      error: 'Salvarea a eșuat: statusul a rămas cel vechi, nu s-a trimis niciun email, alegerile rămân; butonul devine „Încearcă din nou”.',
+      long: 'Titlu lung (#17, ca în DS-002), motiv de respingere lung (exemplu) și 1.248 de urmăritori: textele se rup pe rânduri, butoanele rămân jos.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Pașii permiși (D-015)</h3>
+        <ul><li>Nouă → Confirmată sau Respinsă</li><li>Confirmată → În lucru sau Respinsă</li><li>În lucru → Rezolvată sau Respinsă</li>
+          <li>Rezolvată sau Respinsă → Confirmată (redeschidere), cu motiv obligatoriu; SLA-ul pornește din nou de la data redeschiderii</li><li>Fuzionată: fără pași (statusul se schimbă la principală).</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Motiv obligatoriu la „Respinsă” și la redeschidere; poză obligatorie la „Rezolvată”, micșorată și fără EXIF (D-011). Erorile apar după apăsarea butonului, ca în DS-003.</li>
+          <li>Emailul: doar cetățenii care urmăresc sesizarea (D-012), grupat: o notificare pentru până la 10 schimbări în 5 minute (brief, DS-014).</li>
+          <li>Operatorul nu poate schimba SLA-ul (D-004): dialogul îl arată, nu-l editează.</li>
+          <li>„Renunță”, „×” și butonul de după succes duc înapoi la ecranul de unde ai venit (<code>din=DS-004</code> sau DS-002 cu <code>id</code>), cu rolul, tema și mărimea.</li>
+          <li>Pe telefon dialogul ocupă tot ecranul; pe desktop e centrat peste ecranul de dedesubt, care rămâne vizibil, estompat și inactiv.</li>
+          <li>Rolurile fără triaj (vizitator, cetățean, cont neconfirmat) văd „Nu ai acces la această pagină”.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Fundalul estompat folosește tokenul <code>--color-overlay</code>; marginea dialogului e <code>--color-border-input</code> (vizibilă și în dark). Progresul încărcării (60%) e un exemplu. Ramele de dispozitiv și bordurile de 1 px.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: titlul și id-ul din Field.md. Statusul, SLA-ul, numărul de urmăritori, motivele și numele pozei sunt exemple (azi = 25 nov 2026); nu intră în seed.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      syncUrl(S, ORIGIN === 'DS-004' ? { id: S.id, din: 'DS-004' } : { id: S.id });
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = content();
+      document.getElementById('notes').innerHTML = notes();
+    }
+
+    let timer;
+    document.addEventListener('input', e => { if (e.target.id === 'reason') { S.reason = e.target.value; } });
+    document.addEventListener('change', e => { if (e.target.name === 'next') { S.next = e.target.value; S.err = ''; render(); } });
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        const k = ctl.parentElement.dataset.ctl;
+        S[k] = ctl.dataset.v;
+        if (k === 'state') { clearTimeout(timer); fitState(); }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (!act) { if (e.target.closest('a[aria-disabled="true"]')) e.preventDefault(); return; }
+      const a = act.dataset.act, i = current();
+      if (a === 'photo') { S.photo = 'uploading'; S.err = ''; clearTimeout(timer); timer = setTimeout(() => { S.photo = 'done'; render(); }, 1200); }
+      if (a === 'photo-cancel') { clearTimeout(timer); S.photo = ''; }
+      if (a === 'save') {
+        if (!S.next) S.err = 'step';
+        else if (needsReason(i) && !S.reason.trim()) S.err = 'reason';
+        else if (S.next === 'rezolvata' && S.photo !== 'done') S.err = 'photo';
+        else { S.err = ''; S.state = 'saving'; timer = setTimeout(() => { S.state = 'success'; render(); }, 1200); }
+      }
+      render();
+    });
+
+    mockBar({ id: 'DS-011', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

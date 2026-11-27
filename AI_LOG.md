@@ -133,3 +133,44 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
   - Restul D-013 rămâne: „Dedusă din pin”, pragul de 10 m, centrarea hărții fără să sară pinul și „Reper” opțional.
   
   D-013 rămâne în ledger ca înlocuită de D-014. În DS-003 am adăugat stările „Stradă în afara ariei” și „Stradă negăsită”; starea „Stradă din listă” a devenit „Stradă scrisă de mână”. Cele 6 străzi din jur și numele „Botticelli” sunt în `docs/design/strazi.geojson`. Am cerut și ca starea Succes să arate doar cardul sesizării, fără lista de dedesubt, cu informația despre email doar în banner. Asistentul a testat cu Node normalizarea, regula de 10 m și mesajele; `python3 docs/agents/tools/ledger-lint.py` trece. Am verificat în browser: DS-003 e confirmat (`approved`), iar DS-002 e reconfirmat după modificările din această sesiune (#25, reperul, urmărirea automată pentru cetățeanul autor). Modificările au fost salvate pe branch-ul `chore/ds-003-shared`, unite în `main` și trimise pe GitHub.
+
+## Sesiunea 6 — 27 noiembrie 2026
+
+- **Data:** 2026-11-27
+- **Ce am cerut (What I asked):**  
+  Mock-urile pentru fluxul operatorului, în stilul și cu regula de legare din DS-001, DS-002 și DS-003 (fișierele comune `shared.css`, `shared.js`, `seed.js`), cu statusul `draft` și doar cu tokenii din `DESIGN.md`:
+  - **DS-004**, coada de triaj: ordonată după SLA (întâi cele depășite), filtre pe status, categorie și stradă, căutare după titlu sau #id, rânduri cu poză, #id, titlu, categorie, stradă, status, SLA, persoane afectate și „posibil duplicat”; pe telefon, carduri.
+  - **DS-011**, dialogul de schimbare a statusului: doar pașii permiși, motiv obligatoriu la „respinsă”, poză obligatorie la „rezolvată” (micșorată, fără EXIF), emailul grupat către urmăritori.
+  - **DS-012**, dialogul de unire și anulare a unirii: regula D-005, perechea reală #15 → #14, efectul înainte de confirmare (voturi unice, comentarii, urmăritori, istoric), anularea din istoricul sesizării principale.
+  
+  Pentru toate: rolurile din D-012 (operatorul și adminul văd ecranele, ceilalți „Nu ai acces la această pagină”), „SLA” în loc de „Termen”, stările de bază și cele speciale, light / dark, telefon / desktop, datele de exemplu marcate „exemplu”, linkurile între ecrane și întoarcerea după fiecare dialog acolo unde eram.
+
+- **Ce am primit (What I received):**  
+  Trei mock-uri noi (`DS-004.html`, `DS-011.html`, `DS-012.html`), legate între ele și cu DS-002. Înainte să deseneze, asistentul mi-a pus două întrebări, pe rând:
+  - **Q-023:** ce pași de status sunt permiși. Brief-ul dă doar „nouă → confirmată → în lucru → rezolvată / respinsă”, iar DS-002 arăta deja #10 trecută direct din nouă în respinsă.
+  - **Q-024:** dacă unirea și anularea ei trimit email.
+  
+  A mai semnalat:
+  - perechea #15 → #14 are, în seed, 4 + 2 voturi; votul comun e contul seed care le-a raportat pe amândouă (raportarea e votul autorului, Q-016), deci 5 persoane afectate, exact ca în DS-002;
+  - D-005 spune că și pozele se adună la sesizarea principală, dar DS-002 nu arată încă poza lui #15 la #14;
+  - `registry.yaml` nu era YAML valid (două descrieri cu „: ” fără ghilimele, la DS-009 și DS-014);
+  - `index.html` nu încărca `seed.js`, deci arunca o eroare în consolă.
+
+- **Ce am făcut cu răspunsul (What I did with the response):**  
+  Am decis următoarele:
+  - **Q-023:** înainte câte un pas, „respinsă” din orice status deschis și, în plus, redeschiderea unei sesizări rezolvate sau respinse (înapoi la „confirmată”), cu motiv obligatoriu.
+  - **Q-024:** da, ca la orice schimbare de status: urmăritorii sesizării secundare primesc emailul grupat; cei ai principalei, nu.
+  - **Q-025 (deschisă):** ce arată coada implicit și cum se ordonează la egalitate. Propunerea, desenată în DS-004: implicit doar sesizările deschise; la același SLA, întâi cele cu mai multe persoane afectate, apoi #id-ul mai mic.
+  
+  Asistentul a scris o propunere de decizie (PROPOSAL) pentru Q-023 și Q-024, în așteptarea aprobării mele, și a adăugat PATTERN-003 (`candidate`): un dialog se deschide peste ecranul de unde vine și se întoarce la el. A actualizat `registry.yaml` (DS-004, DS-011, DS-012 în `draft`; DS-014 cu emailul la unire), `SCREENS` din `shared.js` și ledger-ul, și a reparat YAML-ul și `index.html`. A verificat cu Node toate stările × rolurile × mărimile celor trei mock-uri (1.620 de randări, fără erori, fără „undefined” sau „NaN”) și că DS-001, DS-002, DS-003 și `index.html` rulează cu noul `shared.js`. `python3 docs/agents/tools/ledger-lint.py` trece. Capturile de ecran nu au rulat: browserul headless a fost blocat de permisiuni. Verific mock-urile în browser înainte de commit; nimic nu e încă salvat într-un commit (branch-ul `chore/ds-004-011-012`).
+
+- **Continuare (27 noiembrie 2026) — D-015, confirmări și DS-002:**  
+  Am verificat mock-urile în browser și am decis următoarele:
+  - **D-015 (aprobată):** pașii de status și emailurile la unire, din Q-023 și Q-024, cu două completări: la redeschidere, SLA-ul pornește din nou de la data redeschiderii; timpul mediu de rezolvare din statistici (DS-005) se calculează de la raportare până la ultima rezolvare.
+  - **Q-025 (confirmată):** implicit, coada arată doar sesizările deschise; la același SLA, întâi cele cu mai multe persoane afectate, apoi #id-ul mai mic.
+  - **PATTERN-003:** aprobat.
+  - **Tokenul `--color-overlay`**, adăugat în `DESIGN.md` pentru fundalul estompat al dialogurilor: light `#0f172a99`, dark `#000000b3`. Contrastul verificat al marginii dialogului față de ecranul estompat: light, suprafața dialogului ≥ 4,69:1; dark, bordura de 1 px `--color-border-input` ≥ 5,65:1.
+  - **DS-002 (rămâne `approved`):** la #14, după unire, galeria arată și poza lui #15 („Din #15”, conform D-005); starea nouă „Unire anulată” arată pasul în cronologia ambelor sesizări, marcat „exemplu”. DS-012 duce la ea după anularea unirii.
+  - **DS-004, DS-011, DS-012:** confirmate (`approved`).
+  
+  Asistentul a verificat din nou cu Node toate stările × rolurile × mărimile celor patru mock-uri (2.340 de randări, fără erori). `python3 docs/agents/tools/ledger-lint.py` trece. Modificările au fost salvate pe branch-ul `chore/ds-004-011-012`, unite în `main` și trimise pe GitHub.

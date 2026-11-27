@@ -153,12 +153,12 @@
        The sesizare comes from seed.js (Field.md), by ?id=. Statuses, votes, termen, timeline
        dates, the reason for rejection, the merge and the comments are example values (today = 25 nov 2026). */
     const STATES = [['success', 'Succes'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung'],
-      ['anonim', 'Anonimă'], ['autor', 'Sesizarea ta'], ['respinsa', 'Respinsă'], ['rezolvata', 'Rezolvată'], ['fuzionata', 'Fuzionată'], ['ratelimit', 'Prea multe voturi']];
+      ['anonim', 'Anonimă'], ['autor', 'Sesizarea ta'], ['respinsa', 'Respinsă'], ['rezolvata', 'Rezolvată'], ['fuzionata', 'Fuzionată'], ['anulata', 'Unire anulată'], ['ratelimit', 'Prea multe voturi']];
     const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
     // A special state opens on the seed sesizare that shows it (DS-001 has #10 respinsă and #20 rezolvată)
-    const STATE_ID = { respinsa: 10, rezolvata: 20, long: 17, fuzionata: 15 };
+    const STATE_ID = { respinsa: 10, rezolvata: 20, long: 17, fuzionata: 15, anulata: 14 };
     // Example merge: #15 into #14, same category and subcategory (Trotuar deteriorat), Strada Picasso, 38 m apart
-    const MERGE = { secondary: 15, primary: 14, when: '18 nov 2026, ora 12:30', votes: 5 };
+    const MERGE = { secondary: 15, primary: 14, when: '18 nov 2026, ora 12:30', votes: 5, undone: '20 nov 2026, ora 09:10' };
 
     const S = mockState({ state: 'success', role: 'vizitator', size: 'phone', theme: 'light', voted: false, following: false,
       photo: 0, resent: false, added: [], draft: '', draftError: false, sent: false }, { roles: ROLES, states: STATES.map(x => x[0]) });
@@ -168,7 +168,7 @@
     function fitIdToState() {
       const want = STATE_ID[S.state];
       if (!want) return;
-      if (S.state === 'fuzionata' && (S.id === MERGE.primary || S.id === MERGE.secondary)) return;
+      if ((S.state === 'fuzionata' || S.state === 'anulata') && (S.id === MERGE.primary || S.id === MERGE.secondary)) return;
       S.id = want;
     }
     fitIdToState();
@@ -200,6 +200,8 @@
       if (S.state === 'anonim') i.author = null;
       if (S.state === 'fuzionata' && i.id === MERGE.secondary) i = { ...i, st: 'fuzionata', sla: null, mergedInto: MERGE.primary };
       if (S.state === 'fuzionata' && i.id === MERGE.primary) i = { ...i, merged: [MERGE.secondary], votes: MERGE.votes };
+      // After the merge was undone (DS-012): both keep their own votes and status again; the timeline keeps the merge and its undo
+      if (S.state === 'anulata' && (i.id === MERGE.primary || i.id === MERGE.secondary)) i = { ...i, unmerged: true };
       return i;
     }
 
@@ -213,6 +215,13 @@
       if (i.st === 'respinsa') op('respinsa', '17 nov 2026, ora 11:05', { reason: 'Nu am găsit problema la adresa indicată. Dacă o vezi în continuare, trimite o sesizare nouă cu o poză recentă.' });
       if (i.st === 'fuzionata') op('fuzionata', MERGE.when, { title: `Unită cu #${i.mergedInto}` });
       if (i.merged) ev.push({ st: 'fuzionata', merge: MERGE.secondary, title: `Sesizarea #${MERGE.secondary} a fost unită cu aceasta`, who: 'Operator', when: MERGE.when });
+      if (i.unmerged) {
+        const other = i.id === MERGE.primary ? MERGE.secondary : MERGE.primary;
+        ev.push({ st: 'fuzionata', link: other, title: i.id === MERGE.primary ? `Sesizarea #${MERGE.secondary} a fost unită cu aceasta` : `Unită cu #${MERGE.primary}`, who: 'Operator', when: MERGE.when });
+        // #15 gets its status from before the merge back; #14 keeps its own (DS-012)
+        ev.push({ st: i.id === MERGE.primary ? 'fuzionata' : i.st, icon: 'i-undo', link: other, title: 'Unire anulată',
+          note: i.id === MERGE.primary ? `#${MERGE.secondary} are din nou voturile, comentariile și urmăritorii ei.` : `Revine la „${STATUS_ALL[i.st].name}”, cu voturile, comentariile și urmăritorii de dinainte.`, who: 'Operator', when: MERGE.undone });
+      }
       return ev;
     }
 
@@ -250,15 +259,18 @@
     function gallery(i) {
       const photos = [{ label: 'La raportare', caption: `Fotografie de la raportare · ${i.date || SEED_DATE}`, ph: i.example }];
       if (i.st === 'rezolvata') photos.push({ label: 'La rezolvare', caption: 'Fotografie de la rezolvare · 23 nov 2026, de la operator', res: true });
+      if (i.merged) i.merged.forEach(m => photos.push({ label: `Din #${m}`, from: m, caption: `Fotografie de la raportare a sesizării #${m} · ${SEED_DATE}, unită cu aceasta ${EX}` }));
       const k = Math.min(S.photo, photos.length - 1), p = photos[k];
       const main = p.ph
         ? `<div class="photo-ph photo-ph-new" role="img" aria-label="Poza sesizării #${i.id} la raportare (exemplu)">${ic('i-image', 'i-xl')}<span>Poza trimisă de tine ${EX}</span></div>`
         : p.res
         ? `<div class="photo-ph" role="img" aria-label="Poza de la rezolvare a sesizării #${i.id}">${ic('i-camera', 'i-xl')}<span>Poza de la rezolvare</span></div>`
+        : p.from
+        ? `<img src="${photoLarge(p.from)}" alt="Fotografia sesizării #${p.from} la raportare, unită cu #${i.id}: ${findIssue(p.from).title}" width="960" height="1280">`
         : `<img src="${photoLarge(i.id)}" alt="Fotografia sesizării #${i.id} la raportare: ${i.title}" width="960" height="1280">`;
       const count = photos.length > 1 ? `<span class="photo-count num">${k + 1} / ${photos.length}</span>` : '';
       const tabs = photos.length > 1 ? `<div class="photo-tabs" role="group" aria-label="Fotografii">${photos.map((x, n) => `<button class="tab-thumb" data-act="photo" data-v="${n}" aria-pressed="${n === k}">
-          ${x.res ? `<span class="thumb thumb-res">${ic('i-camera')}</span>` : `<span class="thumb"><img src="${photoSrc(i.id)}" alt=""></span>`}${x.label}</button>`).join('')}</div>` : '';
+          ${x.res ? `<span class="thumb thumb-res">${ic('i-camera')}</span>` : `<span class="thumb"><img src="${photoSrc(x.from || i.id)}" alt=""></span>`}${x.label}</button>`).join('')}</div>` : '';
       return `<section class="gallery" aria-label="Fotografii"><div class="photo-main">${main}${count}</div>${tabs}<p class="caption">${p.caption}</p></section>`;
     }
 
@@ -279,7 +291,7 @@
 
     function statusPanel(i) {
       const ev = events(i);
-      const since = ev.filter(e => !e.merge).pop();
+      const since = ev.filter(e => !e.merge && !(e.link && e.st === 'fuzionata')).pop(); // a merge step on the primary is not its status
       let termen = '';
       if (i.sla && isOperator()) termen = `<div class="termen">${slaOperatorBadge(i)}<span class="hint">SLA: ${zile(slaDays(i.cat))} pentru ${i.cat}. Fără weekenduri și sărbători legale.</span></div>`;
       else if (i.sla) termen = `<div class="termen">${slaBadge(i)}<span class="hint">Termenul se numără în zile lucrătoare, fără weekenduri și sărbători legale.</span></div>`;
@@ -346,10 +358,12 @@
         const who = e.who ? `de ${e.who} · ${e.when}` : `Trimisă anonim · ${e.when}`;
         const reason = e.reason ? `<div class="tl-reason"><strong>Motivul respingerii:</strong> ${EX} ${e.reason}</div>` : '';
         const photo = e.photo ? `<div class="tl-photo"><span class="thumb thumb-res">${ic('i-camera')}</span><button class="btn btn-ghost btn-sm" data-act="photo" data-v="1">Vezi poza de la rezolvare</button></div>` : '';
+        const note = e.note ? `<span class="hint">${e.note}</span>` : '';
+        const link = e.link ? `<span class="hint"><a href="${mockHref('DS-002', { id: e.link, stare: 'anulata' })}">Vezi #${e.link}</a></span>` : '';
         const undo = e.merge ? `<span class="hint"><a href="${mockHref('DS-002', { id: e.merge, stare: 'fuzionata' })}">Vezi #${e.merge}</a></span>${isOperator()
           ? `<a class="btn btn-secondary btn-sm" href="${mockHref('DS-012', { id: i.id, cu: e.merge, mod: 'anulare' })}">${ic('i-undo')}Anulează unirea</a>` : ''}` : '';
-        return `<li><span class="status-ico st-${e.st}">${ic(STATUS_ALL[e.st].icon)}</span><div class="tl-body">
-          <span class="tl-head"><span class="tl-title">${e.title}</span>${e.who === 'Operator' ? EX : ''}</span><span class="hint">${who}</span>${reason}${photo}${undo}</div></li>`;
+        return `<li><span class="status-ico st-${e.st}">${ic(e.icon || STATUS_ALL[e.st].icon)}</span><div class="tl-body">
+          <span class="tl-head"><span class="tl-title">${e.title}</span>${e.who === 'Operator' ? EX : ''}</span><span class="hint">${who}</span>${note}${reason}${photo}${link}${undo}</div></li>`;
       }).join('');
       return `<section class="panel" aria-labelledby="tl-h"><h2 class="sec" id="tl-h">Cronologie</h2><ol class="tl">${items}</ol></section>`;
     }
@@ -457,7 +471,8 @@
       autor: 'Cetățeanul e autorul sesizării: nu are buton de vot, raportarea contează ca votul lui și e inclusă în număr (Q-016). Cetățeanul autor urmărește automat sesizarea („Urmărești”). Operatorul autor vede că raportarea lui nu contează ca vot și nu urmărește sesizarea (D-012). Amândoi pot comenta. Sesizarea #25 (din DS-003, „Vezi sesizarea”) e un exemplu complet: nu e în seed, n-are poză reală și nici comentarii. Vizitatorul și contul neconfirmat văd varianta lor.',
       respinsa: 'Sesizarea #10 (respinsă și în DS-001): în cronologie, operatorul, data și motivul respingerii. Fără termen. Respinsă e gri, nu roșu.',
       rezolvata: 'Sesizarea #20 (rezolvată și în DS-001): galeria are două poze, „La raportare” și „La rezolvare”; cronologia arată poza la pasul „Rezolvată”. Poza de rezolvare e un placeholder: nu există încă o poză reală „după”.',
-      fuzionata: 'Exemplu de unire: #15 în #14 (aceeași categorie și subcategorie, Strada Picasso, la 38 m). Pe #15: bannerul „Această sesizare a fost unită cu #14”, cu link. Pe #14: în cronologie, unirea; operatorul vede „Anulează unirea” (DS-012). Voturile unice (5) și comentariile cu „din #15” urmează D-005.',
+      fuzionata: 'Exemplu de unire: #15 în #14 (aceeași categorie și subcategorie, Strada Picasso, la 38 m). Pe #15: bannerul „Această sesizare a fost unită cu #14”, cu link. Pe #14: în galerie și poza lui #15 („Din #15”), în cronologie unirea; operatorul vede „Anulează unirea” (DS-012). Voturile unice (5), poza și comentariile cu „din #15” urmează D-005.',
+      anulata: 'Unirea #15 → #14 a fost anulată din DS-012 (exemplu). Pe ambele sesizări, cronologia păstrează unirea și adaugă „Unire anulată”, cu data și operatorul. #15 are din nou statusul, voturile, comentariile și urmăritorii ei (D-005); #14 nu mai are poza și comentariul „din #15”.',
       ratelimit: 'Cetățeanul a votat sau și-a retras votul de prea multe ori într-un timp scurt (D-006: cel mult 30 de voturi în 10 minute; retragerile intră în limită, Q-016): votul nu s-a schimbat, butonul e blocat, mesajul spune ce să facă. Vizitatorul, contul neconfirmat și operatorul nu pot vota (D-007, D-012), deci văd varianta lor.',
     };
     function notes() {
