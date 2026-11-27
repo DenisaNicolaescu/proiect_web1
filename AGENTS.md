@@ -92,6 +92,8 @@ Node.js + TypeScript server, React + TypeScript (Vite) + Leaflet client, Postgre
 ```bash
 # Lint the ledger (on Windows: py instead of python3)
 python3 docs/agents/tools/ledger-lint.py
+# Test the mocks' working-days function and the DS-005 figures (mock only, not the app)
+node --test docs/design/mocks/tests/
 # Screenshot: not defined until the client exists (Q-006)
 ```
 

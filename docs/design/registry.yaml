@@ -26,7 +26,7 @@ designs:
       One screen with role variants (states in one mock):
       vizitator — read-only, "Intră în cont ca să votezi și să comentezi" instead of actions;
       cetatean — "Mă afectează și pe mine" vote ("Ai votat", "Retrage votul"; no vote button for the author, Q-016), text-only comments (Q-004), follow ("Urmărești");
-      unconfirmed account (D-007) — actions blocked, "Verifică-ți emailul ca să poți vota" with resend;
+      unconfirmed account (D-017) — actions blocked, "Verifică-ți emailul ca să poți vota" with resend;
       operator (and admin) — no vote button and no "Urmărește", only the number of people affected; their own report is not a vote; they track sesizări from DS-004 (D-012); adds the operator panel: status change (opens DS-011), a "Posibile duplicate" section (same category, under 50 m, last 30 days) that opens DS-012, and, on a primary sesizare, the merge history with "Anulează unirea" (opens DS-012 in unmerge mode);
       fuzionata — banner linking to the primary sesizare.
       On a primary sesizare, the photo of a merged one appears in the gallery as "Din #N" (D-005); after an unmerge, both timelines keep the merge and add "Unire anulată".
@@ -35,29 +35,47 @@ designs:
   - id: DS-005
     name: Public Statistics
     kind: screen
-    status: planned
+    status: approved
     route: /statistics
     roles: [vizitator]
-    description: Statistics computed from the data, never hard-coded — average resolution time in working days per category (from the report to the last resolution, D-015), % resolved, sesizări over SLA, totals. No export here (export lives on DS-001).
+    description: >-
+      Statistics computed from the data, never hard-coded (in the mock, from mocks/seed.js), each figure with the number of sesizări it comes from:
+      average resolution time in working days (from the report to the last resolution, D-015), % rezolvate (of all sesizări except fuzionate; respinse count;
+      a fuzionată counts once, through its primary), sesizări with the termen over now (open ones only), "Rezolvate în termen: X din Y rezolvate" (D-016);
+      the same per category, and the counts per status as badges. A category with 0–2 sesizări shows "Prea puține date"; the categories without sesizări are grouped.
+      Chart: one series per category (the resolved share, in the rezolvată color, the value written next to it); no five-color status chart (it fails the colour-blind check in dark).
+      Vizitator and every role see "termen", never "SLA". States: with data, empty, loading, error, long text. No export here (export lives on DS-001).
     brief: Pagină publică de statistici (timp mediu de rezolvare, procent rezolvate, pe categorie)
 
   # ── Authentication: vizitator ───────────────────────────────────────────────
   - id: DS-007
     name: Sign In & Register
     kind: screen
-    status: planned
+    status: approved
     route: /auth/login, /auth/register
     roles: [vizitator]
-    description: Sign in and registration. Registration always creates a Cetățean account; Operators and Admins are appointed in DS-013. Email confirmation states (D-007) — "Verifică-ți emailul", resend link, link expired, confirmed. Honeypot field (D-006).
-    brief: Indirect — un vot per utilizator; roluri (D-006, D-007)
+    description: >-
+      Sign in (email, password, "Am uitat parola" → DS-008) and registration (name, with the hint "Poți folosi doar prenumele și inițiala, de ex. „Ana P.”", email, password), switched only by the two buttons at the top. Registration always creates a Cetățean account;
+      Operators and Admins are appointed in DS-013. Honeypot field (D-006). Errors: empty fields, wrong email or password (one message for both),
+      email already used (D-017: one address, one account), password too weak (at least 8 characters, not a very common one), too many attempts
+      (5 wrong in 10 minutes → wait 10 minutes) (D-016). Email confirmation states (D-017): "Verifică-ți emailul" with resend (once a minute) and
+      "Continuă fără confirmare", "Schimbă adresa" while the account is not confirmed (the old link stops working and the old address is freed; D-017),
+      link expired (valid 24 hours, a new link cancels the old one), confirmed. No "Ai intrat în cont" screen: after signing in, straight back to the screen it was
+      opened from (?din=<DS-id>, and id for DS-002; PATTERN-004), with the signed-in role and a short "Bine ai revenit, <prenume>!" that closes by itself (--duration-message, 5 s, Q-028) or with ×;
+      an unconfirmed account goes back with its actions blocked. States: sign in, register, the errors above, loading, connection error, verify email, change address,
+      link expired, confirmed, success (the message, as an example), success unconfirmed, long text.
+    brief: Indirect — un vot per utilizator; roluri (D-006, D-017)
 
   - id: DS-008
     name: Password Reset
     kind: screen
-    status: planned
+    status: approved
     route: /auth/reset-password
     roles: [vizitator]
-    description: Two states — request a reset link by email; set a new password from the link (including link expired).
+    description: >-
+      Two parts — request a reset link by email ("Dacă adresa are cont, ți-am trimis un link": the same screen whether or not the address has an account; resend once a minute);
+      the page the link opens: the new password once, with "Arată" to check it (the DS-007 rule), link expired (valid 1 hour, a new link cancels the old one, D-016), success → DS-007, still carrying ?din.
+      States: request, empty email, loading, sent, error, new password, password too weak, saving, link expired, success, long text.
     brief: Not in the brief
 
   # ── Cetățean ────────────────────────────────────────────────────────────────
@@ -76,7 +94,7 @@ designs:
       One screen with role variants (states in one mock):
       vizitator — no form, "Intră în cont ca să raportezi" (DS-007);
       cetatean — the full form; the report counts as their vote (Q-016) and they follow it automatically; duplicate card "Există deja, votează-o" → DS-002 of the existing sesizare;
-      unconfirmed account (D-007) — form blocked, "Verifică-ți emailul ca să poți raporta" with resend;
+      unconfirmed account (D-017) — form blocked, "Verifică-ți emailul ca să poți raporta" with resend;
       operator (and admin) — the same form; the report is not a vote and is not followed (D-012); the duplicate card reads "Vezi sesizarea existentă (#N)".
       After sending — DS-002 of the new sesizare (the example #25 in mocks/shared.js).
     brief: Raportare (categorie, descriere, poză, locație, opțional anonim); detecție de duplicate la raportare

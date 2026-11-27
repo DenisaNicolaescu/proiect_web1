@@ -36,3 +36,14 @@
 - **Proposed answer:** Not proposed: either #20 is a second report of #11 (then the coordinates and time in Field.md are wrong, and #11 + #20 are a real duplicate under D-005: same category, 0 m, same day), or the wrong photo was attached to #20 (then the right photo is missing).
 - **Answer:** #20 is a separate problem on Strada Rembrandt; the photo of #11 had been attached to it by mistake. The owner replaced `docs/field_photos/sesizare_20.heic` with the right photo: its EXIF GPS is now 0.2 m from Field.md, at 13:00 (checked 2026-11-26). Field.md stays as it is; 22 sesizări are seeded.
 - **Date:** 2026-11-26
+
+## Q-026 · How are the public statistics on DS-005 defined?
+- **Status:** answered
+- **Blocks:** the figures of DS-005 and the statistics query on the server
+- **Who answers:** project owner
+- **Context:** The brief asks for the average resolution time and the % resolved, per category; the registry adds sesizări over the termen. Nothing said what the % is taken over (respinse, fuzionate) or whether "termen depășit" means open sesizări now or also those resolved late. D-015 already sets the resolution time: working days from the report to the last resolution.
+- **Answer:** % rezolvate = rezolvate / all sesizări except fuzionate (respinse count in the total); a fuzionată counts once, through its primary. "Termen depășit" = open sesizări (nouă, confirmată, în lucru) whose termen is over now. Plus a separate figure: "Rezolvate în termen: X din Y rezolvate" (resolved within the category's SLA, in working days). All of them per category too, computed from the data (in the mocks, from `seed.js`).
+- **Date:** 2026-11-27
+- **Recorded as:** D-016
+- **Note (2026-11-27):** Drawn in `docs/design/mocks/DS-005.html`; a category with 0–2 sesizări shows "Prea puține date" (owner's request in the DS-005 brief).
+

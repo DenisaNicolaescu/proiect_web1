@@ -17,9 +17,9 @@ const SCREEN_GROUPS = [
 const SCREENS = [
   { id: 'DS-001', ro: 'Hartă și listă', name: 'Map & List', group: 'public', status: 'approved', file: 'DS-001.html' },
   { id: 'DS-002', ro: 'Detaliul sesizării', name: 'Sesizare Detail', group: 'public', status: 'approved', file: 'DS-002.html' },
-  { id: 'DS-005', ro: 'Statistici publice', name: 'Public Statistics', group: 'public', status: 'planned' },
-  { id: 'DS-007', ro: 'Intră în cont și înregistrare', name: 'Sign In & Register', group: 'auth', status: 'planned' },
-  { id: 'DS-008', ro: 'Resetarea parolei', name: 'Password Reset', group: 'auth', status: 'planned' },
+  { id: 'DS-005', ro: 'Statistici publice', name: 'Public Statistics', group: 'public', status: 'approved', file: 'DS-005.html' },
+  { id: 'DS-007', ro: 'Intră în cont și înregistrare', name: 'Sign In & Register', group: 'auth', status: 'approved', file: 'DS-007.html' },
+  { id: 'DS-008', ro: 'Resetarea parolei', name: 'Password Reset', group: 'auth', status: 'approved', file: 'DS-008.html' },
   { id: 'DS-003', ro: 'Raportează o sesizare', name: 'Report a Sesizare', group: 'cetatean', status: 'approved', file: 'DS-003.html' },
   { id: 'DS-009', ro: 'Sesizările mele', name: 'My Sesizări', group: 'cetatean', status: 'planned' },
   { id: 'DS-010', ro: 'Profil și notificări', name: 'Profile & Notifications', group: 'cetatean', status: 'planned' },
@@ -243,8 +243,54 @@ function appbar(S, { current = '', brandH1 = S.size === 'phone' } = {}) {
   if (admin) nav.push(`<a href="${mockHref('DS-006')}"${cur('DS-006')}>${ic('i-settings')}Administrare</a>`);
   const right = signedIn
     ? `<a class="btn btn-primary" href="${mockHref('DS-003')}">${ic('i-plus')}Raportează o problemă</a><button class="avatar" aria-label="Contul meu">${ic('i-user')}</button>`
-    : `<a class="btn btn-primary" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să raportezi</a>`;
+    : authScreen(current) ? '' // already on DS-007 / DS-008
+    : `<a class="btn btn-primary" href="${mockHref('DS-007', { din: 'DS-003' })}">${ic('i-login')}Intră în cont ca să raportezi</a>`;
   return `<header class="appbar">${brand}<nav class="nav" aria-label="Principal">${nav.join('')}</nav><div class="actions">${right}</div></header>`;
+}
+
+/* ── Working days (D-004): no weekends, no Romanian statutory holidays (Codul muncii, art. 139), Orthodox Easter by the
+   Meeus Julian algorithm + 13 days (valid 1900–2099). Used by DS-005; tested in tests/workdays.test.js. ─────────────────── */
+const isoDay = d => d.toISOString().slice(0, 10);
+const utcDay = (y, m, d) => new Date(Date.UTC(y, m - 1, d));
+const isIsoDate = t => typeof t === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(t) && isoDay(new Date(t + 'T00:00:00Z')) === t;
+function orthodoxEaster(y) {
+  const a = y % 4, b = y % 7, c = y % 19, d = (19 * c + 15) % 30, e = (2 * a + 4 * b - d + 34) % 7;
+  const month = Math.floor((d + e + 114) / 31), day = ((d + e + 114) % 31) + 1;
+  return new Date(utcDay(y, month, day).getTime() + 13 * 864e5);
+}
+function holidays(y) {
+  const fixed = [[1, 1], [1, 2], [1, 6], [1, 7], [1, 24], [5, 1], [6, 1], [8, 15], [11, 30], [12, 1], [12, 25], [12, 26]].map(([m, d]) => isoDay(utcDay(y, m, d)));
+  const e = orthodoxEaster(y).getTime(), off = n => isoDay(new Date(e + n * 864e5));
+  return new Set([...fixed, off(-2), off(0), off(1), off(49), off(50)]); // Vinerea Mare, Paști (2 zile), Rusalii (2 zile)
+}
+/** Working days after `from` up to and including `to` (ISO dates; the convention of seed.js: 15 → 25 nov 2026 = 8).
+    A missing or invalid date throws: it must never count as 0 days. */
+function workingDays(from, to) {
+  if (!isIsoDate(from) || !isIsoDate(to)) throw new Error(`workingDays: dată invalidă (${from} → ${to})`);
+  let n = 0;
+  for (let t = new Date(from + 'T00:00:00Z').getTime() + 864e5, end = new Date(to + 'T00:00:00Z').getTime(); t <= end; t += 864e5) {
+    const d = new Date(t), wd = d.getUTCDay();
+    if (wd !== 0 && wd !== 6 && !holidays(d.getUTCFullYear()).has(isoDay(d))) n++;
+  }
+  return n;
+}
+const MONTHS_RO = { ian: 1, feb: 2, mar: 3, apr: 4, mai: 5, iun: 6, iul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+/** "15 nov 2026" → "2026-11-15" */
+const parseRo = t => { const [d, m, y] = t.split(' '); return isoDay(utcDay(Number(y), MONTHS_RO[m], Number(d))); };
+
+/* ── Sign in returns where you were (DS-007, DS-008) ─────────────────────────────────────────────
+   A link to DS-007 passes din=<DS-id> (and id for DS-002); DS-007 and DS-008 carry it from one to the other,
+   and the button after sign-in goes back there, now with the signed-in role. A button that names an action
+   ("Intră în cont ca să raportezi") returns to that action (DS-003). Without din: the map. */
+const authScreen = id => id === 'DS-007' || id === 'DS-008';
+const RETURN_LABEL = { 'DS-001': 'Înapoi la hartă', 'DS-003': 'Înapoi la raportare', 'DS-005': 'Înapoi la statistici', 'DS-009': 'Înapoi la sesizările tale' };
+function authReturn() {
+  const din = URLP.get('din'), id = Number(URLP.get('id'));
+  let to = screen(din) && !authScreen(din) ? din : 'DS-001';
+  if (to === 'DS-002' && !findIssue(id)) to = 'DS-001';
+  const data = to === 'DS-002' ? { id } : {};
+  return { to, params: { din: to, ...data }, label: to === 'DS-002' ? `Înapoi la sesizarea #${id}` : RETURN_LABEL[to] || 'Continuă',
+    href: rol => mockHref(to, { ...data, rol }) };
 }
 
 /* ── Map parts (Leaflet, D-002; OpenStreetMap tiles, Q-005; the polygon, D-009) ── */

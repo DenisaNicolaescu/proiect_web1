@@ -444,7 +444,7 @@
     function fab() {
       return signedIn()
         ? `<a class="btn btn-primary fab" href="${mockHref('DS-003')}">${ic('i-plus', 'i-lg')}Raportează</a>`
-        : `<a class="btn btn-primary fab" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să raportezi</a>`;
+        : `<a class="btn btn-primary fab" href="${mockHref('DS-007', { din: 'DS-003' })}">${ic('i-login')}Intră în cont ca să raportezi</a>`;
     }
     function sheet() {
       if (!S.sheet) return '';

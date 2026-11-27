@@ -2,7 +2,7 @@
    The 22 sesizări of Field.md inside aria cartierului (D-009; #06 and #24 are excluded), newest first (Q-015).
    Also the 16 streets of the area and the 6 around it (STRAZI, D-014), from OpenStreetMap.
    From Field.md: id, GPS, title, category, subcategory, street, time (all on 15 nov 2026) and the description, verbatim.
-   Example values for the mocks (not in Field.md): st (status), sla and votes. Today in the mocks = 25 nov 2026.
+   Example values for the mocks (not in Field.md): st (status), sla, votes and resolvedOn (the date of the last resolution, the same 23 nov 2026 as DS-002's timeline; DS-005 computes the resolution time from it). Today in the mocks = 25 nov 2026.
    sla: {left:n} = in time (working days left), {over:n} = termen depășit; none for rezolvată / respinsă.
    Author: every seed sesizare was documented on the field by one seed account, "Denisa N." (the project owner's choice, 2026-11-26). */
 
@@ -22,11 +22,11 @@ const SEED = [
       desc: 'Porțiune dreptunghiulară de asfalt decopertat în urma unor lucrări, lăsată neasfaltată și denivelată chiar în zona de viraj lângă bordură, prezentând risc pentru autovehicule și bicicliști.' },
     { id: 21, lat: 45.81651, lon: 24.13238, title: 'Autoturism parcat neregulamentar complet pe trotuar', cat: 'Trafic auto, semne de circulație și parcări', sub: 'Parcare neregulamentară', street: 'Strada Viena', st: 'noua', sla: { over: 3 }, votes: 3, time: '13:01',
       desc: 'Autoturism staționat integral pe trotuarul îngust, blocând complet trecerea pietonilor și a cărucioarelor și obligându-i să circule pe carosabil.' },
-    { id: 20, lat: 45.81658, lon: 24.13263, title: 'Autoutilitară parcată pe trotuar în intersecție', cat: 'Trafic auto, semne de circulație și parcări', sub: 'Parcare neregulamentară', street: 'Strada Rembrandt', st: 'rezolvata', votes: 6, time: '13:00',
+    { id: 20, lat: 45.81658, lon: 24.13263, title: 'Autoutilitară parcată pe trotuar în intersecție', cat: 'Trafic auto, semne de circulație și parcări', sub: 'Parcare neregulamentară', street: 'Strada Rembrandt', st: 'rezolvata', resolvedOn: '2026-11-23', votes: 6, time: '13:00',
       desc: 'Sesizare din unghi suplimentar pentru autoutilitara staționată pe trotuar in intesectie, facand asigurarea soferilor aproape imposibila, la fel si trecerea pietonilor pe trotuar, fiind foratati sa mearga pe carosabil.' },
     { id: 19, lat: 45.81652, lon: 24.13270, title: 'Trotuar degradat și invadat de buruieni', cat: 'Străzi și iluminat', sub: 'Trotuar deteriorat', street: 'Strada Rembrandt', st: 'noua', sla: { left: 22 }, votes: 2, time: '13:00',
       desc: 'Trotuar pietonal foarte deteriorat, cu asfaltul distrus și vegetație/buruieni crescute pe aproape toată suprafața de mers din fața gardului.' },
-    { id: 18, lat: 45.81488, lon: 24.13294, title: 'Câine de talie mare lăsat liber pe stradă', cat: 'Animale pe domeniu public', sub: 'Animal fără lesă', street: 'Strada Klagenfurt', st: 'rezolvata', votes: 3, time: '12:57',
+    { id: 18, lat: 45.81488, lon: 24.13294, title: 'Câine de talie mare lăsat liber pe stradă', cat: 'Animale pe domeniu public', sub: 'Animal fără lesă', street: 'Strada Klagenfurt', st: 'rezolvata', resolvedOn: '2026-11-23', votes: 3, time: '12:57',
       desc: 'Câine de talie mare nesupravegheat, fără lesă, circulând liber pe trotuar și pe partea carosabilă printre mașini.' },
     { id: 17, lat: 45.81414, lon: 24.13228, title: 'Cablu electric întins peste trotuar între proprietate și un autoturism parcat', cat: 'Străzi și iluminat', sub: 'Altele - Străzi și Iluminat', street: 'Strada Klagenfurt', st: 'confirmata', sla: { left: 22 }, votes: 11, time: '12:55',
       desc: 'Cablu de alimentare tras direct din curte peste întreaga lățime a trotuarului pietonal până la un autoturism staționat la bordură, fără protecție de cablu, creând pericol de împiedicare și electrocutare.' },

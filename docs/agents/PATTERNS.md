@@ -9,6 +9,7 @@
 - PATTERN-001 · Plan-then-build workflow · approved
 - PATTERN-002 · Mocks share shared.css, shared.js and seed.js and are linked by URL · approved
 - PATTERN-003 · A dialog mock opens over its origin screen and goes back to it · approved
+- PATTERN-004 · Sign-in returns to the screen it was opened from · candidate
 
 ---
 
@@ -36,5 +37,13 @@
 - **How:** The link that opens the dialog passes `din=<DS-id>` (and the screen's data, e.g. `id`) through `mockHref`. The dialog reads it with `dialogOrigin()`, draws the origin behind itself with `dialogBackdrop()` (dimmed with `--color-overlay`, `inert`, `aria-hidden`), and every way out ("Renunță", "×", the button after success) links back to the origin with `mockHref`. Phone: the dialog covers the screen; desktop: centred. Styles `.dialog`, `.choice` in `shared.css`.
 - **Example:** `docs/design/mocks/DS-011.html`, `docs/design/mocks/DS-012.html`
 - **Why:** The owner asked that after every dialog the reviewer goes back where they were (2026-11-27); one helper keeps DS-011 and DS-012 the same.
+- **Source:** interview · confidence medium
+
+## PATTERN-004 · Sign-in returns to the screen it was opened from
+- **Status:** candidate
+- **Use when:** A mock in `docs/design/mocks/` links to DS-007 (sign in), or DS-007 / DS-008 link to each other
+- **How:** The link passes `din=<DS-id>` (and the screen's data, e.g. `id` for DS-002) through `mockHref('DS-007', { din, … })`. A button that names an action ("Intră în cont ca să raportezi") passes the screen of that action (`din: 'DS-003'`). DS-007 and DS-008 read it with `authReturn()` (`shared.js`), carry `RET.params` on every link between them, show "După ce intri, te întorci la …", and the button after sign-in links to `RET.href(<role>)`, which carries the signed-in role (`cetatean` or `neconfirmat`). Without `din`: the map (DS-001).
+- **Example:** `docs/design/mocks/DS-007.html`, `docs/design/mocks/DS-002.html` (vote and comment links)
+- **Why:** The owner asked that after signing in the person goes back where they were (2026-11-27), as PATTERN-003 does for dialogs.
 - **Source:** interview · confidence medium
 

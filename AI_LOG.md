@@ -174,3 +174,109 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
   - **DS-004, DS-011, DS-012:** confirmate (`approved`).
   
   Asistentul a verificat din nou cu Node toate stările × rolurile × mărimile celor patru mock-uri (2.340 de randări, fără erori). `python3 docs/agents/tools/ledger-lint.py` trece. Modificările au fost salvate pe branch-ul `chore/ds-004-011-012`, unite în `main` și trimise pe GitHub.
+
+## Sesiunea 7 — 27 noiembrie 2026
+
+- **Data:** 2026-11-27
+- **Ce am cerut (What I asked):**  
+  Mock-urile pentru DS-007 (intrarea în cont și înregistrarea), DS-008 (resetarea parolei) și DS-005 (statisticile publice), în stilul mock-urilor aprobate, cu fișierele comune, cu statusul `draft` și doar cu tokenii din `DESIGN.md`:
+  - **DS-007:** intrare în cont și înregistrare, cu comutare între ele; „Verifică-ți emailul” cu retrimitere și link expirat (D-007); erorile pentru date greșite, email deja folosit, parolă prea slabă și prea multe încercări; întoarcerea, după ce intri, la ecranul de unde ai venit; „Am uitat parola” → DS-008.
+  - **DS-008:** cererea linkului, fără să se afle dacă adresa are cont; pagina din link, cu parola nouă de două ori, link expirat și succes → DS-007.
+  - **DS-005:** timpul mediu de rezolvare în zile lucrătoare (D-015), procentul de sesizări rezolvate și sesizările cu termen depășit, pe categorii, calculate din `seed.js`, fiecare cifră cu numărul de sesizări din care vine; „prea puține date” pentru categoriile cu 0–2 sesizări; regula pentru grafice.
+  
+  Pentru toate: stările de bază, light și dark, telefon și desktop, tonul la „tu”, „Intră în cont” din toate mock-urile → DS-007, „Statistici” din antet → DS-005, `index.html` și `registry.yaml` actualizate.
+
+- **Ce am primit (What I received):**  
+  Trei mock-uri noi (`DS-005.html`, `DS-007.html`, `DS-008.html`). Înainte să deseneze, asistentul mi-a pus două întrebări, pe rând:
+  - **Q-026:** cum se definesc cifrele din DS-005 (ce intră în total la „% rezolvate” și ce înseamnă „termen depășit”).
+  - **Q-027:** regula pentru parolă, limita de încercări la intrarea în cont (D-006 nu o acoperă) și cât timp sunt valabile linkurile.
+  
+  A mai semnalat:
+  - `seed.js` nu avea data rezolvării, deci timpul de rezolvare nu se putea calcula. A adăugat `resolvedOn: '2026-11-23'` la #20 și #18, aceeași dată ca în cronologia din DS-002 (valoare de exemplu).
+  - Graficul cu toate cele cinci culori de status nu trece verificarea pentru daltonism în dark (nouă și confirmată se confundă). DS-005 folosește o singură bară pe categorie („Rezolvate”, în culoarea statusului rezolvată, cu procentul și numărul scrise lângă ea), iar statusurile apar ca badge-uri cu număr.
+  - Eroarea „email deja folosit” din DS-007 spune că adresa are cont, iar DS-008 ascunde asta. Am lăsat-o cum am cerut-o, dar trebuie să decid.
+  - În întrebare, asistentul a scris „6 cu termen depășit”; calculul din seed dă 5 (toate în Trafic auto).
+
+- **Ce am făcut cu răspunsul (What I did with the response):**  
+  Am decis următoarele:
+  - **Q-026:** „% rezolvate” = rezolvate din toate sesizările, fără cele fuzionate (cele respinse intră în total); „termen depășit” = sesizările deschise care au acum termenul depășit; o sesizare fuzionată se numără o singură dată, prin cea principală. În plus, o cifră separată: „Rezolvate în termen: X din Y rezolvate”.
+  - **Q-027:** parola are cel puțin 8 caractere și nu e una foarte des folosită; după 5 încercări greșite în 10 minute, aștepți 10 minute; linkul de confirmare e valabil 24 de ore, cel de resetare o oră, iar un link nou îl anulează pe cel vechi; emailul se poate retrimite o dată pe minut.
+  
+  Asistentul a:
+  - adăugat PATTERN-004 (`candidate`): intrarea în cont se întoarce la ecranul de unde ai venit (`din`, `authReturn()` în `shared.js`);
+  - pregătit o propunere de decizie (PROPOSAL D-016) cu răspunsurile la Q-026 și Q-027, care așteaptă aprobarea mea;
+  - schimbat linkurile „Intră în cont” din DS-001, DS-002, DS-003 și din antet, ca să trimită `din`;
+  - ascuns butonul „Intră în cont” din antet pe DS-007 și DS-008;
+  - pus stilurile formularelor de cont în `shared.css`, sub `.auth`, ca să nu schimbe mock-urile aprobate;
+  - actualizat `SCREENS` (DS-005, DS-007, DS-008 în `draft`; `index.html` le ia de acolo) și `registry.yaml`.
+  
+  Verificări:
+  - Toate stările × rolurile × mărimile × temele mock-urilor noi și ale DS-001–DS-004, DS-011, DS-012 s-au randat cu Node (1.556 de randări, fără erori).
+  - `python3 docs/agents/tools/ledger-lint.py` trece.
+  - Capturile de ecran nu au rulat: nu există un browser headless în mediu.
+  
+  Verific mock-urile în browser înainte de commit; nimic nu e încă salvat într-un commit.
+
+- **Continuare (27 noiembrie 2026) — corectură în DS-005:**  
+  În browser, DS-005 arăta „Timp mediu de rezolvare: 0 zile lucrătoare” și „Rezolvate în termen: 2 din 2”, deși #18 (Animale, termen 3 zile) fusese rezolvată în 6 zile. Am cerut datele pentru #18 și #20 și un test. Asistentul a arătat:
+  - #18 (Animale pe domeniu public) și #20 (Trafic auto): raportate pe 15 nov 2026, rezolvate pe 23 nov 2026, adică 6 zile lucrătoare (16–20 și 23 nov); termenul e de 3, respectiv 5 zile, deci amândouă au fost rezolvate după termen.
+  - Cu `seed.js` din repo, calculul dădea corect 6 zile și 0 din 2. A reprodus exact „0 zile” și „2 din 2” pe un `seed.js` fără `resolvedOn`. Cauza probabilă: browserul meu păstrase în cache varianta veche a `seed.js`. Problema reală era însă în calcul: o dată lipsă era numărată ca 0 zile, fără nicio eroare.
+  
+  Ce s-a schimbat:
+  - Funcția de zile lucrătoare a trecut din DS-005 în `shared.js`. Acum aruncă o eroare la o dată lipsă sau invalidă.
+  - DS-005 lasă în afara timpului mediu și a „Rezolvate în termen” orice sesizare rezolvată fără dată și arată mesajul „Date incomplete în seed.js (mock)”, cu sfatul de a reîncărca fără cache.
+  - „la zi: 25 nov 2026” e marcat „exemplu”.
+  - Testul nou, `docs/design/mocks/tests/workdays.test.js` (`node --test docs/design/mocks/tests/`), verifică #18 și #20, media de 6 zile, 0 din 2 în termen, convenția din seed (15 → 25 nov = 8 zile), 30 noiembrie și 1 Decembrie, Paștele ortodox din 2026 și 2027 și eroarea la data lipsă. Cele 5 teste trec, iar comanda e trecută în `AGENTS.md`.
+  
+  Toate mock-urile s-au randat din nou cu Node (1.556 de randări, fără erori). Nimic nu e încă salvat într-un commit.
+
+- **Continuare (27 noiembrie 2026) — feedback pe DS-007:**  
+  Am cerut:
+  1. antetul aplicației în starea „Intră în cont”;
+  2. fără linkul „Nu ai cont? Creează unul”, doar butoanele de comutare;
+  3. „Schimbă adresa” în „Verifică-ți emailul”, cât timp contul nu e confirmat, iar adresa veche se eliberează;
+  4. fără ecranul „Ai intrat în cont”: întoarcere directă, cu un mesaj scurt „Bine ai revenit, [prenume]!” care dispare singur;
+  5. la „Nume”, sugestia „Poți folosi doar prenumele și inițiala, de ex. «Ana P.»”.
+  
+  Ce s-a făcut:
+  - **Punctele 2–5 sunt făcute.** „Schimbă adresa” apare și în „Link expirat”. Starea nouă „Schimbă adresa” trimite linkul la adresa nouă. Starea „Succes” arată mesajul, ca exemplu, peste o schiță a ecranului de întoarcere. În mock, „Intră în cont” duce acum direct la acel ecran.
+  - **Punctul 1:** asistentul nu a putut reproduce problema. HTML-ul generat are antetul în starea „Intră în cont”, la fel ca în celelalte stări. Captura de ecran cu browserul headless a fost refuzată de permisiuni, așa că mi-a cerut detalii (mărime, temă, o captură).
+  - **Ledger:** Q-028 (`investigating`): cât timp rămâne mesajul „Bine ai revenit”. Propunerea: 5 secunde, cu pauză cât timp e sub mouse sau are focus, și ×.
+  - **PROPOSAL pentru D-007:** schimbarea adresei unui cont neconfirmat. Așteaptă aprobarea mea.
+  
+  `registry.yaml` e actualizat. Verificări: 452 de randări fără erori, testul cu zilele lucrătoare trece (5 din 5), ledger-ul trece. Nimic nu e încă salvat într-un commit.
+
+- **Continuare (27 noiembrie 2026) — decizii și feedback pe DS-008:**  
+  Am decis următoarele:
+  - **D-016 (aprobată):** definițiile statisticilor publice (Q-026) și valorile de securitate ale contului (Q-027). Am fixat retrimiterea emailului: o dată la 60 de secunde.
+  - **D-017 (aprobată, înlocuiește D-007):** regula D-007, plus „Schimbă adresa” cât timp contul nu e confirmat. Linkul vechi nu mai merge, adresa veche se eliberează, iar adresa nouă nu poate fi a altui cont. D-007 rămâne în `DECISIONS-SUPERSEDED.md`.
+  - **Q-028 (răspuns):** mesajul „Bine ai revenit” rămâne 5 secunde, cu pauză cât timp e sub mouse sau are focus, plus ×. Tokenul nou din `DESIGN.md` (și `shared.css`) e `--duration-message: 5s`. În DS-007, mesajul dispare acum singur, cu pauză, iar butonul „Arată din nou mesajul” (doar în mock) îl readuce.
+  - **DS-008:** am scos câmpul „Scrie din nou parola nouă” și starea „Eroare: parolele diferă” (butonul „Arată” e suficient). După „Retrimite emailul”, textul e „Poți retrimite peste 60 de secunde”.
+  
+  `registry.yaml` și notele mock-urilor trimit acum la D-016 și D-017. Antetul din DS-007 îl verific eu, după Ctrl+Shift+R.
+  
+  Verificări:
+  - 1.564 de randări cu Node, fără erori; testul cu zilele lucrătoare trece (5 din 5); `python3 docs/agents/tools/ledger-lint.py` trece.
+  - Lint-ul avertizează că `DECISIONS.md` are 153 de linii și ar trebui împărțit pe teme; nu am făcut asta.
+  - Temporizarea mesajului nu a fost probată într-un browser real.
+  
+  Nimic nu e încă salvat într-un commit.
+
+- **Continuare (27 noiembrie 2026) — confirmare, împărțirea deciziilor, commit:**  
+  Am verificat în browser:
+  - antetul din DS-007 e acolo (după Ctrl+Shift+R);
+  - DS-005 arată corect.
+  
+  **DS-005, DS-007 și DS-008:** confirmate (`approved` în `registry.yaml`, în `SCREENS` și în titlurile mock-urilor). În DS-007, textul de după „Retrimite emailul” e acum „Poți retrimite peste 60 de secunde”, ca în DS-008.
+  
+  **Împărțirea `DECISIONS.md`**, cum recomandă ledger-lint și ca la `OPEN-QUESTIONS.md`: deciziile în vigoare au trecut în `docs/agents/decisions/`:
+  - `accounts-and-roles.md`: D-006, D-012, D-017;
+  - `data-and-seed.md`: D-009, D-010, D-011;
+  - `reporting.md`: D-014;
+  - `stack-and-tooling.md`: D-001, D-002;
+  - `statistics-and-security.md`: D-016;
+  - `triage-and-workflow.md`: D-004, D-005, D-015.
+  
+  `DECISIONS.md` păstrează doar indexul, grupat pe teme. Linkurile din `README.md` duc acum la fișierele noi (D-003 duce la `DECISIONS-SUPERSEDED.md`).
+  
+  Verificări: 1.564 de randări cu Node, fără erori; testul cu zilele lucrătoare trece (5 din 5); `python3 docs/agents/tools/ledger-lint.py` trece, fără avertismentul de lungime. Modificările au fost salvate pe branch-ul `chore/ds-005-007-008`, unite în `main` și trimise pe GitHub.

@@ -268,6 +268,11 @@ vs map ≥ 4.38:1, white icon on pin ≥ 5.02:1, for all six statuses and danger
 | `--shadow-md` | 0 4px 6px -1px rgba(0,0,0,0.1) | Hovered cards, dropdown menus |
 | `--shadow-lg` | 0 10px 15px -3px rgba(0,0,0,0.1) | Floating map sidebar & bottom-sheet drawer |
 
+### Duration
+| Token | Value | Use |
+|---|---|---|
+| `--duration-message` | 5s | How long a message that closes by itself stays ("Bine ai revenit, [prenume]!" after signing in, DS-007). The countdown pauses while the pointer is over the message or it has focus; × closes it at once (Q-028). Not motion: it applies with `prefers-reduced-motion` too |
+
 ### Breakpoints / window sizes
 | Name | Min | Max |
 |---|---|---|
