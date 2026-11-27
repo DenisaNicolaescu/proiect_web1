@@ -309,7 +309,7 @@
         <p class="hint">${isOperator() ? 'Comentează' : 'Votează, comentează și urmărește'} la sesizarea în care a fost unită.</p>
         <a class="btn btn-primary btn-block" href="${mockHref('DS-002', { id: i.mergedInto, stare: 'fuzionata' })}">Mergi la #${i.mergedInto} ${ic('i-chevron')}</a></section>`;
       if (S.role === 'vizitator') return `<section class="panel" aria-labelledby="act-h"><h2 class="sec" id="act-h">Te afectează și pe tine?</h2>${count}
-        <a class="btn btn-primary btn-block" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să votezi și să comentezi</a></section>`;
+        <a class="btn btn-primary btn-block" href="${mockHref('DS-007', { din: 'DS-002', id: i.id })}">${ic('i-login')}Intră în cont ca să votezi și să comentezi</a></section>`;
       const follow = `<button class="btn btn-secondary btn-toggle btn-block" data-act="follow" aria-pressed="${S.following}" ${S.role === 'neconfirmat' ? 'disabled' : ''}>${ic(S.role === 'neconfirmat' ? 'i-lock' : S.following ? 'i-rezolvata' : 'i-bell')}${S.following ? 'Urmărești' : 'Urmărește'}</button>`;
       const followHint = `<p class="hint">${S.following ? 'Primești un email când se schimbă statusul.' : 'Urmărește ca să primești un email când se schimbă statusul.'}</p>`;
       // D-012: Operators and Admins neither vote nor follow; they see only the number of people affected and track sesizări from DS-004
@@ -396,7 +396,7 @@
       const empty = `<div class="msg msg-empty"><span class="ico">${ic('i-comment', 'i-lg')}</span><div class="msg-title">Niciun comentariu încă</div>
           <p class="muted">${canAct() ? 'Aici apar comentariile vecinilor și ale operatorului. Scrie primul comentariu.' : 'Aici apar comentariile vecinilor și ale operatorului.'}</p></div>`;
       let form = '';
-      if (S.role === 'vizitator') form = `<p class="hint"><a href="${mockHref('DS-007')}">Intră în cont</a> ca să votezi și să comentezi.</p>`;
+      if (S.role === 'vizitator') form = `<p class="hint"><a href="${mockHref('DS-007', { din: 'DS-002', id: i.id })}">Intră în cont</a> ca să votezi și să comentezi.</p>`;
       else if (S.role === 'neconfirmat') form = `<p class="hint">${ic('i-lock')} Confirmă-ți emailul ca să poți comenta.</p>`;
       else form = `<div class="form"><label for="c-text">Comentariul tău</label>
           <textarea class="textarea" id="c-text" placeholder="Scrie ce ai observat" ${S.draftError ? 'aria-invalid="true" aria-describedby="c-err"' : ''}>${S.draft}</textarea>

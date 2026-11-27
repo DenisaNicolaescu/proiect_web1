@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-005 · Statistici publice (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, badges, messages: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-005 only. Tokens and shared parts: shared.css */
+    .wrap { display: grid; gap: var(--space-6); padding: var(--space-4); align-content: start; }
+    .frame[data-size="desktop"] .wrap { padding: var(--space-8); gap: var(--space-8); }
+    .title { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+    .sub { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); margin-top: var(--space-1); }
+    .sec { font-size: var(--text-lg); line-height: var(--lh-lg); font-weight: 600; margin-bottom: var(--space-3); }
+    .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+
+    /* KPI tiles: label, figure (--text-2xl, tabular), what it is computed from */
+    .kpis { display: grid; gap: var(--space-3); grid-template-columns: 1fr 1fr; }
+    .frame[data-size="desktop"] .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+    .kpi { display: grid; gap: var(--space-2); align-content: start; padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface);
+      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); min-width: 0; }
+    .kpi-label { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 600; }
+    .kpi-label .i { margin-top: calc(var(--space-1) / 2); color: var(--color-text-muted); }
+    .kpi-fig { font-size: var(--text-2xl); line-height: var(--lh-2xl); font-weight: 700; font-variant-numeric: var(--font-numeric); overflow-wrap: anywhere; }
+    .kpi-fig small { font-size: var(--text-base); line-height: var(--lh-base); font-weight: 500; }
+    .kpi-from { font-size: var(--text-xs); line-height: var(--lh-xs); color: var(--color-text-muted); }
+    .kpi-none { font-size: var(--text-base); line-height: var(--lh-base); font-weight: 600; color: var(--color-text-muted); }
+
+    /* Status counts: badges (icon + name + color) with the number, never color alone */
+    .statuses { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-3); list-style: none; }
+    .statuses li { display: inline-flex; align-items: center; gap: var(--space-2); font-variant-numeric: var(--font-numeric); font-weight: 600; }
+
+    /* Resolved share: one series, one hue (the rezolvată status), the value always written next to it */
+    .meter { display: grid; gap: var(--space-1); min-width: 0; }
+    .bar { height: var(--space-2); border-radius: var(--radius-full); background: var(--color-border); overflow: hidden; }
+    .bar span { display: block; height: 100%; background: var(--color-status-rezolvata); border-radius: var(--radius-full); }
+    .val { font-variant-numeric: var(--font-numeric); }
+    .val strong { font-weight: 600; }
+
+    /* Categories: cards on a phone, a table on a desktop */
+    .cats { display: grid; gap: var(--space-3); list-style: none; }
+    .cat { display: grid; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); border: 1px solid var(--color-border); min-width: 0; }
+    .cat-name { font-weight: 600; overflow-wrap: anywhere; }
+    .cat-meta { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .cat dl { display: grid; gap: var(--space-2); }
+    .cat dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-2); align-items: start; }
+    .cat dt { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .cat dd { font-size: var(--text-sm); line-height: var(--lh-sm); min-width: 0; }
+    .few { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+    .few .i { margin-top: calc(var(--space-1) / 2); }
+    .table-box { border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; background: var(--color-surface); }
+    table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); line-height: var(--lh-sm); }
+    caption { text-align: left; padding: var(--space-3) var(--space-4); font-weight: 600; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); }
+    th, td { text-align: left; vertical-align: top; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border-subtle); }
+    thead th { font-weight: 600; color: var(--color-text-muted); background: var(--color-surface-elevated); }
+    tbody th { font-weight: 600; }
+    tbody tr:last-child > * { border-bottom: 0; }
+    td.n { font-variant-numeric: var(--font-numeric); }
+    .zero { display: grid; gap: var(--space-2); padding: var(--space-4); border-radius: var(--radius-lg); border: 1px dashed var(--color-border-input); background: var(--color-surface); }
+    .zero p { font-size: var(--text-sm); line-height: var(--lh-sm); }
+    .how { padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface); border: 1px solid var(--color-border); }
+    .how summary { min-height: var(--size-touch); display: flex; align-items: center; gap: var(--space-2); font-weight: 600; cursor: pointer; }
+    .how ul { padding-left: var(--space-4); display: grid; gap: var(--space-2); font-size: var(--text-sm); line-height: var(--lh-sm); margin-top: var(--space-2); }
+    .sk-block { background: var(--color-surface-elevated); border-radius: var(--radius-lg); }
+    .msg .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       Every figure is COMPUTED here from SEED (seed.js), never written by hand (brief → Definition of Done):
+       status, sla and resolvedOn are example values in seed.js; category, the report date (15 nov 2026) and the count
+       come from Field.md. Today in the mocks = 25 nov 2026. Definitions (D-016, from Q-026):
+       - % rezolvate = rezolvate / all sesizări except fuzionate (respinse count in the total); a fuzionată counts once, through its primary.
+       - Termen depășit = open sesizări (nouă, confirmată, în lucru) whose termen is over now (seed.js → sla.over).
+       - Rezolvate în termen = rezolvate whose resolution time is at most the category's SLA (D-004), in working days.
+       - Resolution time = working days from the report to the last resolution (D-015).
+       - A category with 0–2 sesizări shows "Prea puține date" instead of figures. */
+    const STATES = [['default', 'Succes (cu date)'], ['empty', 'Gol'], ['loading', 'Încărcare'], ['error', 'Eroare'], ['long', 'Text lung']];
+    const ROLES = ['vizitator', 'cetatean', 'neconfirmat', 'operator', 'admin'];
+    const S = mockState({ state: 'default', role: 'vizitator', size: 'phone', theme: 'light' }, { roles: ROLES, states: STATES.map(x => x[0]) });
+    const TODAY = '2026-11-25';
+    const MIN_N = 3; // fewer than 3 sesizări (0–2): "Prea puține date"
+    const OPEN = ['noua', 'confirmata', 'in-lucru'];
+    const phone = () => S.size === 'phone';
+
+    const reportedOn = i => parseRo(i.date || SEED_DATE);
+
+    /* ── The statistics ─────────────────────────────────────────────────── */
+    function stats(list) {
+      const all = list.filter(x => x.st !== 'fuzionata');
+      const resolved = all.filter(x => x.st === 'rezolvata');
+      const open = all.filter(x => OPEN.includes(x.st));
+      const dated = resolved.filter(x => isIsoDate(x.resolvedOn)), undated = resolved.filter(x => !isIsoDate(x.resolvedOn));
+      const days = dated.map(x => ({ x, d: workingDays(reportedOn(x), x.resolvedOn) }));
+      const byStatus = Object.fromEntries(Object.keys(STATUS).map(st => [st, all.filter(x => x.st === st).length]));
+      return { n: all.length, resolved: resolved.length, open: open.length, over: open.filter(x => x.sla && x.sla.over).length,
+        avg: days.length ? days.reduce((s, v) => s + v.d, 0) / days.length : null, timed: days.length, undated: undated.map(x => x.id),
+        inTime: days.filter(v => v.d <= slaDays(v.x.cat)).length, byStatus };
+    }
+    /* Text lung: the seed repeated 57 times (1.254 sesizări), to test big numbers; still computed, marked "exemplu" */
+    const data = () => S.state === 'long' ? Array.from({ length: 57 }, (_, k) => SEED.map(x => ({ ...x, id: x.id + 100 * k }))).flat() : S.state === 'empty' ? [] : SEED;
+    const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+    const dec = v => v.toLocaleString('ro-RO', { maximumFractionDigits: 1 });
+    const zileL = v => Number.isInteger(v) ? zile(v) : `${dec(v)} zile lucrătoare`;
+    const sesizari = n => plural(n, 'sesizare', 'sesizări');
+    const rezolvate = n => n === 1 ? '1 sesizare rezolvată' : `${fmt(n)} ${de(n)}sesizări rezolvate`;
+    const deschise = n => n === 1 ? '1 sesizare deschisă' : `${fmt(n)} ${de(n)}sesizări deschise`;
+    const ex = () => S.state === 'long' ? ` ${exTag()}` : '';
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    function meter(a, b) {
+      const p = pct(a, b);
+      return `<div class="meter"><span class="val"><strong>${p}%</strong> · ${fmt(a)} din ${sesizari(b)}</span>
+        <div class="bar" role="img" aria-label="Rezolvate: ${fmt(a)} din ${sesizari(b)}, ${p}%"><span style="width: ${p}%"></span></div></div>`;
+    }
+    const avgText = s => s.avg === null ? '<span class="muted">Nicio sesizare rezolvată încă</span>' : `<strong>${zileL(s.avg)}</strong> <span class="muted">· din ${rezolvate(s.timed)}</span>`;
+    const overText = s => s.open === 0 ? '<span class="muted">Nicio sesizare deschisă</span>'
+      : s.over ? `<span class="badge badge-danger">${ic('i-alert')}Termen depășit: ${fmt(s.over)}</span> <span class="muted">din ${deschise(s.open)}</span>`
+      : `<span class="sla-ok">${ic('i-clock')}Niciuna</span> <span class="muted">din ${deschise(s.open)}</span>`;
+    const inTimeText = s => s.timed === 0 ? '<span class="muted">Nicio sesizare rezolvată încă</span>' : `<strong class="val">${fmt(s.inTime)}</strong> <span class="muted">din ${rezolvate(s.timed)}</span>`;
+
+    function kpis(s) {
+      const tile = (icon, label, fig, from) => `<div class="kpi"><div class="kpi-label">${ic(icon)}<span>${label}</span></div>${fig}<div class="kpi-from">${from}</div></div>`;
+      return `<section aria-labelledby="kpi-h"><h2 class="sec" id="kpi-h">În tot cartierul</h2><div class="kpis">
+        ${tile('i-clock', 'Timp mediu de rezolvare', s.avg === null ? '<div class="kpi-none">Nicio rezolvare încă</div>' : `<div class="kpi-fig">${dec(s.avg)} <small>zile lucrătoare</small></div>`, s.avg === null ? 'Apare după prima sesizare rezolvată.' : `Din ${rezolvate(s.timed)}${ex()}`)}
+        ${tile('i-rezolvata', 'Rezolvate', `<div class="kpi-fig">${pct(s.resolved, s.n)}%</div>`, `${fmt(s.resolved)} din ${sesizari(s.n)}${ex()}`)}
+        ${tile('i-alert', 'Cu termen depășit acum', `<div class="kpi-fig">${fmt(s.over)}</div>`, `Din ${deschise(s.open)}${ex()}`)}
+        ${tile('i-check-square', 'Rezolvate în termen', s.timed ? `<div class="kpi-fig">${fmt(s.inTime)} <small>din ${fmt(s.timed)}</small></div>` : '<div class="kpi-none">Nicio rezolvare încă</div>', s.timed ? `Rezolvate în termenul categoriei${ex()}` : 'Apare după prima sesizare rezolvată.')}
+      </div></section>`;
+    }
+
+    function statusRow(s) {
+      return `<section aria-labelledby="st-h"><h2 class="sec" id="st-h">Pe status</h2>
+        <ul class="statuses">${Object.keys(STATUS).map(st => `<li>${statusBadge(st)}<span>${fmt(s.byStatus[st])}</span></li>`).join('')}</ul>
+        <p class="hint" style="margin-top: var(--space-2)">Sesizările unite cu altele se numără o singură dată, la sesizarea în care au fost unite.</p></section>`;
+    }
+
+    function categories(list) {
+      const rows = CATEGORY_TREE.map((c, k) => ({ c, k, s: stats(list.filter(x => x.cat === c.name)) }))
+        .sort((a, b) => b.s.n - a.s.n || a.k - b.k);
+      const withData = rows.filter(r => r.s.n > 0), none = rows.filter(r => r.s.n === 0);
+      const few = r => r.s.n < MIN_N;
+      const fewText = r => `<span class="few">${ic('i-hourglass')}<span>Prea puține date: ${sesizari(r.s.n)}. Cifrele apar de la ${MIN_N} sesizări.</span></span>`;
+      const term = c => `Termen: ${zile(c.sla)}`;
+      let body;
+      if (phone()) {
+        body = `<ul class="cats">${withData.map(r => `<li class="cat"><div><div class="cat-name">${r.c.name}</div><div class="cat-meta">${sesizari(r.s.n)}${ex()} · ${term(r.c)}</div></div>
+          ${few(r) ? fewText(r) : `<dl>
+            <div><dt>Rezolvate</dt><dd>${meter(r.s.resolved, r.s.n)}</dd></div>
+            <div><dt>Timp mediu de rezolvare</dt><dd>${avgText(r.s)}</dd></div>
+            <div><dt>Cu termen depășit acum</dt><dd>${overText(r.s)}</dd></div>
+            <div><dt>Rezolvate în termen</dt><dd>${inTimeText(r.s)}</dd></div></dl>`}</li>`).join('')}</ul>`;
+      } else {
+        body = `<div class="table-box"><table><caption>Calculat din ${sesizari(stats(list).n)}${ex()}; categoriile cu cele mai multe sesizări primele.</caption>
+          <thead><tr><th scope="col">Categorie</th><th scope="col">Sesizări</th><th scope="col">Rezolvate</th><th scope="col">Timp mediu de rezolvare</th><th scope="col">Cu termen depășit acum</th><th scope="col">Rezolvate în termen</th></tr></thead>
+          <tbody>${withData.map(r => `<tr><th scope="row">${r.c.name}<div class="cat-meta">${term(r.c)}</div></th><td class="n">${fmt(r.s.n)}</td>
+            ${few(r) ? `<td colspan="4">${fewText(r)}</td>` : `<td>${meter(r.s.resolved, r.s.n)}</td><td>${avgText(r.s)}</td><td>${overText(r.s)}</td><td>${inTimeText(r.s)}</td>`}</tr>`).join('')}</tbody></table></div>`;
+      }
+      const zero = none.length ? `<div class="zero"><p><strong>Fără sesizări încă (${none.length} categorii)</strong>: prea puține date pentru statistici.</p>
+        <p class="muted">${none.map(r => r.c.name).join(' · ')}</p></div>` : '';
+      return `<section aria-labelledby="cat-h"><h2 class="sec" id="cat-h">Pe categorii</h2><div style="display: grid; gap: var(--space-3)">${body}${zero}</div></section>`;
+    }
+
+    function how() {
+      return `<details class="how"><summary>${ic('i-chart')}Cum calculăm cifrele</summary><ul>
+        <li><strong>Timpul de rezolvare</strong> se numără în zile lucrătoare, fără weekend și fără sărbătorile legale, de la raportare până la ultima rezolvare. Dacă o sesizare a fost redeschisă și rezolvată din nou, contează a doua rezolvare.</li>
+        <li><strong>Rezolvate</strong>: din toate sesizările, inclusiv cele respinse. Sesizările unite cu altele se numără o singură dată.</li>
+        <li><strong>Cu termen depășit acum</strong>: sesizările încă deschise (nouă, confirmată, în lucru) care au trecut de termenul categoriei.</li>
+        <li><strong>Rezolvate în termen</strong>: sesizările rezolvate în cel mult termenul categoriei.</li>
+        <li>O categorie cu mai puțin de ${MIN_N} sesizări nu are cifre: ar fi prea puține ca să spună ceva.</li></ul></details>`;
+    }
+
+    function page() {
+      const head = `<div><h1 class="title">Statistici publice</h1>`;
+      if (S.state === 'loading') {
+        const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="display:block; width:${w}; height:${h}"></span>`;
+        return `${head}<p class="sub">Cartierul Tineretului, Sibiu</p></div><div class="loading-note" role="status">${ic('i-hourglass')}Se calculează statisticile…</div>
+          <div class="kpis" aria-hidden="true">${[1, 2, 3, 4].map(() => `<div class="kpi">${sk('60%')}${sk('50%', 'var(--lh-2xl)')}${sk('80%')}</div>`).join('')}</div>
+          <div aria-hidden="true">${sk('30%', 'var(--lh-lg)')}</div>${[1, 2, 3].map(() => `<div class="sk-block" aria-hidden="true" style="height: calc(var(--space-8) * ${phone() ? 5 : 2})"></div>`).join('')}`;
+      }
+      if (S.state === 'error') return `${head}<p class="sub">Cartierul Tineretului, Sibiu</p></div>
+        <div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Nu am putut încărca statisticile</div>
+          <p>Verifică-ți conexiunea la internet și încearcă din nou. Harta și lista merg în continuare.</p>
+          <div class="btns"><button class="btn btn-primary" data-act="retry">${ic('i-refresh')}Încearcă din nou</button><a class="btn btn-secondary" href="${mockHref('DS-001')}">${ic('i-map')}Mergi la hartă</a></div></div>`;
+      const list = data(), s = stats(list);
+      if (!s.n) {
+        const report = signedInRole(S.role) ? `<a class="btn btn-primary" href="${mockHref('DS-003')}">${ic('i-plus')}Raportează o problemă</a>`
+          : `<a class="btn btn-primary" href="${mockHref('DS-007', { din: 'DS-003' })}">${ic('i-login')}Intră în cont ca să raportezi</a>`;
+        return `${head}<p class="sub">Cartierul Tineretului, Sibiu</p></div>
+          <div class="msg msg-empty"><span class="ico">${ic('i-chart', 'i-lg')}</span><div class="msg-title">Încă nu sunt sesizări</div>
+            <p class="muted">Aici vei vedea cât de repede se rezolvă problemele din cartier, pe categorii, după primele sesizări.</p>
+            <div class="btns">${report}<a class="btn btn-secondary" href="${mockHref('DS-001')}">${ic('i-map')}Mergi la hartă</a></div></div>`;
+      }
+      const missing = s.undated.length ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Date incomplete în seed.js (mock)</div>
+          <p>${s.undated.map(id => `#${id}`).join(', ')} ${s.undated.length === 1 ? 'e rezolvată, dar nu are' : 'sunt rezolvate, dar nu au'} data rezolvării (<code>resolvedOn</code>), așa că nu intră în timpul mediu și în „Rezolvate în termen”.
+          Dacă seed.js are datele, browserul a păstrat o variantă veche: reîncarcă fără cache (Ctrl+Shift+R).</p></div>` : '';
+      return `${head}<p class="sub">Calculate din ${sesizari(s.n)} din Cartierul Tineretului${ex()}, la zi: 25 nov 2026 ${exTag()}.</p></div>
+        ${missing}${kpis(s)}${statusRow(s)}${categories(list)}${how()}`;
+    }
+
+    function content() {
+      return `<div class="app">${appbar(S, { current: 'DS-005', brandH1: false })}<div class="page"><div class="wrap">${page()}</div></div></div>`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      default: 'Cifrele calculate din cele 22 de sesizări din seed.js. Străzi și iluminat (12), Trafic auto (6) și Parcuri (3) au cifre; Animale (1) are „Prea puține date”; cele 10 categorii fără sesizări sunt grupate dedesubt.',
+      empty: 'Nicio sesizare: ecranul spune ce va apărea și oferă raportarea (vizitatorul: „Intră în cont ca să raportezi”, înapoi la raportare) și harta.',
+      loading: 'Scheleturi cu forma finală (patru cifre, apoi categoriile).',
+      error: 'Statisticile nu s-au încărcat: mesajul spune ce să faci; „Încearcă din nou” și harta.',
+      long: 'Numere mari: seed-ul repetat de 57 de ori (1.254 de sesizări), tot calculat, marcat „exemplu”. Procentele rămân aceleași; numerele și numele lungi de categorii se rup pe rânduri.',
+    };
+    function notes() {
+      const s = stats(SEED);
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Ce calculează mock-ul din seed.js</h3>
+        <ul><li>${s.n} sesizări (fără fuzionate): ${s.resolved} rezolvate (#20, #18), ${s.byStatus.respinsa} respinsă, ${s.open} deschise, din care ${s.over} cu termen depășit.</li>
+          <li>Timpul de rezolvare: 15 nov → 23 nov 2026 (data din cronologia DS-002, acum câmpul <code>resolvedOn</code> din seed.js) = ${workingDays('2026-11-15', '2026-11-23')} zile lucrătoare.</li>
+          <li>Rezolvate în termen: ${s.inTime} din ${s.resolved}: #20 (termen 5) și #18 (termen 3) s-au rezolvat în 6 zile lucrătoare.</li>
+          <li>Testul: <code>node --test docs/design/mocks/tests/</code> verifică funcția de zile lucrătoare pe #18 și #20 (6 zile, peste termenele de 3 și 5) și cifrele de mai sus.</li>
+          <li>Verificare: 15 → 25 nov 2026 = ${workingDays('2026-11-15', TODAY)} zile lucrătoare, ca în seed.js (Străzi și iluminat: 30 − 8 = 22 rămase).</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Definițiile din D-016: % rezolvate din toate (fără fuzionate, cu respinsele); termen depășit = deschise acum; plus „Rezolvate în termen”.</li>
+          <li>D-015: timpul de rezolvare, de la raportare până la ultima rezolvare. D-004: zile lucrătoare, cu Paștele ortodox și Rusaliile.</li>
+          <li>Fiecare cifră spune din câte sesizări e calculată. Categoriile cu 0–2 sesizări au „Prea puține date”.</li>
+          <li>Graficul: o singură serie (bara „Rezolvate”, în culoarea statusului rezolvată), cu procentul și numărul scrise lângă bară. Statusurile apar ca badge-uri cu iconiță, nume și număr. Un grafic cu toate cele cinci culori de status nu trece verificarea pentru daltonism în dark (nouă și confirmată, ΔE 10,7), deci nu l-am folosit.</li>
+          <li>Vizitatorul și cetățeanul văd „termen”, niciodată „SLA” (CONTEXT.md); pagina e publică, așa că operatorul vede tot „termen”. Roșul apare doar la „Termen depășit” și la eroare.</li>
+          <li>Fără export aici: exportul e în DS-001.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Lățimea barei (procentul) și ramele de dispozitiv.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: categoria și data raportării vin din Field.md; statusurile, termenele depășite și data rezolvării sunt exemple din seed.js (azi = 25 nov 2026). Aplicația calculează aceleași cifre din baza de date.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      syncUrl(S);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = content();
+      document.getElementById('notes').innerHTML = notes();
+    }
+
+    let timer;
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) { S[ctl.parentElement.dataset.ctl] = ctl.dataset.v; clearTimeout(timer); return render(); }
+      const act = e.target.closest('[data-act]');
+      if (act && act.dataset.act === 'retry') { S.state = 'loading'; timer = setTimeout(() => { S.state = 'default'; render(); }, 1200); render(); }
+    });
+
+    mockBar({ id: 'DS-005', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

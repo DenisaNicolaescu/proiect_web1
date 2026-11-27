@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-007 · Intră în cont și înregistrare (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, messages, auth form: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* DS-007 only. Tokens and shared parts (incl. the auth form): shared.css */
+    .msg .btns { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    /* "Bine ai revenit": a short message at the top of the screen you went back to */
+    .back { position: relative; }
+    .toast { position: sticky; top: var(--space-3); z-index: 2; margin: var(--space-3) var(--space-4) 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); border-radius: var(--radius-lg);
+      background: var(--color-surface-elevated); border: 1px solid var(--color-success); box-shadow: var(--shadow-md); color: var(--color-text); }
+    .frame[data-size="desktop"] .toast { width: calc(var(--space-8) * 13); margin: var(--space-4) auto 0; }
+    .toast-ico { color: var(--color-success); display: grid; }
+    .toast-text { display: grid; font-size: var(--text-sm); line-height: var(--lh-sm); overflow-wrap: anywhere; }
+    .back-note { padding: 0 var(--space-4) var(--space-4); font-size: var(--text-sm); line-height: var(--lh-sm); }
+  </style>
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       No Field.md data here: the name and the email are example values. ?din=<DS-id> (and id for DS-002): where the
+       person goes back to after signing in (authReturn() in shared.js). Values from the owner's answer (D-016):
+       password at least 8 characters and not a very common one; 5 wrong attempts in 10 minutes → wait 10 minutes;
+       confirmation link valid 24 hours, a new link cancels the old one; resend once every 60 seconds. */
+    const STATES = [['login', 'Intră în cont'], ['register', 'Creează cont'], ['gol', 'Eroare: câmpuri goale'], ['gresit', 'Eroare: date greșite'],
+      ['folosit', 'Eroare: email folosit'], ['slaba', 'Eroare: parolă slabă'], ['ratelimit', 'Prea multe încercări'], ['loading', 'Încărcare'],
+      ['error', 'Eroare'], ['verifica', 'Verifică-ți emailul'], ['schimba', 'Schimbă adresa'], ['expirat', 'Link expirat'], ['confirmat', 'Email confirmat'],
+      ['success', 'Succes: înapoi, cu mesaj'], ['neconfirmat', 'Succes, email neconfirmat'], ['long', 'Text lung']];
+    const ROLES = ['vizitator'];
+    const S = mockState({ state: 'login', role: 'vizitator', size: 'phone', theme: 'light' }, { roles: ROLES, states: STATES.map(x => x[0]) });
+    const RET = authReturn();
+    const EX = { name: 'Ana Popescu', email: 'ana.popescu@exemplu.ro', newEmail: 'ana.p@exemplu.ro',
+      longName: 'Maria-Magdalena Constantinescu-Dumitrescu', longEmail: 'maria-magdalena.constantinescu-dumitrescu@asociatia-proprietarilor-tineretului.ro' };
+    const REGISTER = ['register', 'folosit', 'slaba'];
+    const NO_FORM = ['verifica', 'schimba', 'expirat', 'confirmat', 'long'];
+    const BACK = ['success', 'neconfirmat']; // no screen of its own: back where you were, with a short message
+    S.resent = false; S.showPw = false; S.changed = false;
+    S.busyMode = 'login'; // the form that was sent when the state is 'loading'
+    const mode = () => REGISTER.includes(S.state) || (S.state === 'loading' && S.busyMode === 'register') ? 'register' : 'login';
+    const phone = () => S.size === 'phone';
+    const busy = () => S.state === 'loading';
+    const email = () => S.state === 'long' ? EX.longEmail : S.changed ? EX.newEmail : EX.email;
+    const firstName = () => EX.name.split(/\s+/)[0];
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    const returnNote = () => `<p class="return-note">${ic('i-back')}<span>După ce intri, te întorci ${RET.label.startsWith('Înapoi') ? `la <strong>${RET.label.replace(/^Înapoi la /, '')}</strong>` : 'unde erai'}.</span></p>`;
+
+    function field({ id, label, type = 'text', value = '', auto, hint, error, top = '' }) {
+      const desc = error ? `${id}-err` : hint ? `${id}-h` : '';
+      const input = `<input class="input" id="${id}" name="${id}" type="${type}" value="${value}" autocomplete="${auto}" ${type === 'email' ? 'inputmode="email" spellcheck="false"' : ''}
+        ${error ? 'aria-invalid="true"' : ''} ${desc ? `aria-describedby="${desc}"` : ''} ${busy() || S.state === 'ratelimit' ? 'disabled' : ''}>`;
+      const pw = type === 'password' || id.startsWith('pw');
+      const box = pw ? `<div class="pw">${input.replace(`type="${type}"`, `type="${S.showPw ? 'text' : 'password'}"`)}
+          <button type="button" class="btn btn-secondary btn-sm" data-act="showpw" aria-pressed="${S.showPw}" aria-controls="${id}" aria-label="Arată parola">${ic('i-confirmata')}${S.showPw ? 'Ascunde' : 'Arată'}</button></div>` : input;
+      return `<div class="field"><div class="field-top"><label for="${id}">${label}</label>${top}</div>${box}
+        ${error ? `<p class="field-error" id="${id}-err">${ic('i-alert')}<span>${error}</span></p>` : hint ? `<p class="hint" id="${id}-h">${hint}</p>` : ''}</div>`;
+    }
+
+    function tabs() {
+      const t = (m, label) => `<button type="button" role="tab" data-act="tab" data-v="${m}" aria-selected="${mode() === m}" ${busy() ? 'disabled' : ''}>${label}</button>`;
+      return `<div class="auth-tabs" role="tablist" aria-label="Ai deja cont?">${t('login', 'Intră în cont')}${t('register', 'Creează cont')}</div>`;
+    }
+
+    function loginForm() {
+      const st = S.state, empty = st === 'gol';
+      const forgot = `<a class="btn-link" href="${mockHref('DS-008', RET.params)}">Am uitat parola</a>`;
+      const top = st === 'gresit' ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Emailul sau parola nu se potrivesc</div>
+          <p>Verifică-le și încearcă din nou. Dacă nu mai știi parola, <a href="${mockHref('DS-008', RET.params)}">alege una nouă</a>.</p>
+          <p>După 5 încercări greșite în 10 minute, va trebui să aștepți 10 minute.</p></div>`
+        : st === 'ratelimit' ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-lock')}Prea multe încercări</div>
+          <p>Ai încercat de 5 ori în 10 minute cu date greșite, așa că am oprit autentificarea pentru 10 minute. Așa îți protejăm contul.</p>
+          <p>Încearcă din nou peste 10 minute sau <a href="${mockHref('DS-008', RET.params)}">alege o parolă nouă</a>.</p></div>`
+        : st === 'error' ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Nu am putut verifica datele</div>
+          <p>Verifică-ți conexiunea la internet și încearcă din nou. Ce ai scris a rămas în formular.</p></div>` : '';
+      const button = busy() ? `<button class="btn btn-primary btn-block" disabled aria-busy="true">${ic('i-hourglass')}Se verifică…</button>`
+        : st === 'ratelimit' ? `<button class="btn btn-primary btn-block" disabled>${ic('i-lock')}Încearcă din nou peste 10 minute</button>`
+        : `<button class="btn btn-primary btn-block" data-act="submit">${ic(st === 'error' ? 'i-refresh' : 'i-login')}${st === 'error' ? 'Încearcă din nou' : 'Intră în cont'}</button>`;
+      return `${top}<form class="auth-form" novalidate onsubmit="return false" ${busy() ? 'aria-busy="true"' : ''}>
+        ${field({ id: 'email', label: 'Email', type: 'email', auto: 'email', value: empty ? '' : email(), error: empty && 'Scrie adresa de email cu care ți-ai făcut contul.' })}
+        ${field({ id: 'pw', label: 'Parola', type: 'password', auto: 'current-password', value: empty || st === 'gresit' ? '' : 'parola-exemplu', top: forgot, error: empty && 'Scrie parola.' })}
+        ${button}</form>`;
+    }
+
+    function registerForm() {
+      const st = S.state;
+      const used = st === 'folosit' && `Există deja un cont cu adresa asta: o adresă poate avea un singur cont.
+        <button type="button" class="btn-link" data-act="tab" data-v="login">Intră în cont</button> sau <a class="btn-link" href="${mockHref('DS-008', RET.params)}">alege o parolă nouă</a>.`;
+      const weak = st === 'slaba' && 'Parola are doar 6 caractere. Alege una de cel puțin 8.';
+      return `<form class="auth-form" novalidate onsubmit="return false" ${busy() ? 'aria-busy="true"' : ''}>
+        ${field({ id: 'name', label: 'Nume', auto: 'name', value: EX.name, hint: 'Apare la sesizările și comentariile tale. Poți folosi doar prenumele și inițiala, de ex. „Ana P.”. Poți raporta și anonim.' })}
+        ${field({ id: 'email', label: 'Email', type: 'email', auto: 'email', value: email(), error: used, hint: 'Îți trimitem un link ca să-ți confirmi adresa. O adresă poate avea un singur cont.' })}
+        ${field({ id: 'pw-new', label: 'Parola', type: 'password', auto: 'new-password', value: st === 'slaba' ? 'sibiu1' : 'parola-exemplu', error: weak,
+          hint: 'Cel puțin 8 caractere. Nu folosi o parolă foarte des întâlnită, ca „12345678”.' })}
+        <div class="hp" aria-hidden="true"><label>Nu completa acest câmp<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        ${busy() ? `<button class="btn btn-primary btn-block" disabled aria-busy="true">${ic('i-hourglass')}Se creează contul…</button>`
+          : `<button class="btn btn-primary btn-block" data-act="submit">${ic('i-user')}Creează contul</button>`}</form>`;
+    }
+
+    /* States after the form: the email confirmation (D-017) and the return to where you were */
+    const resendBlock = () => S.resent
+      ? `<div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Ți-am trimis din nou emailul</div>
+          <p>Linkul vechi nu mai e valabil: deschide-l pe cel nou. Poți cere altul peste 60 de secunde.</p></div>
+        <button class="btn btn-secondary btn-block" disabled>${ic('i-hourglass')}Poți retrimite peste 60 de secunde</button>`
+      : `<button class="btn btn-secondary btn-block" data-act="resend">${ic('i-refresh')}Retrimite emailul</button>`;
+
+    function result() {
+      const st = S.state;
+      const head = (icon, cls, title, sub) => `<span class="auth-ico ${cls}">${ic(icon, 'i-lg')}</span><h1 class="auth-title">${title}</h1>${sub ? `<p class="auth-sub">${sub}</p>` : ''}`;
+      if (st === 'verifica' || st === 'long') return `${head('i-mail', '', 'Verifică-ți emailul', `Ți-am trimis un link de confirmare la <strong>${email()}</strong>. Deschide-l în cel mult 24 de ore.`)}
+        <p>Până atunci ești în cont, dar nu poți raporta, vota, comenta sau urmări sesizări.</p>
+        ${S.changed ? `<div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Am schimbat adresa</div>
+          <p>Linkul trimis la adresa veche nu mai e valabil, iar adresa veche e din nou liberă.</p></div>` : ''}
+        <p class="hint">Nu găsești emailul? Uită-te și în Spam. Ai greșit adresa? Schimb-o mai jos.</p>
+        <div class="btns">${resendBlock()}${changeButton()}<a class="btn btn-ghost btn-block" href="${RET.href('neconfirmat')}">Continuă fără confirmare</a></div>`;
+      if (st === 'schimba') return `${head('i-mail', '', 'Schimbă adresa', `Acum: <strong>${EX.email}</strong>. Contul nu e confirmat încă, așa că poți folosi altă adresă.`)}
+        <form class="auth-form" novalidate onsubmit="return false">
+          ${field({ id: 'email-new', label: 'Adresa nouă', type: 'email', auto: 'email', value: EX.newEmail,
+            hint: 'Îți trimitem acolo un link nou. Linkul trimis la adresa veche nu mai merge, iar adresa veche rămâne liberă pentru alt cont.' })}
+          <div class="btns"><button class="btn btn-primary btn-block" data-act="change">${ic('i-send')}Trimite linkul la adresa nouă</button>
+            <button type="button" class="btn btn-secondary btn-block" data-act="state" data-v="verifica">Renunță</button></div></form>`;
+      if (st === 'expirat') return `${head('i-clock', 'bad', 'Linkul de confirmare a expirat', 'Linkul e valabil 24 de ore, iar un link nou îl anulează pe cel vechi.')}
+        <p>Cere un link nou și deschide-l pe cel mai recent primit.</p>
+        <div class="btns">${S.resent ? resendBlock() : `<button class="btn btn-primary btn-block" data-act="resend">${ic('i-mail')}Trimite-mi un link nou</button>`}
+          ${changeButton()}<a class="btn btn-ghost btn-block" href="${mockHref('DS-001')}">Mergi la hartă</a></div>`;
+      if (st === 'confirmat') return `${head('i-rezolvata', 'ok', 'Emailul tău e confirmat', 'Mulțumim! Acum poți raporta, vota, comenta și urmări sesizări.')}
+        <div class="btns"><a class="btn btn-primary btn-block" href="${RET.href('cetatean')}">${ic('i-back')}${RET.label}</a></div>`;
+      return '';
+    }
+    const changeButton = () => `<button type="button" class="btn btn-secondary btn-block" data-act="state" data-v="schimba">${ic('i-mail')}Schimbă adresa</button>`;
+
+    /* After signing in: no screen of its own. The app goes straight back where you were (RET) and shows
+       "Bine ai revenit, <prenume>!", which closes by itself (--duration-message, 5 s, Q-028) or with ×. The mock draws the example
+       message over a sketch of that screen. */
+    function backView() {
+      const sk = (w, h = 'var(--space-3)') => `<span class="sk" style="display:block; width:${w}; height:${h}"></span>`;
+      const role = S.state === 'neconfirmat' ? 'neconfirmat' : 'cetatean';
+      const toast = `<div class="toast" role="status"><span class="toast-ico">${ic('i-rezolvata')}</span>
+          <div class="toast-text"><strong>Bine ai revenit, ${firstName()}!</strong>${role === 'neconfirmat' ? '<span>Confirmă-ți emailul ca să poți raporta, vota și comenta.</span>' : ''}</div>
+          <button class="btn btn-ghost btn-icon" data-act="toast-close" aria-label="Închide mesajul">${ic('i-x')}</button></div>`;
+      const origin = screen(RET.to);
+      const again = `<p class="back-note"><button class="btn btn-secondary btn-sm" data-act="toast-again">${ic('i-refresh')}Arată din nou mesajul</button> <span class="ex" title="Doar în mock">exemplu</span></p>`;
+      return `<div class="app">${appbar({ ...S, role }, { brandH1: false })}<div class="page back">${S.toast === false ? again : toast}
+        <div class="ghost"><h1 class="ghost-h">${origin.ro}${RET.to === 'DS-002' ? ` <span class="mono">#${RET.params.id}</span>` : ''}</h1>${sk('90%')}${sk('70%')}${sk('100%', 'calc(var(--space-8) * 4)')}${sk('60%')}</div>
+        <p class="back-note"><a href="${RET.href(role)}">Mergi la ecranul real: ${origin.ro} ${ic('i-chevron')}</a> <span class="ex" title="Doar în mock">exemplu</span></p></div></div>`;
+    }
+
+    function card() {
+      if (NO_FORM.includes(S.state)) return `<div class="auth-card" role="status">${result()}</div>`;
+      const reg = mode() === 'register';
+      return `<div class="auth-card"><h1 class="auth-title">${reg ? 'Creează-ți cont' : 'Intră în cont'}</h1>
+        <p class="auth-sub">${reg ? 'Cu un cont poți raporta, vota, comenta și urmări sesizările din Cartierul Tineretului.' : 'Ca să raportezi, să votezi, să comentezi și să urmărești sesizări.'}</p>
+        ${returnNote()}${tabs()}${reg ? registerForm() : loginForm()}</div>`;
+    }
+
+    function content() {
+      if (BACK.includes(S.state)) return backView();
+      return `<div class="app">${appbar(S, { current: 'DS-007', brandH1: false })}<div class="page"><div class="auth">${card()}</div></div></div>`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      login: 'Intrarea în cont: email și parolă, „Arată parola”, „Am uitat parola” (DS-008). Comutarea doar din cele două butoane de sus. Deasupra, unde te întorci după ce intri, din parametrul <code>din</code>.',
+      register: 'Înregistrarea: nume, email, parolă. Contul nou e mereu de cetățean; operatorii și adminii sunt numiți în DS-013. Câmpul-capcană (honeypot, D-006) e ascuns.',
+      gol: 'Ai apăsat „Intră în cont” cu câmpurile goale: fiecare câmp spune ce lipsește. Erorile apar doar după apăsare, ca în DS-003.',
+      gresit: 'Email sau parolă greșită: același mesaj în ambele cazuri, ca să nu aflăm dacă adresa are cont. Parola se golește, emailul rămâne.',
+      folosit: 'Adresa are deja un cont (D-017: o adresă, un singur cont). Mesajul oferă „Intră în cont” și „alege o parolă nouă”. Atenție: mesajul spune că adresa are cont, iar DS-008 nu spune asta (vezi notele).',
+      slaba: 'Parolă prea scurtă (exemplu: 6 caractere). Pentru o parolă foarte des folosită, mesajul e: „Parola asta e foarte des folosită și se ghicește ușor. Alege alta.”',
+      ratelimit: 'După 5 încercări greșite în 10 minute (pe email sau pe conexiune), autentificarea se oprește 10 minute. Câmpurile și butonul sunt blocate; „alege o parolă nouă” rămâne activ.',
+      loading: 'Se verifică datele: câmpurile și filele sunt blocate, butonul spune „Se verifică…”.',
+      error: 'Eroare de conexiune: nimic nu s-a schimbat, datele rămân în formular, butonul devine „Încearcă din nou”.',
+      verifica: 'După înregistrare (D-017): „Verifică-ți emailul”, cu „Retrimite emailul” (o dată la 60 de secunde; apasă-l ca să vezi starea), „Schimbă adresa” și „Continuă fără confirmare”, care te duce înapoi unde erai, cu contul neconfirmat.',
+      expirat: 'Ai deschis un link de confirmare mai vechi de 24 de ore sau anulat de unul mai nou: „Trimite-mi un link nou”.',
+      confirmat: 'Ai deschis linkul bun: emailul e confirmat, butonul te duce înapoi unde erai, ca cetățean.',
+      success: 'Fără ecran „Ai intrat în cont”: te întorci direct unde erai, ca cetățean, cu mesajul scurt „Bine ai revenit, Ana!” (prenumele din nume), care dispare singur sau cu ×. Mock-ul desenează mesajul peste o schiță a ecranului de întoarcere; linkul de jos deschide ecranul adevărat. Mesajul rămâne 5 secunde (<code>--duration-message</code>, Q-028), cu pauză cât timp e sub mouse sau are focus; × îl închide imediat. După ce dispare, „Arată din nou mesajul” (doar în mock) îl readuce.',
+      neconfirmat: 'La fel, cu un cont neconfirmat (D-017 permite intrarea): mesajul adaugă „Confirmă-ți emailul…”; ecranul de întoarcere are deja bannerul „Verifică-ți emailul” cu „Retrimite emailul”.',
+      schimba: '„Schimbă adresa”, cât timp contul nu e confirmat (în „Verifică-ți emailul” și „Link expirat”): adresa nouă primește un link nou, linkul vechi nu mai merge, iar adresa veche se eliberează. Dacă adresa nouă are deja cont, apare eroarea de la „Email folosit”. După trimitere: „Verifică-ți emailul” cu adresa nouă.',
+      long: 'Text lung: o adresă de email foarte lungă în „Verifică-ți emailul” se rupe pe rânduri. În câmpuri, textul lung derulează în interiorul câmpului.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Înapoi unde erai</h3>
+        <ul><li>Fiecare link spre DS-007 trimite <code>din</code> (și <code>id</code> pentru DS-002). Acum: <strong>${RET.label}</strong> (<code>${RET.to}</code>).</li>
+          <li>„Intră în cont ca să raportezi” (antet, DS-001, DS-003) duce înapoi la raportare; „Intră în cont ca să votezi” (DS-002) duce înapoi la sesizare.</li>
+          <li>Parametrul trece și prin DS-008: după o parolă nouă, intri în cont și te întorci tot acolo. Fără <code>din</code>: harta.</li>
+          <li>Probează: <a href="${mockHref('DS-007', { din: 'DS-003' })}">din DS-003</a> · <a href="${mockHref('DS-007', { din: 'DS-002', id: 14 })}">din DS-002 #14</a> · <a href="${mockHref('DS-007', { din: 'DS-005' })}">din DS-005</a>.</li></ul>
+        <h3>Reguli aplicate</h3>
+        <ul><li>D-017 (înlocuiește D-007): emailul se confirmă printr-un link; contul neconfirmat poate intra, dar nu poate raporta, vota, comenta sau urmări. O adresă, un singur cont. Cât timp contul nu e confirmat, adresa se poate schimba („Schimbă adresa”); adresa veche se eliberează.</li>
+          <li>Valorile din D-016: parola are cel puțin 8 caractere și nu e una foarte des folosită, fără reguli de majuscule sau simboluri; 5 încercări greșite în 10 minute → 10 minute de așteptare; linkul de confirmare e valabil 24 de ore, iar unul nou îl anulează pe cel vechi; retrimiterea, o dată la 60 de secunde.</li>
+          <li>D-006: câmpul-capcană (honeypot) la înregistrare. Fără CAPTCHA.</li>
+          <li>Câmpurile au <code>autocomplete</code> (email, current-password, new-password, name), ca managerul de parole să le completeze.</li>
+          <li>Rolul: ecranul e pentru vizitator. După intrare, linkul de întoarcere poartă rolul <code>cetatean</code> sau <code>neconfirmat</code>.</li></ul>
+        <h3>De verificat</h3>
+        <ul><li>„Email deja folosit” spune că adresa are cont; DS-008 și „date greșite” nu spun asta. Alternativa: aceeași pagină „Verifică-ți emailul” și un email „ai deja cont” trimis la adresă.</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv și bordurile de 1 px. Lățimea cardului pe desktop: <code>calc(var(--space-8) * 15)</code>.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: numele și adresele de email sunt exemple; nu intră în seed.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      syncUrl(S, RET.params);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = content();
+      document.getElementById('notes').innerHTML = notes();
+    }
+
+    let timer;
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        S[ctl.parentElement.dataset.ctl] = ctl.dataset.v;
+        if (ctl.parentElement.dataset.ctl === 'state') { clearTimeout(timer); S.resent = false; S.busyMode = 'login'; S.changed = false; S.toast = true; }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (!act) return;
+      const a = act.dataset.act;
+      if (a === 'tab') { S.state = act.dataset.v; S.resent = false; }
+      if (a === 'state') S.state = act.dataset.v;
+      if (a === 'change') { S.changed = true; S.resent = false; S.state = 'verifica'; }
+      if (a === 'toast-close') { S.toast = false; stopToast(); }
+      if (a === 'toast-again') S.toast = true;
+      if (a === 'showpw') S.showPw = !S.showPw;
+      if (a === 'resend') { S.resent = true; if (S.state === 'expirat') S.state = 'verifica'; }
+      if (a === 'submit') {
+        const reg = mode() === 'register';
+        S.busyMode = reg ? 'register' : 'login'; S.state = 'loading';
+        // after signing in, straight back where you were (the app shows "Bine ai revenit" there)
+        timer = setTimeout(() => { if (reg) { S.state = 'verifica'; render(); } else location.href = RET.href('cetatean'); }, 1200);
+      }
+      render();
+    });
+
+    /* The message closes by itself after --duration-message (5 s, DESIGN.md, Q-028); the countdown pauses while the
+       pointer is over it or it has focus; × closes it at once. */
+    let toastTimer, toastLeft, toastStart;
+    const toastMs = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-message')) * 1000;
+    function stopToast() { clearTimeout(toastTimer); toastTimer = null; }
+    function runToast() { stopToast(); toastStart = Date.now(); toastTimer = setTimeout(() => { S.toast = false; render(); }, toastLeft); }
+    function pauseToast() { if (toastTimer) { stopToast(); toastLeft -= Date.now() - toastStart; } }
+    function armToast() {
+      const t = document.querySelector('.toast');
+      if (!t) return stopToast();
+      toastLeft = toastMs();
+      const busy = () => t.matches(':hover') || t.contains(document.activeElement);
+      t.addEventListener('mouseenter', pauseToast); t.addEventListener('focusin', pauseToast);
+      t.addEventListener('mouseleave', () => { if (!busy()) runToast(); });
+      t.addEventListener('focusout', e => { if (!t.contains(e.relatedTarget) && !t.matches(':hover')) runToast(); });
+      runToast();
+    }
+    const renderBase = render;
+    render = function () { renderBase(); if (BACK.includes(S.state) && S.toast !== false) armToast(); else stopToast(); };
+
+    mockBar({ id: 'DS-007', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>

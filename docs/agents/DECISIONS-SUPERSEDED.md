@@ -11,6 +11,7 @@
 - D-003 · Cartierul Tineretului polygon boundary enforcement · _superseded-by D-009_
 - D-008 · Account roles are hierarchical · _superseded-by D-012_
 - D-013 · The pin is the source of the location; the street is a list, deduced from the pin · _superseded-by D-014_
+- D-007 · Email confirmation is mandatory at registration · _superseded-by D-017_
 
 ---
 
@@ -39,4 +40,13 @@
 - **Why:** A free-text street and the pin could disagree, which was confusing; a list deduced from the pin keeps them in step and can be checked. Tested on the 22 seed sesizări: the nearest street is the Field.md street for all of them, and at intersections the two streets are 3–6 m apart, hence the 10 m threshold.
 - **Rejected:** A free-text "Stradă sau reper" field (the Q-021 answer); reverse geocoding through an external service (Nominatim); the pin jumping to a street chosen from the list.
 - **Evidence:** User approval of the D-013 proposal and of points 1–5 (2026-11-26); Q-020; Q-021; `docs/design/strazi.geojson`; the nearest-street test on `mocks/seed.js` (0 of 22 different).
+- **Source:** interview · confidence high
+
+## D-007 · Email confirmation is mandatory at registration
+- **Status:** superseded-by D-017
+- **Date:** 2026-11-25
+- **Rule:** A new account must confirm its email address through the link sent at registration. Until it is confirmed, the account can sign in but cannot report, vote, comment or follow. One email address can hold only one account. Confirmation is a state of DS-007 ("Verifică-ți emailul", resend link, expired link), not a separate screen. Extends D-006.
+- **Why:** Anti-spam and "one vote per person": without confirmation, one person could open several accounts and vote several times.
+- **Rejected:** Registration without email confirmation; a separate confirmation screen.
+- **Evidence:** Q-008 answer; user approval of the D-007 proposal (2026-11-25).
 - **Source:** interview · confidence high

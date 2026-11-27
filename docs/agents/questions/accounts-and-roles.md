@@ -26,3 +26,23 @@
 - **Proposed answer:** On the detail, the author line reads "Raportată anonim"; "Cetățean anonim" stays the name in lists and exports. Nobody sees the real author in the app; it is kept only in the database for accountability. Not confirmed; DS-002 shows "Raportată anonim" to every role.
 - **Answer:** The proposed answer, accepted by the owner: on the detail the author line reads "Raportată anonim"; lists and exports show "Cetățean anonim". Nobody sees the real author in the app; it is kept only in the database.
 - **Date:** 2026-11-26
+
+## Q-027 · What are the password rule, the sign-in attempt limit and the link lifetimes?
+- **Status:** answered
+- **Blocks:** DS-007, DS-008, the authentication endpoints
+- **Who answers:** project owner
+- **Context:** DS-007 needs the "parolă prea slabă" and "prea multe încercări" errors and DS-007 / DS-008 the expired-link states. D-006 limits reports, votes and comments, not sign-in; D-007 does not say how long a confirmation link is valid.
+- **Answer:** Password: at least 8 characters and not one of the very common passwords ("12345678"); no uppercase or symbol rules (NIST guideline). After 5 wrong attempts in 10 minutes, per email or IP: "încearcă din nou peste 10 minute". The confirmation link is valid 24 hours, the reset link 1 hour; a new link cancels the old one. Resending an email: once a minute.
+- **Date:** 2026-11-27
+- **Recorded as:** D-016
+- **Note (2026-11-27):** Drawn in `docs/design/mocks/DS-007.html` and `DS-008.html`.
+
+## Q-028 · How long does the "Bine ai revenit" message stay after signing in?
+- **Status:** answered
+- **Blocks:** the message after signing in (DS-007), and any other message that closes by itself
+- **Who answers:** project owner
+- **Context:** The owner asked (2026-11-27) that after signing in the person goes straight back where they were, with a short "Bine ai revenit, [prenume]!" that disappears by itself. DESIGN.md has no duration token.
+- **Proposed answer:** It stays 5 seconds, the countdown pauses while the pointer is over it or it has focus, and × closes it at once; it is announced to screen readers (`role="status"`) and never carries the only way to do something. A duration token would be a DESIGN.md PROPOSAL.
+- **Answer:** 5 seconds, paused while the pointer is over it or it has focus, plus × to close it at once. The duration is a DESIGN.md token, `--duration-message` (5 s).
+- **Date:** 2026-11-27
+

@@ -387,7 +387,7 @@
     function visitorView() {
       return `<div class="done">${heading()}<div class="msg msg-note"><div class="msg-title">${ic('i-login')}Intră în cont ca să raportezi</div>
         <p>Ca să trimiți o sesizare ai nevoie de un cont cu emailul confirmat. Așa oprim spamul și numărăm un singur vot de persoană. După ce intri, poți raporta și anonim.</p>
-        <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-007')}">${ic('i-login')}Intră în cont ca să raportezi</a>
+        <div class="btns"><a class="btn btn-primary" href="${mockHref('DS-007', { din: 'DS-003' })}">${ic('i-login')}Intră în cont ca să raportezi</a>
           <a class="btn btn-ghost" href="${mockHref('DS-001')}">Înapoi la hartă</a></div></div></div>`;
     }
     function verifyBanner() {
@@ -488,7 +488,7 @@
       return `<h2>Note pentru revizuire</h2>
         <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
         <h3>Ce diferă pe roluri</h3>
-        <ul><li><strong>Vizitator:</strong> nu vede formularul; „Intră în cont ca să raportezi” duce la DS-007 (încă nedesenat, deci la index).</li>
+        <ul><li><strong>Vizitator:</strong> nu vede formularul; „Intră în cont ca să raportezi” duce la DS-007; după autentificare, înapoi la raportare.</li>
           <li><strong>Cetățean:</strong> formularul complet. Raportarea contează ca votul lui (Q-016) și urmărește automat sesizarea. La duplicat: „Există deja, votează-o” → DS-002 al sesizării existente. Vede „Termen”, nu „SLA”.</li>
           <li><strong>Cont neconfirmat</strong> (D-007): formularul se vede, dar e blocat, cu „Verifică-ți emailul ca să poți raporta” și „Retrimite emailul”.</li>
           <li><strong>Operator și admin</strong> (D-012): același formular; raportarea nu contează ca vot și nu urmăresc sesizarea (o găsesc în DS-004). La duplicat: „Vezi sesizarea existentă (#N)”. Văd „SLA” în loc de „Termen”.</li></ul>

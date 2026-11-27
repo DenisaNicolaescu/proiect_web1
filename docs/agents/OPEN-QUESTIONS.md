@@ -13,12 +13,15 @@
 - Q-008 · Is email confirmation required at registration? · _answered_
 - Q-009 · Can an Admin do everything an Operator does, or are the roles separate? · _answered_
 - Q-018 · How is an anonymous author shown, and who sees the real one? · _answered_
+- Q-027 · What are the password rule, the sign-in attempt limit and the link lifetimes? · _answered_
+- Q-028 · How long does the "Bine ai revenit" message stay after signing in? · _answered_
 
 ### [Data and seed](questions/data-and-seed.md)
 - Q-002 · How should seed data from Field.md and docs/field_photos be ingested? · _answered_
 - Q-007 · Are the per-category SLA values validated by Primăria Sibiu or the neighbourhood association?
 - Q-014 · The neighbourhood polygon leaves 4 field reports outside: change the polygon or D-003? · _answered_
 - Q-019 · Sesizarea #20: the photo's GPS points to #11, 204 m away · _answered_
+- Q-026 · How are the public statistics on DS-005 defined? · _answered_
 
 ### [Map and list](questions/map-and-list.md)
 - Q-010 · What does each role see differently on DS-001 (Map & List)? · _answered_

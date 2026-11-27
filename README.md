@@ -20,7 +20,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   > *"Locația selectată este în afara ariei Cartierului Tineretului"*.
 - **Fișier:** `docs/design/cartier.geojson` — singura sursă a poligonului pentru client, server și seed.
 - **Sesizări în afara ariei:** #06 (0,1 m) și #24 (7,0 m) rămân în Field.md, marcate „în afara ariei proiectului – exclusă din seed”.
-- **Decizie:** [D-009](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-009--neighbourhood-area-is-the-owner-drawn-polygon-without-buffer), care înlocuiește [D-003](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-003--cartierul-tineretului-polygon-boundary-enforcement).
+- **Decizie:** [D-009](file:///home/deny/proiect_web1/docs/agents/decisions/data-and-seed.md#d-009--neighbourhood-area-is-the-owner-drawn-polygon-without-buffer), care înlocuiește [D-003](file:///home/deny/proiect_web1/docs/agents/DECISIONS-SUPERSEDED.md#d-003--cartierul-tineretului-polygon-boundary-enforcement).
 
 ### 2.2. Taxonomie categorii & Motor de calcul SLA în zile lucrătoare
 - **Categorii oficiale:** Sunt implementate toate cele 14 categorii și subcategoriile aferente comunicate de Primăria Sibiu.
@@ -42,7 +42,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
 - **SLA Granularity:** SLA-ul este configurat la nivelul categoriei principale și moștenit de subcategorii.
 - **Calcul zile lucrătoare:** Zilele lucrătoare sunt calculate strict excluzând weekend-urile și sărbătorile legale din România (inclusiv sărbătorile cu dată mobilă: Paștele ortodox și Rusaliile, calculate prin algoritmul Meeus/Jones/Butcher).
 - **Integritate:** Adminul poate modifica SLA-ul unei categorii din panoul de administrare. Operatorii nu pot modifica SLA-ul și nu pot suprascrie manual termenul calculat, asigurând indicatori obiectivi de depășire și statistici publice reale.
-- **Decizie:** [D-004](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-004--12-primăria-categories-and-romanian-statutory-working-day-sla-engine).
+- **Decizie:** [D-004](file:///home/deny/proiect_web1/docs/agents/decisions/triage-and-workflow.md#d-004--14-primăria-categories-and-romanian-statutory-working-day-sla-engine).
 
 ### 2.3. Detecție duplicate & Fuziune reversibilă (Twist P08)
 - **Praguri fixe:** Aceeași categorie principală, distanță `< 50 m`, înregistrată în ultimele `30 de zile calendaristice`. Pragurile sunt setate în configurarea serverului, nu din interfață.
@@ -52,7 +52,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   - **Păstrarea voturilor:** Rândurile de vot din baza de date **nu se șterg și nu se rescriu**. Voturile unice pe sesizarea A sunt calculate dinamic ca `COUNT(DISTINCT user_id)` peste A și sesizările fuzionate în ea (dacă Utilizatorul X a votat ambele sesizări, se contorizează ca 1 singur vot unic).
   - **Comentarii, fotografii și urmăritori:** Sunt agregate pe sesizarea A cu etichetă de proveniență (*"Din sesizarea #B"*). Urmăritorii lui B primesc notificări când A își schimbă statusul.
   - **Desfacerea fuziunii (Unmerge):** La desfacerea fuziunii, sesizarea B își recapătă statusul anterior (ex. `nouă` sau `confirmată`), voturile fiecărei sesizări revin la valorile originale, iar comentariile și urmăritorii revin la sesizarea lor de origine.
-- **Decizie:** [D-005](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-005--spatial-duplicate-detection-and-reversible-merge-architecture).
+- **Decizie:** [D-005](file:///home/deny/proiect_web1/docs/agents/decisions/triage-and-workflow.md#d-005--spatial-duplicate-detection-and-reversible-merge-architecture).
 
 ### 2.4. Autentificare, Confidențialitate (Raportare Anonimă) & Anti-Spam
 - **Autentificare obligatorie:** Toate acțiunile cu impact (raportare, vot, comentarii, abonare notificări) necesită cont autentificat (`user_id`).
@@ -65,7 +65,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   - Votare: maximum 30 voturi / 10 minute per utilizator / IP.
   - Comentarii: maximum 10 comentarii / 10 minute per utilizator / IP.
   - Protecție împotriva roboților: câmp ascuns honeypot pe formulare (fără CAPTCHA intruziv).
-- **Decizie:** [D-006](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-006--mandatory-authentication-with-public-anonymity-and-anti-spam-rate-limiting).
+- **Decizie:** [D-006](file:///home/deny/proiect_web1/docs/agents/decisions/accounts-and-roles.md#d-006--mandatory-authentication-with-public-anonymity-and-anti-spam-rate-limiting).
 
 ---
 
@@ -80,7 +80,7 @@ Aplicația este construită pe baza cerințelor din [docs/brief.md](file:///home
   3. Redimensionare și optimizare web (JPEG/WebP).
   - Seed-ul trece prin același proces ca o poză încărcată (D-011); GPS-ul din EXIF doar verifică coordonatele din Field.md (abatere > 10 m oprește seed-ul). Fără originale, seed-ul folosește JPEG-urile fără EXIF din repo.
 - **Notificări prin email:** Job de fundal ce rulează la 5 minute, grupând până la 10 schimbări de status per utilizator într-o singură notificare. Mediu de dezvoltare configurat implicit cu transport local (Mailpit / preview log).
-- **Decizie:** [D-002](file:///home/deny/proiect_web1/docs/agents/DECISIONS.md#d-002--full-stack-technology-stack-nodejs-react-postgresqlpostgis).
+- **Decizie:** [D-002](file:///home/deny/proiect_web1/docs/agents/decisions/stack-and-tooling.md#d-002--full-stack-technology-stack-nodejs-react-postgresqlpostgis).
 
 ---
 

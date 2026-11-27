@@ -84,6 +84,7 @@
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+  --duration-message: 5s;
 
   /* MOCK ONLY, not tokens: device frames. */
   --mock-phone-w: 375px;  --mock-phone-h: 760px;
@@ -282,3 +283,41 @@ a { color: var(--color-primary); }
 .choice-body .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
 .field-error { display: flex; gap: var(--space-1); align-items: flex-start; color: var(--color-danger); font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; }
 .field-error .i { margin-top: calc(var(--space-1) / 2); }
+
+/* ── Sign in, register, password reset (DS-007, DS-008) ── */
+.page { flex: 1; min-height: 0; overflow-y: auto; }
+.auth { display: grid; gap: var(--space-4); padding: var(--space-4); align-content: start; }
+.frame[data-size="desktop"] .auth { width: calc(var(--space-8) * 15); margin: 0 auto; padding: var(--space-8) 0; }
+.auth-card { display: grid; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--color-surface);
+  border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); min-width: 0; }
+.frame[data-size="desktop"] .auth-card { padding: var(--space-6); }
+.auth-title { font-size: var(--text-xl); line-height: var(--lh-xl); font-weight: 700; }
+.auth-sub { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); overflow-wrap: anywhere; }
+.auth-sub .i, .auth .hint .i { vertical-align: text-bottom; }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--color-border-input); border-radius: var(--radius-md); overflow: hidden; }
+.auth-tabs button { min-height: var(--size-touch); border: 0; background: var(--color-surface); color: var(--color-text); font-size: var(--text-base); line-height: var(--lh-base); font-weight: 500; }
+.auth-tabs button + button { border-left: 1px solid var(--color-border-input); }
+.auth-tabs button[aria-selected="true"] { background: var(--color-primary); color: var(--color-on-primary); font-weight: 600; }
+.auth-form { display: grid; gap: var(--space-4); }
+.auth .field { display: grid; gap: var(--space-1); min-width: 0; }
+.auth .field-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.auth .field label, .auth .field .label { font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 600; }
+.auth .input { width: 100%; min-height: var(--size-touch); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border-input); border-radius: var(--radius-md);
+  background: var(--color-surface); color: var(--color-text); font-size: var(--text-base); line-height: var(--lh-base); min-width: 0; }
+.auth .input:disabled { background: var(--color-surface-elevated); color: var(--color-text-muted); }
+.auth .input[aria-invalid="true"] { border-color: var(--color-danger); box-shadow: inset 0 0 0 1px var(--color-danger); }
+.auth .pw { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); }
+.auth .hint { font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+.auth .btn-block { width: 100%; }
+.btn-link { min-height: var(--size-touch); display: inline-flex; align-items: center; padding: 0 var(--space-1); border: 0; background: none; color: var(--color-primary);
+  font-size: var(--text-sm); line-height: var(--lh-sm); font-weight: 500; text-decoration: underline; }
+.auth-alt { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 var(--space-1); font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+.auth-ico { width: calc(var(--space-8) + var(--space-4)); height: calc(var(--space-8) + var(--space-4)); border-radius: var(--radius-full); display: grid; place-items: center;
+  background: var(--color-primary-subtle); color: var(--color-primary); }
+.auth-ico.ok { background: var(--color-success-bg); color: var(--color-success); }
+.auth-ico.bad { background: var(--color-danger-bg); color: var(--color-danger); }
+.auth .btns { display: grid; gap: var(--space-2); }
+.return-note { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--color-text-muted); }
+.return-note .i { margin-top: calc(var(--space-1) / 2); }
+/* Honeypot (D-006): a field people never see; a bot that fills it is refused */
+.auth .hp { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

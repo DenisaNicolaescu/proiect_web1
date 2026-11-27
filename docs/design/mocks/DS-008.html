@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DS-008 · Resetarea parolei (Cartierul Tineretului, Sibiu) · approved</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Tokens, mock bar, app header, messages, auth form: shared by every mock (DESIGN.md → Linking mocks) -->
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body data-theme="light">
+
+  <!-- Mock controls (not part of the screen): shared.js → mockBar() -->
+  <header class="mock-bar" id="mock-bar" aria-label="Comenzi mock"></header>
+
+  <main class="stage">
+    <div class="frame-scroll"><div class="frame" id="frame"></div></div>
+    <aside class="notes" id="notes"></aside>
+  </main>
+
+  <script src="seed.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    /* ── Data ─────────────────────────────────────────────────────────────
+       Two parts: ask for the link (by email), then the page the link opens (new password). The email is an example.
+       ?din=<DS-id> (and id): carried from DS-007 and back to it, so that after signing in the person goes back where they were.
+       Values from the owner's answer (D-016): the reset link is valid 1 hour, a new link cancels the old one;
+       resend once a minute; the password rule is the one of DS-007 (at least 8 characters, not a very common one). */
+    const STATES = [['cere', 'Cere linkul'], ['gol', 'Eroare: email gol'], ['loading', 'Încărcare'], ['trimis', 'Link trimis'], ['error', 'Eroare'],
+      ['nou', 'Parola nouă'], ['slaba', 'Eroare: parolă slabă'], ['saving', 'Se salvează'],
+      ['expirat', 'Link expirat'], ['success', 'Succes'], ['long', 'Text lung']];
+    const ROLES = ['vizitator'];
+    const S = mockState({ state: 'cere', role: 'vizitator', size: 'phone', theme: 'light' }, { roles: ROLES, states: STATES.map(x => x[0]) });
+    const RET = authReturn();
+    const EX = { email: 'ana.popescu@exemplu.ro', longEmail: 'maria-magdalena.constantinescu-dumitrescu@asociatia-proprietarilor-tineretului.ro' };
+    const REQUEST = ['cere', 'gol', 'loading', 'error'], NEW = ['nou', 'slaba', 'saving'];
+    S.resent = false; S.showPw = false;
+    const busy = () => S.state === 'loading' || S.state === 'saving';
+    const email = () => S.state === 'long' ? EX.longEmail : EX.email;
+    const loginHref = () => mockHref('DS-007', RET.params);
+
+    /* ── Parts ───────────────────────────────────────────────────────────── */
+    function field({ id, label, type = 'text', value = '', auto, hint, error }) {
+      const desc = error ? `${id}-err` : hint ? `${id}-h` : '';
+      const pw = type === 'password';
+      const input = `<input class="input" id="${id}" name="${id}" type="${pw && S.showPw ? 'text' : type}" value="${value}" autocomplete="${auto}"
+        ${type === 'email' ? 'inputmode="email" spellcheck="false"' : ''} ${error ? 'aria-invalid="true"' : ''} ${desc ? `aria-describedby="${desc}"` : ''} ${busy() ? 'disabled' : ''}>`;
+      const box = pw ? `<div class="pw">${input}<button type="button" class="btn btn-secondary btn-sm" data-act="showpw" aria-pressed="${S.showPw}" aria-controls="${id}" aria-label="Arată parola"
+          ${busy() ? 'disabled' : ''}>${ic('i-confirmata')}${S.showPw ? 'Ascunde' : 'Arată'}</button></div>` : input;
+      return `<div class="field"><label for="${id}">${label}</label>${box}
+        ${error ? `<p class="field-error" id="${id}-err">${ic('i-alert')}<span>${error}</span></p>` : hint ? `<p class="hint" id="${id}-h">${hint}</p>` : ''}</div>`;
+    }
+    const head = (icon, cls, title, sub) => `<span class="auth-ico ${cls}">${ic(icon, 'i-lg')}</span><h1 class="auth-title">${title}</h1>${sub ? `<p class="auth-sub">${sub}</p>` : ''}`;
+
+    function requestCard() {
+      const st = S.state;
+      const err = st === 'error' ? `<div class="msg msg-error" role="alert"><div class="msg-title">${ic('i-alert')}Nu am putut trimite cererea</div>
+          <p>Verifică-ți conexiunea la internet și încearcă din nou. Adresa a rămas în formular.</p></div>` : '';
+      const button = st === 'loading' ? `<button class="btn btn-primary btn-block" disabled aria-busy="true">${ic('i-hourglass')}Se trimite…</button>`
+        : `<button class="btn btn-primary btn-block" data-act="request">${ic(st === 'error' ? 'i-refresh' : 'i-mail')}${st === 'error' ? 'Încearcă din nou' : 'Trimite-mi linkul'}</button>`;
+      return `<h1 class="auth-title">Ai uitat parola?</h1>
+        <p class="auth-sub">Scrie adresa cu care ți-ai făcut contul. Îți trimitem un link ca să alegi o parolă nouă.</p>
+        ${err}<form class="auth-form" novalidate onsubmit="return false" ${st === 'loading' ? 'aria-busy="true"' : ''}>
+        ${field({ id: 'email', label: 'Email', type: 'email', auto: 'email', value: st === 'gol' ? '' : email(), error: st === 'gol' && 'Scrie adresa de email cu care ți-ai făcut contul.' })}
+        ${button}</form>
+        <p class="auth-alt">Îți amintești parola?<a class="btn-link" href="${loginHref()}">Intră în cont</a></p>`;
+    }
+
+    const resendBlock = () => S.resent
+      ? `<div class="msg msg-success" role="status"><div class="msg-title">${ic('i-rezolvata')}Am trimis din nou cererea</div>
+          <p>Dacă adresa are cont, primești un link nou; cel vechi nu mai e valabil. Poți cere altul peste 60 de secunde.</p></div>
+        <button class="btn btn-secondary btn-block" disabled>${ic('i-hourglass')}Poți retrimite peste 60 de secunde</button>`
+      : `<button class="btn btn-secondary btn-block" data-act="resend">${ic('i-refresh')}Retrimite emailul</button>`;
+
+    function sentCard() {
+      return `${head('i-mail', '', 'Verifică-ți emailul', `Dacă adresa <strong>${email()}</strong> are cont, ți-am trimis un link ca să alegi o parolă nouă.`)}
+        <p>Linkul e valabil o oră. Deschide-l pe cel mai recent primit.</p>
+        <p class="hint">Nu găsești emailul? Uită-te și în Spam sau verifică dacă ai scris adresa cu care ți-ai făcut contul.</p>
+        <div class="btns">${resendBlock()}<a class="btn btn-ghost btn-block" href="${loginHref()}">${ic('i-back')}Înapoi la intrarea în cont</a></div>`;
+    }
+
+    function newCard() {
+      const st = S.state;
+      const button = st === 'saving' ? `<button class="btn btn-primary btn-block" disabled aria-busy="true">${ic('i-hourglass')}Se salvează…</button>`
+        : `<button class="btn btn-primary btn-block" data-act="save">${ic('i-lock')}Salvează parola nouă</button>`;
+      return `<h1 class="auth-title">Alege o parolă nouă</h1>
+        <p class="auth-sub">Pentru contul <strong>${email()}</strong>.</p>
+        <form class="auth-form" novalidate onsubmit="return false" ${st === 'saving' ? 'aria-busy="true"' : ''}>
+        ${field({ id: 'pw-new', label: 'Parola nouă', type: 'password', auto: 'new-password', value: st === 'slaba' ? '12345678' : 'parola-exemplu',
+          error: st === 'slaba' && 'Parola asta e foarte des folosită și se ghicește ușor. Alege alta.', hint: 'Cel puțin 8 caractere. Nu folosi o parolă foarte des întâlnită, ca „12345678”.' })}
+        ${button}</form>`;
+    }
+
+    function card() {
+      const st = S.state;
+      if (REQUEST.includes(st)) return `<div class="auth-card">${requestCard()}</div>`;
+      if (NEW.includes(st)) return `<div class="auth-card">${newCard()}</div>`;
+      if (st === 'trimis' || st === 'long') return `<div class="auth-card" role="status">${sentCard()}</div>`;
+      if (st === 'expirat') return `<div class="auth-card" role="status">${head('i-clock', 'bad', 'Linkul a expirat', 'Linkul pentru o parolă nouă e valabil o oră, iar un link nou îl anulează pe cel vechi.')}
+        <p>Cere un link nou și deschide-l pe cel mai recent primit.</p>
+        <div class="btns"><button class="btn btn-primary btn-block" data-act="again">${ic('i-mail')}Cere un link nou</button>
+          <a class="btn btn-ghost btn-block" href="${loginHref()}">Înapoi la intrarea în cont</a></div></div>`;
+      return `<div class="auth-card" role="status">${head('i-rezolvata', 'ok', 'Parola ta e schimbată', 'Intră în cont cu parola nouă.')}
+        <div class="btns"><a class="btn btn-primary btn-block" href="${loginHref()}">${ic('i-login')}Intră în cont</a></div></div>`;
+    }
+
+    function content() {
+      return `<div class="app">${appbar(S, { current: 'DS-008', brandH1: false })}<div class="page"><div class="auth">${card()}</div></div></div>`;
+    }
+
+    /* ── Notes ───────────────────────────────────────────────────────────── */
+    const STATE_NOTES = {
+      cere: 'Prima parte: scrii emailul și ceri linkul. Deschis din „Am uitat parola” (DS-007), cu <code>din</code> păstrat.',
+      gol: 'Ai apăsat „Trimite-mi linkul” fără adresă: câmpul spune ce lipsește.',
+      loading: 'Se trimite cererea: câmpul și butonul sunt blocate.',
+      trimis: '„Dacă adresa are cont, ți-am trimis un link”: același ecran, fie că adresa are cont, fie că nu, ca să nu se afle cine are cont. Dacă nu are, nu se trimite nimic. „Retrimite emailul” merge o dată la 60 de secunde (apasă-l ca să vezi starea).',
+      error: 'Eroare de conexiune: cererea nu a plecat, adresa rămâne, butonul devine „Încearcă din nou”.',
+      nou: 'A doua parte: pagina din link. Parola nouă o singură dată; „Arată” o face vizibilă, ca să verifici ce ai scris. Aceeași regulă ca la înregistrare.',
+      slaba: 'Parolă foarte des folosită („12345678”): eroarea spune de ce și ce să faci. Pentru o parolă prea scurtă, mesajul e cel din DS-007.',
+      saving: 'Se salvează: câmpurile și butonul sunt blocate.',
+      expirat: 'Ai deschis un link mai vechi de o oră sau anulat de unul mai nou: „Cere un link nou” te duce înapoi la prima parte.',
+      success: 'Parola e schimbată: „Intră în cont” duce la DS-007, cu <code>din</code> păstrat, deci după intrare te întorci unde erai.',
+      long: 'Text lung: o adresă de email foarte lungă se rupe pe rânduri.',
+    };
+    function notes() {
+      return `<h2>Note pentru revizuire</h2>
+        <p><strong>Stare:</strong> ${STATE_NOTES[S.state]}</p>
+        <h3>Reguli aplicate</h3>
+        <ul><li>Mesajul de după cerere nu spune dacă adresa are cont.</li>
+          <li>Valorile din D-016: linkul e valabil o oră, iar unul nou îl anulează pe cel vechi; retrimiterea, o dată la 60 de secunde; parola are cel puțin 8 caractere și nu e una foarte des folosită.</li>
+          <li>După succes: DS-007, apoi înapoi unde erai (<strong>${RET.label}</strong>, <code>${RET.to}</code>).</li>
+          <li>Câmpurile au <code>autocomplete</code> (email, new-password).</li></ul>
+        <h3>Valori care nu sunt tokeni</h3>
+        <ul><li>Ramele de dispozitiv și bordurile de 1 px.</li></ul>
+        <p class="muted" style="margin-top: var(--space-4)">Datele: adresele de email sunt exemple; nu intră în seed.</p>`;
+    }
+
+    /* ── Render ──────────────────────────────────────────────────────────── */
+    function render() {
+      syncBar(S);
+      syncUrl(S, RET.params);
+      const frame = document.getElementById('frame');
+      frame.dataset.size = S.size;
+      frame.innerHTML = content();
+      document.getElementById('notes').innerHTML = notes();
+    }
+
+    let timer;
+    const after = (next, ms = 1200) => { clearTimeout(timer); timer = setTimeout(() => { S.state = next; render(); }, ms); };
+    document.addEventListener('click', e => {
+      const ctl = e.target.closest('[data-ctl] button');
+      if (ctl) {
+        S[ctl.parentElement.dataset.ctl] = ctl.dataset.v;
+        if (ctl.parentElement.dataset.ctl === 'state') { clearTimeout(timer); S.resent = false; }
+        return render();
+      }
+      const act = e.target.closest('[data-act]');
+      if (!act) return;
+      const a = act.dataset.act;
+      if (a === 'showpw') S.showPw = !S.showPw;
+      if (a === 'resend') S.resent = true;
+      if (a === 'again') { S.state = 'cere'; S.resent = false; }
+      if (a === 'request') { S.state = 'loading'; after('trimis'); }
+      if (a === 'save') { S.state = 'saving'; after('success'); }
+      render();
+    });
+
+    mockBar({ id: 'DS-008', states: STATES, roles: ROLES });
+    render();
+  </script>
+</body>
+</html>
