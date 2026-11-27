@@ -9,7 +9,7 @@
 - PATTERN-001 · Plan-then-build workflow · approved
 - PATTERN-002 · Mocks share shared.css, shared.js and seed.js and are linked by URL · approved
 - PATTERN-003 · A dialog mock opens over its origin screen and goes back to it · approved
-- PATTERN-004 · Sign-in returns to the screen it was opened from · candidate
+- PATTERN-004 · Sign-in returns to the screen it was opened from · approved
 
 ---
 
@@ -40,7 +40,8 @@
 - **Source:** interview · confidence medium
 
 ## PATTERN-004 · Sign-in returns to the screen it was opened from
-- **Status:** candidate
+- **Status:** approved
+- **Confirmed:** 2026-11-27
 - **Use when:** A mock in `docs/design/mocks/` links to DS-007 (sign in), or DS-007 / DS-008 link to each other
 - **How:** The link passes `din=<DS-id>` (and the screen's data, e.g. `id` for DS-002) through `mockHref('DS-007', { din, … })`. A button that names an action ("Intră în cont ca să raportezi") passes the screen of that action (`din: 'DS-003'`). DS-007 and DS-008 read it with `authReturn()` (`shared.js`), carry `RET.params` on every link between them, show "După ce intri, te întorci la …", and the button after sign-in links to `RET.href(<role>)`, which carries the signed-in role (`cetatean` or `neconfirmat`). Without `din`: the map (DS-001).
 - **Example:** `docs/design/mocks/DS-007.html`, `docs/design/mocks/DS-002.html` (vote and comment links)

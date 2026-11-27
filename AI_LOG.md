@@ -280,3 +280,6 @@ Acest fișier documentează utilizarea asistenților AI în cadrul proiectului P
   `DECISIONS.md` păstrează doar indexul, grupat pe teme. Linkurile din `README.md` duc acum la fișierele noi (D-003 duce la `DECISIONS-SUPERSEDED.md`).
   
   Verificări: 1.564 de randări cu Node, fără erori; testul cu zilele lucrătoare trece (5 din 5); `python3 docs/agents/tools/ledger-lint.py` trece, fără avertismentul de lungime. Modificările au fost salvate pe branch-ul `chore/ds-005-007-008`, unite în `main` și trimise pe GitHub.
+
+- **Continuare (27 noiembrie 2026) — PATTERN-004 aprobat:**  
+  Am aprobat PATTERN-004: intrarea în cont se întoarce la ecranul de unde ai venit (`din`, `authReturn()` în `shared.js`). `python3 docs/agents/tools/ledger-lint.py` trece. Modificarea a fost salvată pe branch-ul `chore/pattern-004`, unită în `main` și trimisă pe GitHub.
